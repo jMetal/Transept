@@ -1,5 +1,5 @@
 CONDA_ENV := transept
-RUN := conda run -n $(CONDA_ENV)
+RUN := conda run --no-capture-output -n $(CONDA_ENV)
 JAR_NAME := transept-core-0.1.0-jar-with-dependencies.jar
 
 .PHONY: setup env jar lint format test run
@@ -27,6 +27,7 @@ jar:
 	  done; \
 	  echo "No jar found: build it in a clone of Transept-core (mvn clean package -DskipTests)"; \
 	  echo "and run 'make setup JAR=<path to $(JAR_NAME)>', or set its path in the app."; \
+	  exit 1; \
 	fi
 
 lint:
