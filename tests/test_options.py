@@ -1,0 +1,53 @@
+"""Which algorithms accept each formulation of --objectives."""
+
+import dataclasses
+
+from transept import options, runner
+
+
+class TestObjectives:
+    def test_should_offer_only_the_single_objective_algorithms_for_one_objective(self):
+        assert options.algorithms_for("LDDT") == [
+            "GENETIC_ALGORITHM",
+            "ASYNC_GENETIC_ALGORITHM",
+            "RANDOM_SEARCH",
+            "RANDOM_SEEDED",
+        ]
+
+    def test_should_offer_the_multiobjective_algorithms_for_two_and_three(self):
+        two = options.algorithms_for("SOPWTP_LDDT")
+        assert two == options.algorithms_for("SOPWTP_LDDT_COVERAGE")
+        assert "NSGA_II" in two and "MOEA_D" in two
+        assert "GENETIC_ALGORITHM" not in two
+
+    def test_should_reject_unsuitable_algorithms_and_moead_sizes(self):
+        # Arrange
+        request = runner.RunRequest(dataset="toy", seeds=("a", "b"), run_id="r", seed=1)
+
+        # Act
+        wrong_algorithm = runner.validate(
+            dataclasses.replace(request, algorithm="GENETIC_ALGORITHM")
+        )
+        wrong_size = runner.validate(
+            dataclasses.replace(
+                request,
+                algorithm="MOEA_D",
+                objectives="SOPWTP_LDDT_COVERAGE",
+                population_size=50,
+            )
+        )
+        good = runner.validate(
+            dataclasses.replace(request, algorithm="GENETIC_ALGORITHM", objectives="LDDT")
+        )
+
+        # Assert
+        assert any("does not accept" in message for message in wrong_algorithm)
+        assert any("MOEA/D with three objectives" in message for message in wrong_size)
+        assert good == []
+
+    def test_should_pass_the_objectives_to_the_tool(self, tmp_path):
+        request = runner.RunRequest(
+            dataset="toy", seeds=("a", "b"), run_id="r", seed=1, objectives="LDDT"
+        )
+        arguments = runner.command(request, "/t.jar", "/data", tmp_path)
+        assert arguments[arguments.index("--objectives") + 1] == "LDDT"
