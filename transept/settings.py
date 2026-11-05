@@ -121,9 +121,9 @@ def problems(settings: Settings) -> list[str]:
         )
     if not Path(settings.jar).is_file():
         found.append(
-            f"The jar was not found at {settings.jar}. Run `make setup JAR=<path to the jar>`, "
-            "or build it with `mvn clean package -DskipTests` in a clone of Transept-core next "
-            "to this repository, or set its path below."
+            f"The jar was not found at {settings.jar}. Clone Transept-core next to this "
+            "repository and run `make setup`, or run `make setup JAR=<path to the jar>`, or set "
+            "its path below."
         )
     if not (Path(settings.data_root) / "sequences" / "tmregions").is_dir():
         found.append(
