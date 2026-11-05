@@ -59,6 +59,31 @@ class TestLocations:
         assert settings.default_settings().jar == "/somewhere/tool.jar"
 
 
+class TestJava:
+    def test_should_prefer_the_java_of_java_home(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange: a Java home that is not on the PATH, as in the Conda environment
+        java = tmp_path / "jvm" / "bin" / "java"
+        java.parent.mkdir(parents=True)
+        java.write_text("#!/bin/sh\n")
+        java.chmod(0o755)
+        monkeypatch.setenv("JAVA_HOME", str(tmp_path / "jvm"))
+
+        # Act & Assert
+        assert settings.java_command() == str(java)
+
+    def test_should_use_the_path_when_java_home_has_no_java(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange
+        monkeypatch.setenv("JAVA_HOME", str(tmp_path / "nothing"))
+        monkeypatch.setattr(settings.shutil, "which", lambda name: f"/usr/bin/{name}")
+
+        # Act & Assert
+        assert settings.java_command() == "/usr/bin/java"
+
+
 class TestPersistence:
     def test_should_load_what_was_saved(self, studio_home: Path):
         # Arrange
