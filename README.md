@@ -30,9 +30,8 @@ without using the command line. The engine is [Transept core](https://github.com
 | --- | --- |
 | **Operating system** | macOS or Linux. On Windows, use [WSL](https://learn.microsoft.com/windows/wsl/install) (not tested yet) |
 | **git and make** | macOS: `xcode-select --install`. Debian/Ubuntu: `sudo apt install git make` |
-| **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python 3.11 and Java for Transept, in an environment of its own: you do not need to install them yourself |
-| **The Transept core jar** | `transept-core-0.1.0-jar-with-dependencies.jar` (about 135 MB). It is not published yet: build it (see [Building the jar](#building-the-jar)), or ask the authors for it |
-| **Disk and network** | About 1 GB for the Conda environment, downloaded once |
+| **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python, Java and Maven for Transept, in an environment of its own: you do not need to install them yourself |
+| **Disk and network** | About 2 GB, downloaded once: the Conda environment and the libraries of Transept core |
 
 Check that the tools are available (each command prints a version):
 
@@ -44,22 +43,24 @@ conda --version
 
 ### Steps
 
-1. Get Transept:
+1. Get Transept and its engine, [Transept core](https://github.com/jMetal/Transept-core), side
+   by side in the same folder:
 
    ```bash
    git clone https://github.com/jMetal/Transept.git
+   git clone https://github.com/jMetal/Transept-core.git
    cd Transept
    ```
 
-2. Create the environment and install the jar (a few minutes the first time):
+2. Install (about five minutes the first time):
 
    ```bash
-   make setup JAR=/path/to/transept-core-0.1.0-jar-with-dependencies.jar
+   make setup
    ```
 
-   It creates the `transept` Conda environment and copies the jar to `lib/`. It ends with
-   `Copied ... to lib/transept-core-0.1.0-jar-with-dependencies.jar`. Run it again whenever you
-   get a new jar, or after `git pull`.
+   It creates the `transept` Conda environment, builds the core jar in `../Transept-core` with
+   the Maven of that environment, and copies it to `lib/`. It ends with
+   `Copied ../Transept-core/target/transept-core-0.1.0-jar-with-dependencies.jar to lib/`.
 
 3. Start Transept:
 
@@ -73,6 +74,12 @@ conda --version
    `make run`.
 
 Transept only listens on your own machine (`localhost`): it is not reachable from the network.
+
+To update Transept later, run `git pull` in both folders, then `make setup` (it updates the
+environment) and `make core` (it rebuilds the jar) in `Transept`.
+
+If you already have the jar (`transept-core-0.1.0-jar-with-dependencies.jar`), you do not need
+Transept-core: run `make setup JAR=/path/to/the.jar` instead.
 
 ### Your first run
 
@@ -94,7 +101,8 @@ page (for example `mafft`, `muscle5` and `tmaligner`).
 | Message or problem | What to do |
 | --- | --- |
 | `conda: command not found` | Install Miniforge, then open a new terminal |
-| `make setup` ends with _No jar found_ | Pass the path of the jar: `make setup JAR=/path/to/the.jar` |
+| `make setup` ends with _No jar found_ | Clone Transept-core next to Transept (step 1) and run `make setup` again, or pass a jar with `make setup JAR=/path/to/the.jar` |
+| `make setup` fails while building the jar | Check the network connection (Maven downloads the libraries of Transept core) and run `make core` |
 | Home: _Java was not found_ | Run `make setup` again, and start Transept with `make run` (it uses the Java of the environment) |
 | Home: _The jar was not found at ..._ | Run `make setup JAR=...`, or set the path of the jar in the **Settings** of the home page |
 | Home: _... does not look like a data directory_ | Set the data directory in the **Settings** of the home page to a folder with `sequences/tmregions/` (for example `examples/GPCRdb`) |
@@ -103,24 +111,6 @@ page (for example `mafft`, `muscle5` and `tmaligner`).
 
 To remove Transept, delete the `Transept` folder and the environment:
 `conda env remove -n transept`.
-
-### Building the jar
-
-The jar is built from [Transept core](https://github.com/jMetal/Transept-core). You need Java 21
-or newer and [Maven](https://maven.apache.org/) 3.9 or newer (`mvn --version`); Maven downloads
-every other dependency. Clone it next to this repository, so that `make setup` finds the jar by
-itself:
-
-```bash
-cd ..                      # the folder that contains Transept
-git clone https://github.com/jMetal/Transept-core.git
-cd Transept-core
-mvn clean package -DskipTests
-cd ../Transept
-make setup
-```
-
-The build takes a few minutes the first time, while Maven downloads the dependencies.
 
 ## Data
 
