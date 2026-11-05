@@ -24,19 +24,90 @@ without using the command line. The engine is [Transept core](https://github.com
 
 ## Installation
 
-Requirements: [Conda](https://docs.conda.io/) (it installs Python 3.11 and Java 21) and the
-Transept core jar, `transept-core-0.1.0-jar-with-dependencies.jar`.
+### What you need
+
+| | |
+| --- | --- |
+| **Operating system** | macOS or Linux. On Windows, use [WSL](https://learn.microsoft.com/windows/wsl/install) (not tested yet) |
+| **git and make** | macOS: `xcode-select --install`. Debian/Ubuntu: `sudo apt install git make` |
+| **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python 3.11 and Java for Transept, in an environment of its own: you do not need to install them yourself |
+| **The Transept core jar** | `transept-core-0.1.0-jar-with-dependencies.jar` (about 135 MB). During the prototype phase it is not published: ask the authors for it, or build it (see below) |
+| **Disk and network** | About 1 GB for the Conda environment, downloaded once |
+
+Check that the tools are available (each command prints a version):
 
 ```bash
-git clone https://github.com/jMetal/Transept.git
-cd Transept
-make setup JAR=/path/to/transept-core-0.1.0-jar-with-dependencies.jar
-make run      # opens Transept in the browser
+git --version
+make --version
+conda --version
 ```
 
-`make setup` creates the `transept` Conda environment and copies the jar to `lib/`. To build the
-jar yourself, see [Building from source](https://github.com/jMetal/Transept-core#building-from-source)
-in Transept core. If you clone Transept-core next to this repository and build it there,
+### Steps
+
+1. Get Transept:
+
+   ```bash
+   git clone https://github.com/jMetal/Transept.git
+   cd Transept
+   ```
+
+2. Create the environment and install the jar (a few minutes the first time):
+
+   ```bash
+   make setup JAR=/path/to/transept-core-0.1.0-jar-with-dependencies.jar
+   ```
+
+   It creates the `transept` Conda environment and copies the jar to `lib/`. It ends with
+   `Copied ... to lib/transept-core-0.1.0-jar-with-dependencies.jar`. Run it again whenever you
+   get a new jar, or after `git pull`.
+
+3. Start Transept:
+
+   ```bash
+   make run
+   ```
+
+   The terminal shows `URL: http://localhost:8501` and the browser opens that page (open it by
+   hand if it does not). Keep the terminal open while you use Transept; `Ctrl+C` stops it. Runs
+   already launched keep running when Transept stops, and it finds them again on the next
+   `make run`.
+
+Transept only listens on your own machine (`localhost`): it is not reachable from the network.
+
+### Your first run
+
+1. **Home** should say _Ready_, with the Java version and _1 dataset in the data directory_ (the
+   example). If it lists problems instead, see [Troubleshooting](#troubleshooting).
+2. Open **New run**. The dataset is `classT2_19`, the seed alignments are `internal` (computed
+   by Transept), and the algorithm is NSGA-II with its default configuration and 10 000
+   evaluations. Press **Launch**.
+3. **Monitor** follows the run: evaluations and the best values of both objectives. It takes between
+   half a minute and two minutes, depending on the computer.
+4. When it finishes, open **Results**: every dot of the chart is an alignment; pick one to see
+   it helix by helix, compare it with the seed alignments and download it.
+
+To try the seed alignments of other tools, choose them in **Seed alignments** on the **New run**
+page (for example `mafft`, `muscle5` and `tmaligner`).
+
+### Troubleshooting
+
+| Message or problem | What to do |
+| --- | --- |
+| `conda: command not found` | Install Miniforge, then open a new terminal |
+| `make setup` ends with _No jar found_ | Pass the path of the jar: `make setup JAR=/path/to/the.jar` |
+| Home: _Java was not found_ | Run `make setup` again, and start Transept with `make run` (it uses the Java of the environment) |
+| Home: _The jar was not found at ..._ | Run `make setup JAR=...`, or set the path of the jar in the **Settings** of the home page |
+| Home: _... does not look like a data directory_ | Set the data directory in the **Settings** of the home page to a folder with `sequences/tmregions/` (for example `examples/GPCRdb`) |
+| `Port 8501 is already in use` | Transept (or another Streamlit app) is already running: use that one, or stop it |
+| A run fails | The **Monitor** shows why; the full output of the run is in `runs/jobs/<dataset>/<run-id>/log.txt` |
+
+To remove Transept, delete the `Transept` folder and the environment:
+`conda env remove -n transept`.
+
+### Building the jar
+
+The jar is built from [Transept core](https://github.com/jMetal/Transept-core) with Java 21 and
+Maven (see its README). If you clone Transept-core next to this repository and build it there,
 `make setup` (without `JAR=`) finds the jar by itself.
 
 ## Data
