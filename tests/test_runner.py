@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from transept import runner
+from transept import runner, settings
 
 REQUEST = runner.RunRequest(dataset="toy", seeds=("mafft", "kalign"), run_id="r1", seed=7)
 
@@ -45,7 +45,7 @@ class TestCommand:
         arguments = runner.command(REQUEST, "/t.jar", "/data", tmp_path)
 
         # Assert
-        assert arguments[:4] == ["java", "-jar", "/t.jar", "run"]
+        assert arguments[:4] == [settings.java_command(), "-jar", "/t.jar", "run"]
         options = dict(zip(arguments[4::2], arguments[5::2]))
         assert options["--seeds"] == "mafft,kalign"
         assert options["--output-root"] == str(tmp_path)

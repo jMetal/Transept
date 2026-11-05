@@ -6,7 +6,6 @@ repository or TRANSEPT_CORE_JAR) and is skipped when the jar or Java is not avai
 
 import json
 import re
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from transept import options, runner, settings, spaces
 JAR = settings.default_settings().jar
 
 pytestmark = pytest.mark.skipif(
-    not Path(JAR).is_file() or shutil.which("java") is None,
+    not Path(JAR).is_file() or settings.java_version() is None,
     reason="the Transept core jar or Java is not available",
 )
 
@@ -25,7 +24,10 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture(scope="module")
 def run_help() -> str:
     result = subprocess.run(
-        ["java", "-jar", JAR, "run", "--help"], capture_output=True, text=True, timeout=120
+        [settings.java_command(), "-jar", JAR, "run", "--help"],
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     return " ".join(result.stdout.split())
 
@@ -45,9 +47,7 @@ def candidates(text: str, label: str) -> tuple[str, ...]:
 )
 def test_should_offer_exactly_the_values_of_the_tool(run_help, label, offered):
     available = tuple(v for v in candidates(run_help, label) if v not in options.NOT_OFFERED)
-    assert offered == available, (
-        f"transept/options.py is out of step with the jar for '{label}'"
-    )
+    assert offered == available, f"transept/options.py is out of step with the jar for '{label}'"
 
 
 def test_should_describe_every_value(run_help):
@@ -79,7 +79,10 @@ def test_should_offer_the_formulations_of_the_tool(run_help):
 
 def test_should_know_the_objectives_each_algorithm_accepts():
     result = subprocess.run(
-        ["java", "-jar", JAR, "algorithms"], capture_output=True, text=True, timeout=120
+        [settings.java_command(), "-jar", JAR, "algorithms"],
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     for algorithm in json.loads(result.stdout):
         if algorithm["name"] in options.NOT_OFFERED:

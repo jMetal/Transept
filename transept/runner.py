@@ -17,7 +17,7 @@ import threading
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from transept import options, spaces
+from transept import options, settings, spaces
 
 REQUEST_FILE = "request.json"
 PID_FILE = "pid.txt"
@@ -117,7 +117,7 @@ def job_directory(runs_root: Path, dataset: str, run_id: str) -> Path:
 def command(request: RunRequest, jar: str, data_root: str, runs_root: Path) -> list[str]:
     """Returns the command line of a run."""
     arguments = [
-        "java",
+        settings.java_command(),
         "-jar",
         str(jar),
         "run",

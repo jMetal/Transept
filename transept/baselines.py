@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from transept import settings
+
 TIMEOUT_SECONDS = 600
 
 
@@ -31,7 +33,7 @@ def cache_file(runs_root: Path, dataset: str, mapping_policy: str, jar: str) -> 
 def command(jar: str, data_root: str, dataset: str, mapping_policy: str, output: Path) -> list[str]:
     """Returns the command line that scores the precomputed alignments of a dataset."""
     return [
-        "java", "-jar", str(jar), "baseline",
+        settings.java_command(), "-jar", str(jar), "baseline",
         "--data-root", str(data_root),
         "--datasets", dataset,
         "--mapping-policy", mapping_policy,

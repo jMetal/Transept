@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from transept import baselines
+from transept import baselines, settings
 
 CSV = (
     "dataset,method,SOPwTP,lDDT,file,status,message\n"
@@ -12,7 +12,7 @@ CSV = (
 
 def test_should_build_the_baseline_command(tmp_path: Path):
     arguments = baselines.command("/t.jar", "/data", "toy", "VERIFIED", tmp_path / "o")
-    assert arguments[:4] == ["java", "-jar", "/t.jar", "baseline"]
+    assert arguments[:4] == [settings.java_command(), "-jar", "/t.jar", "baseline"]
     assert "VERIFIED" in arguments and "toy" in arguments
 
 

@@ -88,11 +88,25 @@ def save_settings(settings: Settings) -> None:
     settings_file().write_text(json.dumps(asdict(settings), indent=2) + "\n", encoding="utf-8")
 
 
+def java_command() -> str:
+    """Returns the Java executable: $JAVA_HOME/bin/java if it exists, else java on the PATH.
+
+    The Java of the Conda environment sets JAVA_HOME but is not on the PATH.
+    """
+    home = os.environ.get("JAVA_HOME")
+    if home:
+        candidate = Path(home) / "bin" / ("java.exe" if os.name == "nt" else "java")
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    return shutil.which("java") or "java"
+
+
 def java_version() -> str | None:
-    """Returns the first line of `java -version`, or None if Java is not on the PATH."""
-    if shutil.which("java") is None:
+    """Returns the first line of `java -version`, or None if Java is not available."""
+    java = java_command()
+    if shutil.which(java) is None:
         return None
-    result = subprocess.run(["java", "-version"], capture_output=True, text=True, timeout=30)
+    result = subprocess.run([java, "-version"], capture_output=True, text=True, timeout=30)
     lines = (result.stderr or result.stdout).strip().splitlines()
     return lines[0] if lines else "java"
 
@@ -101,7 +115,10 @@ def problems(settings: Settings) -> list[str]:
     """Lists what prevents running the tool with these settings; empty if nothing does."""
     found = []
     if java_version() is None:
-        found.append("Java was not found on the PATH: install Java 21 or newer.")
+        found.append(
+            "Java was not found (neither in JAVA_HOME nor on the PATH): run `make setup`, or "
+            "install Java 21 or newer."
+        )
     if not Path(settings.jar).is_file():
         found.append(
             f"The jar was not found at {settings.jar}. Run `make setup JAR=<path to the jar>`, "

@@ -10,7 +10,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from transept import runner
+from transept import runner, settings
 
 NAME = "internal"
 DIRECTORY = "internal_seeds"
@@ -51,7 +51,7 @@ def computing(runs_root: Path, dataset: str) -> bool:
 def command(jar: str, data_root: str, runs_root: Path, dataset: str) -> list[str]:
     """Returns the command that computes the internal seeds of a dataset."""
     return [
-        "java", "-jar", str(jar), "seeds",
+        settings.java_command(), "-jar", str(jar), "seeds",
         "--data-root", str(data_root),
         "--datasets", dataset,
         "--output-root", str(runs_root),
