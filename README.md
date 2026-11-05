@@ -31,7 +31,7 @@ without using the command line. The engine is [Transept core](https://github.com
 | **Operating system** | macOS or Linux. On Windows, use [WSL](https://learn.microsoft.com/windows/wsl/install) (not tested yet) |
 | **git and make** | macOS: `xcode-select --install`. Debian/Ubuntu: `sudo apt install git make` |
 | **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python 3.11 and Java for Transept, in an environment of its own: you do not need to install them yourself |
-| **The Transept core jar** | `transept-core-0.1.0-jar-with-dependencies.jar` (about 135 MB). During the prototype phase it is not published: ask the authors for it, or build it (see below) |
+| **The Transept core jar** | `transept-core-0.1.0-jar-with-dependencies.jar` (about 135 MB). It is not published yet: build it (see [Building the jar](#building-the-jar)), or ask the authors for it |
 | **Disk and network** | About 1 GB for the Conda environment, downloaded once |
 
 Check that the tools are available (each command prints a version):
@@ -106,9 +106,21 @@ To remove Transept, delete the `Transept` folder and the environment:
 
 ### Building the jar
 
-The jar is built from [Transept core](https://github.com/jMetal/Transept-core) with Java 21 and
-Maven (see its README). If you clone Transept-core next to this repository and build it there,
-`make setup` (without `JAR=`) finds the jar by itself.
+The jar is built from [Transept core](https://github.com/jMetal/Transept-core). You need Java 21
+or newer and [Maven](https://maven.apache.org/) 3.9 or newer (`mvn --version`); Maven downloads
+every other dependency. Clone it next to this repository, so that `make setup` finds the jar by
+itself:
+
+```bash
+cd ..                      # the folder that contains Transept
+git clone https://github.com/jMetal/Transept-core.git
+cd Transept-core
+mvn clean package -DskipTests
+cd ../Transept
+make setup
+```
+
+The build takes a few minutes the first time, while Maven downloads the dependencies.
 
 ## Data
 
