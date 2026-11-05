@@ -44,7 +44,8 @@ in Transept core. If you clone Transept-core next to this repository and build i
 Transept starts with a small example in `examples/GPCRdb/`: the `classT2_19` dataset (19 taste
 receptors type 2), with its predicted topology, AlphaFold2 distance matrices, six seed
 alignments (ClustalW, Kalign, MAFFT, MUSCLE5, T-Coffee and TM-Aligner) and the GPCRdb reference
-alignment. A run of a few hundred evaluations takes seconds.
+alignment. A run of a few hundred evaluations takes seconds. The origin and licence of these
+files are described in [examples/README.md](examples/README.md).
 
 For more datasets, use the GPCR structural benchmark
 [Dataset_Structural_GPCRs](https://github.com/TM-M2StructAlign/Dataset_Structural_GPCRs)
