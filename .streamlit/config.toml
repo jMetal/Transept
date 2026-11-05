@@ -1,0 +1,7 @@
+# Transept is meant for local use: it has no authentication and launches processes, so it only
+# listens on this machine.
+[server]
+address = "localhost"
+
+[browser]
+gatherUsageStats = false
