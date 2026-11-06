@@ -263,6 +263,103 @@ class TestSeries:
         assert not app.exception
         assert "toy / alone: finished" in [element.value for element in app.subheader]
 
+    def test_should_show_the_aggregate_in_results_by_default(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        show = next(box for box in app.selectbox if box.label == "Show")
+        assert show.value == "All runs (aggregate)"
+        assert show.options == ["All runs (aggregate)", "seed 1", "seed 2"]
+        titles = [element.value for element in app.subheader]
+        assert "Fronts of the runs and their aggregate" in titles
+        table = next(f.value for f in app.dataframe if "seed" in f.value.columns)
+        assert set(table["file"]) >= {"MSASol0.fasta"}
+
+    def test_should_show_a_run_of_the_series_as_a_single_run(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Act
+        next(box for box in app.selectbox if box.label == "Show").set_value("seed 2").run()
+
+        # Assert
+        assert not app.exception
+        titles = [element.value for element in app.subheader]
+        assert "Non-dominated alignments" in titles
+        assert "Fronts of the runs and their aggregate" not in titles
+
+    def test_should_open_the_run_remembered_inside_its_series(self, configured, data_root: Path):
+        # Arrange: as when coming from History or from a run in Monitor
+        self.finished_series(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "s_seed_2"))
+
+        # Assert
+        assert not app.exception
+        assert next(box for box in app.selectbox if box.label == "Show").value == "seed 2"
+
+    def test_should_warn_about_a_partial_series(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        (runner.run_directory(root, "toy", "s_seed_2") / "metadata.json").unlink()
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        assert "1 of 2 runs have finished" in texts(app)
+
+    def test_should_prepare_the_download_only_when_asked(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+        assert not app.get("download_button")
+
+        # Act
+        next(b for b in app.button if b.label.startswith("Prepare the")).click().run()
+
+        # Assert
+        assert not app.exception
+        assert app.get("download_button")
+
+    def test_should_show_the_metrics_of_a_series_against_the_reference(
+        self, configured, data_root: Path, monkeypatch
+    ):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+        reference = datasets.reference_file(data_root, "toy")
+        reference.parent.mkdir(parents=True)
+        reference.write_text(">p1\nA\n")
+        monkeypatch.setattr(
+            reference_scores,
+            "run_scores",
+            lambda *arguments: TestResultsAgainstTheReference.metrics([0, 1, 3], [0.6, 0.7, 0.5]),
+        )
+        monkeypatch.setattr(
+            reference_scores,
+            "seed_scores",
+            lambda *arguments: pd.DataFrame(columns=["seed", *reference_scores.METRICS, "problem"]),
+        )
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        table = next(f.value for f in app.dataframe if "alignment" in f.value.columns)
+        assert "(best of all runs)" in table["alignment"].iloc[0]
+        solutions = next(f.value for f in app.dataframe if "file" in f.value.columns)
+        assert reference_scores.PAIR_F1 in solutions.columns
+
     def test_should_say_which_series_a_run_belongs_to(self, configured, data_root: Path):
         # Arrange
         self.finished_series(settings.runs_root(), data_root)

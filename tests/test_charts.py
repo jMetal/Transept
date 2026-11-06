@@ -35,3 +35,21 @@ class TestSeriesProgressFigure:
 
     def test_should_draw_nothing_without_records(self):
         assert len(charts.series_progress_figure([], []).data) == 0
+
+
+class TestSeriesFrontFigure:
+    def test_should_draw_the_fronts_in_grey_and_the_aggregate_in_blue_on_top(self):
+        # Arrange
+        table = pd.DataFrame({"SOPwTP": [1.0], "lDDT": [0.5]})
+        aggregate = pd.DataFrame({"seed": [3], "row": [7], "SOPwTP": [1.0], "lDDT": [0.5]})
+
+        # Act
+        figure = charts.series_front_figure([table, table], aggregate)
+
+        # Assert
+        assert [trace.marker.color for trace in figure.data] == [
+            charts.ALL_COLOUR,
+            charts.ALL_COLOUR,
+            charts.FRONT_COLOUR,
+        ]
+        assert list(figure.data[-1].customdata[0]) == [3, 7]
