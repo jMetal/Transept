@@ -16,6 +16,7 @@ SETTINGS_FILE_NAME = "settings.json"
 REPOSITORY = Path(__file__).resolve().parent.parent
 EXAMPLES = REPOSITORY / "examples" / "GPCRdb"
 EXAMPLES_NAME = "Examples"
+MY_DATASETS_NAME = "My datasets"
 BENCHMARK_FOLDER = "GPCRdb"
 
 
@@ -23,6 +24,16 @@ def transept_home() -> Path:
     """Returns the directory of Transept: the repository, or TRANSEPT_HOME if it is set."""
     override = os.environ.get(HOME_VARIABLE)
     return Path(override) if override else REPOSITORY
+
+
+def datasets_root() -> Path:
+    """Returns the repository of the datasets added in Transept."""
+    return transept_home() / "datasets"
+
+
+def staging_root() -> Path:
+    """Returns where a dataset is laid out and checked before it joins the repository."""
+    return transept_home() / ".staging"
 
 
 def runs_root() -> Path:
@@ -93,8 +104,16 @@ def is_repository(path: Path | str) -> bool:
 
 
 def all_repositories(settings: Settings) -> list[Repository]:
-    """Returns the examples of this repository and the repositories the user added."""
-    return [Repository(EXAMPLES_NAME, str(EXAMPLES)), *settings.repositories]
+    """Returns the examples, the datasets added in Transept, if any, and the other repositories."""
+    built_in = [Repository(EXAMPLES_NAME, str(EXAMPLES))]
+    if is_repository(datasets_root()):
+        built_in.append(Repository(MY_DATASETS_NAME, str(datasets_root())))
+    return [*built_in, *settings.repositories]
+
+
+def is_built_in(repository: Repository) -> bool:
+    """Tells whether a repository belongs to Transept, so that it cannot be removed."""
+    return repository.name in (EXAMPLES_NAME, MY_DATASETS_NAME)
 
 
 def default_repository_name(path: Path | str) -> str:
@@ -118,6 +137,8 @@ def add_repository(settings: Settings, path: str, name: str = "") -> Settings:
             f"{path} does not look like a data directory: it has no sequences/tmregions/ folder."
         )
     name = name.strip() or default_repository_name(directory)
+    if name in (EXAMPLES_NAME, MY_DATASETS_NAME):
+        raise ValueError(f"{name} is the name of a repository of Transept: choose another name.")
     for existing in all_repositories(settings):
         if Path(existing.path).resolve() == directory.resolve():
             raise ValueError(f"This directory is already the repository {existing.name}.")

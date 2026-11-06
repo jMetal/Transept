@@ -6,6 +6,8 @@ __pycache__/
 .idea/
 # Local data of Transept
 runs/
+datasets/
+.staging/
 settings.json
 # The core jar (make setup)
 lib/

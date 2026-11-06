@@ -6,16 +6,10 @@ import pandas as pd
 import streamlit as st
 
 from transept import dataset_check, datasets, runs, settings, ui
-from transept.dataset_check import DatasetEntry, Level, Status
+from transept.dataset_check import DatasetEntry, Status
 
 ALL = "All"
-SELECTED = "datasets_selected"
-LEVEL_MARKS = {
-    Level.OK: ":green[:material/check_circle:]",
-    Level.INFO: ":blue[:material/info:]",
-    Level.WARNING: ":orange[:material/warning:]",
-    Level.ERROR: ":red[:material/error:]",
-}
+SELECTED = ui.DATASET_SELECTED
 
 
 def render_repository(repository: settings.Repository, current: settings.Settings) -> None:
@@ -28,7 +22,7 @@ def render_repository(repository: settings.Repository, current: settings.Setting
         columns[2].markdown(f"{found} dataset{'' if found == 1 else 's'}")
     else:
         columns[2].markdown(":red[Directory not found]")
-    if repository.name != settings.EXAMPLES_NAME and columns[3].button(
+    if not settings.is_built_in(repository) and columns[3].button(
         "Remove",
         key=f"remove:{repository.path}",
         help="Transept forgets this repository; its files are not touched.",
@@ -138,8 +132,7 @@ def render_detail(entry: DatasetEntry) -> None:
     actions[1].page_link(
         ui.HISTORY, label=f"Finished runs: {len(finished)}", icon=":material/history:"
     )
-    for check in report.checks:
-        st.markdown(f"{LEVEL_MARKS[check.level]} **{check.name}.** {check.message}")
+    ui.render_checks(report)
     proteins, seeds = st.tabs(["Proteins", "Seed alignments"])
     with proteins:
         st.dataframe(
@@ -183,6 +176,7 @@ def render_detail(entry: DatasetEntry) -> None:
 
 st.title("Datasets")
 st.write("The datasets you can align, and whether they are ready to use.")
+st.page_link(ui.ADD_DATASET, label="Add your own proteins", icon=":material/add_circle:")
 
 current = settings.load_settings()
 render_repositories(current)

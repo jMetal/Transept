@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import streamlit as st
 
-from transept import runs, settings
+from transept import dataset_check, runs, settings
+from transept.dataset_check import Level
 
 HOME = "pages/home.py"
 DATASETS = "pages/datasets.py"
+ADD_DATASET = "pages/add_dataset.py"
 NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
@@ -15,6 +17,19 @@ HISTORY = "pages/history.py"
 
 SELECTED_RUN = "selected_run"
 DATASET_TO_OPTIMIZE = "dataset_to_optimize"
+DATASET_SELECTED = "datasets_selected"
+LEVEL_MARKS = {
+    Level.OK: ":green[:material/check_circle:]",
+    Level.INFO: ":blue[:material/info:]",
+    Level.WARNING: ":orange[:material/warning:]",
+    Level.ERROR: ":red[:material/error:]",
+}
+
+
+def render_checks(report: dataset_check.DatasetReport) -> None:
+    """Shows the checklist of a dataset."""
+    for check in report.checks:
+        st.markdown(f"{LEVEL_MARKS[check.level]} **{check.name}.** {check.message}")
 
 
 def select_run(run: runs.Run) -> None:

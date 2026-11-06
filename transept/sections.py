@@ -66,6 +66,7 @@ SECTIONS = (
                 ":material/add_circle:",
                 "Add your own proteins: a checklist guides you through the files needed (sequences "
                 "and topology, structures, seed and reference alignments).",
+                ui.ADD_DATASET,
             ),
             Page(
                 "Algorithms",
