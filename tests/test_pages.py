@@ -5,10 +5,11 @@ import shutil
 from pathlib import Path
 
 import pytest
-from conftest import ALIVE_PID, write_finished_run, write_job
+import streamlit as st
+from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import options, settings, ui
+from transept import datasets, options, settings, ui
 from transept.sections import SECTIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
@@ -149,6 +150,110 @@ class TestDatasets:
         assert app.dataframe[0].value["Status"][0] == "Not usable"
         optimize = next(b for b in app.button if b.label == "Optimize this dataset")
         assert optimize.disabled
+
+
+class FakeUpload:
+    def __init__(self, name: str, data: bytes):
+        self.name = name
+        self.data = data
+        self.size = len(data)
+
+    def getvalue(self) -> bytes:
+        return self.data
+
+
+class TestAddDataset:
+    @pytest.fixture
+    def uploads(self, monkeypatch: pytest.MonkeyPatch) -> dict:
+        """What the file uploaders return, by the start of their label (AppTest cannot upload)."""
+        given: dict = {}
+
+        def uploader(label, accept_multiple_files=False, **options):
+            for start, value in given.items():
+                if label.startswith(start):
+                    return value
+            return [] if accept_multiple_files else None
+
+        monkeypatch.setattr(st, "file_uploader", uploader)
+        return given
+
+    @staticmethod
+    def fill(app: AppTest) -> None:
+        app.text_input[0].set_value("mine").run()
+        next(button for button in app.button if button.label == "Check the files").click().run()
+
+    def test_should_not_check_without_a_name_and_a_topology(self, configured):
+        app = open_page(ui.ADD_DATASET)
+        assert not app.exception
+        assert next(b for b in app.button if b.label == "Check the files").disabled
+
+    def test_should_add_a_dataset_after_checking_it(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        uploads["PDB"] = [
+            FakeUpload("p1.pdb", pdb_text(3).encode()),
+            FakeUpload("p2.pdb", pdb_text(4).encode()),
+            FakeUpload("other.pdb", pdb_text(3).encode()),
+        ]
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert: checked, and nothing added yet
+        assert not app.exception
+        assert "Distances computed from the PDB files of 2 protein(s)" in texts(app)
+        assert "other.pdb" in texts(app)
+        assert not settings.datasets_root().exists()
+
+        # Act
+        next(b for b in app.button if b.label == "Add to My datasets").click().run()
+
+        # Assert
+        assert not app.exception
+        assert datasets.list_datasets(settings.datasets_root()) == ["mine"]
+        assert app.title[0].value == "Datasets"
+        assert app.session_state[ui.DATASET_SELECTED][1] == "mine"
+
+    def test_should_not_add_a_dataset_that_cannot_be_used(self, configured, uploads):
+        # Arrange: no structures
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert
+        assert not app.exception
+        assert "No protein has distances" in texts(app)
+        assert next(b for b in app.button if b.label == "Add to My datasets").disabled
+
+    def test_should_explain_why_the_files_cannot_make_a_dataset(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", b">a/b\nAC\nMM\n>c\nAC\nMM\n")
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert
+        assert not app.exception
+        assert "cannot name a file" in texts(app)
+
+    def test_should_discard_the_checklist_when_the_files_change(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        app = open_page(ui.ADD_DATASET)
+        self.fill(app)
+        assert "Checklist of mine" in [element.value for element in app.subheader]
+
+        # Act
+        uploads["PDB"] = [FakeUpload("p1.pdb", pdb_text(3).encode())]
+        app.run()
+
+        # Assert
+        assert not app.exception
+        assert "Checklist of mine" not in [element.value for element in app.subheader]
 
 
 class TestNewRun:

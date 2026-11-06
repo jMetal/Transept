@@ -181,6 +181,28 @@ class TestRepositories:
         assert data_root.is_dir()
 
 
+class TestMyDatasets:
+    def test_should_appear_once_it_has_datasets(self, transept_home: Path):
+        # Arrange
+        chosen = settings.Settings("/a.jar")
+        names = [repository.name for repository in settings.all_repositories(chosen)]
+        assert settings.MY_DATASETS_NAME not in names
+
+        # Act
+        (settings.datasets_root() / "sequences" / "tmregions").mkdir(parents=True)
+
+        # Assert
+        mine = settings.all_repositories(chosen)[1]
+        assert mine == settings.Repository(settings.MY_DATASETS_NAME, str(settings.datasets_root()))
+        assert settings.is_built_in(mine)
+
+    def test_should_keep_its_name_for_itself(self, transept_home: Path, data_root: Path):
+        with pytest.raises(ValueError, match="name of a repository of Transept"):
+            settings.add_repository(
+                settings.Settings("/a.jar"), str(data_root), settings.MY_DATASETS_NAME
+            )
+
+
 class TestDataRootOfRun:
     def test_should_prefer_the_directory_the_run_recorded(self, configured, data_root: Path):
         assert settings.data_root_of_run(configured, str(data_root), "other") == str(data_root)

@@ -32,6 +32,19 @@ ALIGNMENTS = {
 }
 
 
+THREE_LINE = ">p1\nACD\nMMO\n>p2\nACDE\nOMMO\n"
+
+
+def pdb_text(residues: int) -> str:
+    """A structure model with one Cα atom every 3 Å along the x axis."""
+    lines = [
+        f"ATOM  {i:5d}  CA  ALA A{i:4d}    {3.0 * i:8.3f}{0.0:8.3f}{0.0:8.3f}"
+        "  1.00 90.00           C"
+        for i in range(1, residues + 1)
+    ]
+    return "\n".join(lines) + "\nEND\n"
+
+
 @pytest.fixture
 def transept_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "home"
