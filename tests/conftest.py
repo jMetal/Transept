@@ -37,6 +37,7 @@ def transept_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv(settings.HOME_VARIABLE, str(home))
+    monkeypatch.setattr(settings, "EXAMPLES", tmp_path / "no-examples")
     return home
 
 
@@ -61,7 +62,7 @@ def data_root(tmp_path: Path) -> Path:
 def configured(transept_home: Path, data_root: Path) -> settings.Settings:
     jar = transept_home / "fake.jar"
     write_fake_jar(jar)
-    chosen = settings.Settings(jar=str(jar), data_root=str(data_root))
+    chosen = settings.Settings(str(jar), [settings.Repository("Toy", str(data_root))])
     settings.save_settings(chosen)
     return chosen
 

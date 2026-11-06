@@ -59,6 +59,7 @@ SECTIONS = (
                 ":material/dataset:",
                 "See the datasets of your data directories and whether they are ready to use, and "
                 "add other directories, such as the GPCR structural benchmark.",
+                ui.DATASETS,
             ),
             Page(
                 "Add dataset",

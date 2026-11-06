@@ -37,10 +37,10 @@ class TestSections:
 
     def test_should_list_only_the_available_pages_of_a_section(self):
         optimize = next(section for section in SECTIONS if section.name == "Optimize")
-        explore = next(section for section in SECTIONS if section.name == "Explore")
+        learn = next(section for section in SECTIONS if section.name == "Learn")
         assert [page.path for page in optimize.available_pages] == [
             ui.NEW_RUN,
             ui.MONITOR,
             ui.HISTORY,
         ]
-        assert explore.available_pages == ()
+        assert learn.available_pages == ()

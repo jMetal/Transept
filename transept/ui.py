@@ -7,12 +7,14 @@ import streamlit as st
 from transept import runs, settings
 
 HOME = "pages/home.py"
+DATASETS = "pages/datasets.py"
 NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
 HISTORY = "pages/history.py"
 
 SELECTED_RUN = "selected_run"
+DATASET_TO_OPTIMIZE = "dataset_to_optimize"
 
 
 def select_run(run: runs.Run) -> None:

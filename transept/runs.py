@@ -266,3 +266,18 @@ def empty_trash(runs_root: Path) -> int:
     trashed = list_trash(runs_root)
     shutil.rmtree(trash_root(runs_root), ignore_errors=True)
     return len(trashed)
+
+
+def finished_runs_of(runs_root: Path, dataset: str, data_root: str) -> list[Run]:
+    """Returns the finished runs of a dataset of a data directory.
+
+    Runs that did not record their data directory count for every dataset with their name.
+    """
+    found = []
+    for run in list_runs(runs_root):
+        if run.dataset != dataset or state(run) != RunState.FINISHED:
+            continue
+        recorded = config(run).get("dataRoot")
+        if not recorded or Path(recorded).resolve() == Path(data_root).resolve():
+            found.append(run)
+    return found

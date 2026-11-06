@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from transept import datasets, settings
+from transept import dataset_check, settings, ui
 from transept.sections import SECTIONS, Page, Section
 
 CARDS_PER_ROW = 3
@@ -33,9 +33,11 @@ if problems:
     for problem in problems:
         st.error(problem)
 else:
-    found = datasets.list_datasets(current.data_root)
-    noun = "dataset" if len(found) == 1 else "datasets"
-    st.success(f"Ready: {settings.java_version()}, {len(found)} {noun} in the data directory.")
+    entries = dataset_check.catalogue(settings.all_repositories(current))
+    noun = "dataset" if len(entries) == 1 else "datasets"
+    holders = len({entry.repository.path for entry in entries})
+    place = "repository" if holders == 1 else "repositories"
+    st.success(f"Ready: {settings.java_version()}, {len(entries)} {noun} in {holders} {place}.")
 
 cards = [(section, page) for section in SECTIONS for page in section.pages]
 for start in range(0, len(cards), CARDS_PER_ROW):
@@ -48,12 +50,8 @@ for start in range(0, len(cards), CARDS_PER_ROW):
 with st.expander("Settings", expanded=bool(problems)):
     with st.form("settings"):
         jar = st.text_input("Transept core jar (with dependencies)", current.jar)
-        data_root = st.text_input(
-            "Data directory (the examples of Transept, the GPCRdb folder of the benchmark "
-            "dataset, or your own)",
-            current.data_root,
-        )
         if st.form_submit_button("Save"):
-            settings.save_settings(settings.Settings(jar=jar.strip(), data_root=data_root.strip()))
+            settings.save_settings(settings.Settings(jar.strip(), current.repositories))
             st.rerun()
+    st.page_link(ui.DATASETS, label="Add data directories in Datasets", icon=":material/dataset:")
     st.caption(f"Runs are stored in {settings.runs_root()}.")

@@ -36,7 +36,7 @@ def texts(app: AppTest) -> str:
 class TestHome:
     def test_should_report_what_is_missing(self, transept_home: Path):
         # Arrange
-        settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
+        settings.save_settings(settings.Settings("/no.jar"))
 
         # Act
         app = open_page(ui.HOME)
@@ -51,7 +51,7 @@ class TestHome:
             pytest.skip("Java is not installed")
         app = open_page(ui.HOME)
         assert not app.exception
-        assert "1 dataset in the data directory" in texts(app)
+        assert "1 dataset in 1 repository" in texts(app)
 
     def test_should_show_a_card_for_every_page(self, configured):
         # Act
@@ -75,7 +75,8 @@ class TestHome:
 
         # Assert
         assert not app.exception
-        links = {link.proto.label for link in app.get("page_link")}
+        labels = [link.proto.label for link in app.get("page_link")]
+        links = {label for label in labels if label.startswith("Open ")}
         assert links == {f"Open {page.title}" for page in pages if page.available}
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
@@ -184,7 +185,7 @@ class TestNewRun:
         assert "--objectives LDDT" in command
 
     def test_should_send_to_the_settings_when_not_ready(self, transept_home: Path):
-        settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
+        settings.save_settings(settings.Settings("/no.jar"))
         app = open_page(ui.NEW_RUN)
         assert not app.exception
         assert "not ready" in texts(app)

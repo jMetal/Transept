@@ -19,7 +19,10 @@ class TestLocations:
         defaults = settings.default_settings()
 
         # Assert: relative to the repository, not to the home
-        assert defaults.data_root == str(settings.REPOSITORY / "examples" / "GPCRdb")
+        assert defaults.repositories == []
+        assert settings.all_repositories(defaults) == [
+            settings.Repository(settings.EXAMPLES_NAME, str(settings.EXAMPLES))
+        ]
         assert defaults.jar in [str(path) for path in settings.jar_candidates()]
 
     def test_should_prefer_the_first_jar_that_exists(
@@ -87,13 +90,14 @@ class TestJava:
 class TestPersistence:
     def test_should_load_what_was_saved(self, transept_home: Path):
         # Arrange
-        settings.save_settings(settings.Settings(jar="/a.jar", data_root="/data"))
+        chosen = settings.Settings("/a.jar", [settings.Repository("Mine", "/data")])
+        settings.save_settings(chosen)
 
         # Act
         loaded = settings.load_settings()
 
         # Assert
-        assert loaded == settings.Settings(jar="/a.jar", data_root="/data")
+        assert loaded == chosen
 
     def test_should_load_the_defaults_when_nothing_was_saved(self, transept_home: Path):
         assert settings.load_settings() == settings.default_settings()
@@ -107,8 +111,8 @@ class TestProblems:
 
     def test_should_report_a_missing_jar_and_data_directory(self, transept_home: Path):
         # Act
-        found = settings.problems(settings.Settings(jar="/no.jar", data_root="/no/data"))
+        found = settings.problems(settings.Settings("/no.jar"))
 
         # Assert
         assert any("jar was not found" in problem for problem in found)
-        assert any("does not look like a data directory" in problem for problem in found)
+        assert any("No data directory is available" in problem for problem in found)

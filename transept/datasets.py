@@ -99,6 +99,16 @@ def seed_file(data_root: Path | str, dataset: str, tool: str) -> Path:
     return Path(data_root) / "precomputed" / dataset / f"{tool}_{dataset}.fasta"
 
 
+def reference_file(data_root: Path | str, dataset: str) -> Path:
+    """Returns the reference alignment of a dataset."""
+    return Path(data_root) / "reference_alignments" / f"{dataset}.fasta"
+
+
+def structure_model_file(data_root: Path | str, dataset: str, protein: str) -> Path:
+    """Returns the structure model of a protein."""
+    return Path(data_root) / "alphafold_pdb" / dataset / f"{protein}.pdb"
+
+
 def _read_records(path: Path) -> list[tuple[str, str]]:
     records: list[tuple[str, str]] = []
     header, parts = None, []
