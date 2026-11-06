@@ -45,6 +45,7 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
   (`tests/test_pages.py`). Tests use the fixtures of `tests/conftest.py` (an isolated home,
   a toy data directory, runs in every state); they must not need the real jar or data.
 - `make lint` and `make test` must pass before every commit. Follow `GIT_GUIDELINES.md`.
+- Work on `develop`, not on `main`; `main` receives `develop`, and both are pushed, only on request.
 - Code, comments and documentation in English.
 - Local use only for now: no authentication, no remote execution.
 - `examples/GPCRdb/` holds one small dataset (`classT2_19`) copied from Dataset_Structural_GPCRs
