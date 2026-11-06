@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from transept import dataset_check, settings, ui
+from transept import dataset_check, settings, tutorials, ui
 from transept.sections import SECTIONS, Page, Section
 
 CARDS_PER_ROW = 3
@@ -14,7 +14,14 @@ def render_card(section: Section, page: Page) -> None:
         st.caption(section.name.upper())
         st.markdown(f"#### {page.icon} {page.title}")
         st.markdown(page.description)
-        if page.available:
+        if page.is_tutorials:
+            for tutorial in tutorials.list_tutorials():
+                st.page_link(
+                    ui.tutorial_page(tutorial),
+                    label=tutorial.title,
+                    icon=":material/arrow_forward:",
+                )
+        elif page.available:
             st.page_link(page.path, label=f"Open {page.title}", icon=":material/arrow_forward:")
         else:
             st.badge("Coming soon", icon=":material/construction:", color="gray")
@@ -27,7 +34,11 @@ st.write(
     "they find."
 )
 
-st.page_link(ui.TUTORIALS, label="New here? Read the overview", icon=":material/school:")
+overview = tutorials.tutorial_named(tutorials.OVERVIEW)
+if overview is not None:
+    st.page_link(
+        ui.tutorial_page(overview), label="New here? Read the overview", icon=":material/school:"
+    )
 
 current = settings.load_settings()
 problems = settings.problems(current)

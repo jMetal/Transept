@@ -94,7 +94,9 @@ class TestHome:
         assert not app.exception
         labels = [link.proto.label for link in app.get("page_link")]
         links = {label for label in labels if label.startswith("Open ")}
-        assert links == {f"Open {page.title}" for page in pages if page.available}
+        assert links == {
+            f"Open {page.title}" for page in pages if page.available and not page.is_tutorials
+        }
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
 
@@ -481,36 +483,36 @@ class TestAlgorithms:
 
 
 class TestTutorials:
-    def test_should_show_the_tutorial(self, configured):
-        app = open_page(ui.TUTORIALS)
-        assert not app.exception
-        assert "# Overview" in texts(app)
-        selector = next(box for box in app.selectbox if box.label == "Tutorial")
-        assert selector.options == ["Overview", "Add your own proteins"]
-
-    def test_should_choose_among_several(
-        self, configured, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ):
-        # Arrange
-        (tmp_path / "a.md").write_text("# First\n")
-        (tmp_path / "b.md").write_text("# Second\n")
-        several = tutorials.list_tutorials(tmp_path)
-        monkeypatch.setattr(tutorials, "list_tutorials", lambda directory=None: several)
-        app = open_page(ui.TUTORIALS)
-        assert "# First" in texts(app)
-
+    def test_should_offer_every_tutorial_in_the_card_of_the_home_page(self, configured):
         # Act
-        app.selectbox[0].select_index(1).run()
+        app = open_page(ui.HOME)
 
         # Assert
         assert not app.exception
-        assert "# Second" in texts(app)
+        labels = [link.proto.label for link in app.get("page_link")]
+        assert "New here? Read the overview" in labels
+        for tutorial in tutorials.list_tutorials():
+            assert tutorial.title in labels
 
-    def test_should_say_when_there_are_none(self, configured, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setattr(tutorials, "list_tutorials", lambda directory=None: [])
-        app = open_page(ui.TUTORIALS)
+    def test_should_show_a_tutorial_as_a_page_of_the_menu(self):
+        def script() -> None:
+            import streamlit as st
+
+            from transept import ui
+
+            st.navigation(ui.tutorial_pages()).run()
+
+        # Act
+        app = AppTest.from_function(script, default_timeout=30).run()
+
+        # Assert: the overview comes first, so it opens by default
         assert not app.exception
-        assert "were not found" in texts(app)
+        assert app.markdown[0].value.startswith("# Overview")
+
+    def test_should_work_without_tutorials(self, configured, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(tutorials, "list_tutorials", lambda directory=None: [])
+        app = open_page(ui.HOME)
+        assert not app.exception
 
 
 class TestDatasets:

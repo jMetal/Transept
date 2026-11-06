@@ -15,6 +15,15 @@ class TestPage:
         assert not Page("Title", ":material/home:", "Description").available
 
 
+class TestTutorialsEntry:
+    def test_should_be_available_without_a_script(self):
+        assert Page("Title", ":material/school:", "Description", is_tutorials=True).available
+
+    def test_should_be_the_only_one_in_learn(self):
+        learn = next(section for section in SECTIONS if section.name == "Learn")
+        assert [page.is_tutorials for page in learn.pages] == [True]
+
+
 class TestSections:
     def test_should_follow_the_use_cases_in_order(self):
         names = [section.name for section in SECTIONS]
@@ -22,12 +31,12 @@ class TestSections:
 
     def test_should_point_to_scripts_that_exist(self):
         for page in ALL_PAGES:
-            if page.available:
+            if page.path is not None:
                 assert (ROOT / page.path).is_file(), page.path
 
     def test_should_offer_every_page_script_except_the_home_page(self):
         scripts = {f"pages/{path.name}" for path in (ROOT / "pages").glob("*.py")}
-        offered = {page.path for page in ALL_PAGES if page.available}
+        offered = {page.path for page in ALL_PAGES if page.path is not None}
         assert offered == scripts - {ui.HOME}
 
     def test_should_have_unique_titles_and_a_description(self):

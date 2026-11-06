@@ -21,16 +21,18 @@ class Page:
         icon: Its icon in the menu and on its card.
         description: What the user can do with it, for its card on the home page.
         path: Its script, relative to the root of the application; None if not available yet.
+        is_tutorials: Whether it stands for the tutorials, which have one page each in the menu.
     """
 
     title: str
     icon: str
     description: str
     path: str | None = None
+    is_tutorials: bool = False
 
     @property
     def available(self) -> bool:
-        return self.path is not None
+        return self.path is not None or self.is_tutorials
 
 
 @dataclass(slots=True, frozen=True)
@@ -140,7 +142,7 @@ SECTIONS = (
                 ":material/school:",
                 "What Transept is for, its usual workflows, and how to add and align your own "
                 "proteins.",
-                ui.TUTORIALS,
+                is_tutorials=True,
             ),
         ),
     ),

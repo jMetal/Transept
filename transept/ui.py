@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from transept import dataset_check, runs, series, settings
+from transept import dataset_check, runs, series, settings, tutorials
 from transept.dataset_check import Level
 
 HOME = "pages/home.py"
@@ -15,7 +15,6 @@ NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
 HISTORY = "pages/history.py"
-TUTORIALS = "pages/tutorials.py"
 
 SELECTED_RUN = "selected_run"
 SELECTED_SERIES = "selected_series"
@@ -29,6 +28,22 @@ LEVEL_MARKS = {
     Level.WARNING: ":orange[:material/warning:]",
     Level.ERROR: ":red[:material/error:]",
 }
+
+
+def tutorial_page(tutorial: tutorials.Tutorial) -> st.Page:
+    """Returns the page of a tutorial, for the menu and for links to it."""
+
+    def show() -> None:
+        st.markdown(tutorial.text)
+
+    return st.Page(
+        show, title=tutorial.title, icon=":material/school:", url_path=f"tutorial-{tutorial.name}"
+    )
+
+
+def tutorial_pages() -> list[st.Page]:
+    """Returns one page per tutorial: a new file in docs/tutorials is enough to add one."""
+    return [tutorial_page(tutorial) for tutorial in tutorials.list_tutorials()]
 
 
 def render_checks(report: dataset_check.DatasetReport) -> None:
