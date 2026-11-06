@@ -8,7 +8,7 @@ version = "0.1.0.dev0"
 description = "Graphical interface of Transept, multiobjective structure-guided alignment of transmembrane proteins"
 requires-python = ">=3.11"
 dependencies = [
-    "streamlit>=1.40",
+    "streamlit>=1.67",
     "pandas",
     "plotly",
     "pyyaml",
