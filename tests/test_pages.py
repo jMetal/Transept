@@ -9,7 +9,7 @@ import streamlit as st
 from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import algorithms, datasets, options, settings, tutorials, ui
+from transept import algorithms, datasets, options, runner, series, settings, tutorials, ui
 from transept.algorithms import Algorithm
 from transept.sections import SECTIONS
 
@@ -82,6 +82,102 @@ class TestHome:
         links = {label for label in labels if label.startswith("Open ")}
         assert links == {f"Open {page.title}" for page in pages if page.available}
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
+
+
+class TestSeries:
+    @staticmethod
+    def finished_series(root: Path, data_root: Path) -> None:
+        directory = write_finished_run(root, data_root, "s_seed_1")
+        write_finished_run(root, data_root, "s_seed_2")
+        assert directory.is_dir()
+        folder = series.series_directory(root, "toy", "s")
+        folder.mkdir(parents=True)
+        request = runner.RunRequest(dataset="toy", seeds=("mafft", "kalign"), run_id="s", seed=1)
+        saved = {
+            "dataset": "toy",
+            "series_id": "s",
+            "requests": [
+                {name: getattr(member, name) for name in runner.RunRequest.__dataclass_fields__}
+                for member in series.member_requests(request, 2)
+            ],
+            "parallel": 1,
+            "jar": "/t.jar",
+            "data_root": str(data_root),
+            "runs_root": str(root),
+        }
+        (folder / series.SERIES_FILE).write_text(json.dumps(saved))
+        for seed in (1, 2):
+            (folder / f"started_{seed}").touch()
+
+    def test_should_follow_a_series_in_the_monitor(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.MONITOR, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        assert "toy / s: finished" in [element.value for element in app.subheader]
+        table = app.dataframe[0].value
+        assert list(table["seed"]) == [1, 2]
+        assert list(table["state"]) == ["finished", "finished"]
+        assert "Every run of the series has finished." in texts(app)
+
+    def test_should_open_the_results_of_a_run_of_the_series(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+        app = open_page(ui.MONITOR, selected_series="toy / s")
+
+        # Act
+        next(b for b in app.button if b.label == "Open the results").click().run()
+
+        # Assert
+        assert not app.exception
+        assert app.title[0].value == "Results"
+        assert app.session_state[ui.SELECTED_RUN] == ("toy", "s_seed_1")
+
+    def test_should_switch_to_a_run_that_has_not_finished(self, configured, data_root: Path):
+        # Arrange: a run of the series that was cancelled
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        (runner.run_directory(root, "toy", "s_seed_2") / "metadata.json").unlink()
+        job = runner.job_directory(root, "toy", "s_seed_2")
+        job.mkdir(parents=True)
+        (job / runner.CANCELLED_FILE).touch()
+        app = open_page(ui.MONITOR, selected_series="toy / s")
+        assert "toy / s: finished, with problems" in [e.value for e in app.subheader]
+
+        # Act
+        next(b for b in app.selectbox if b.label == "Run of the series").set_value("s_seed_2").run()
+        next(b for b in app.button if b.label == "Monitor this run").click().run()
+
+        # Assert
+        assert not app.exception
+        assert "toy / s_seed_2: cancelled" in [e.value for e in app.subheader]
+        assert ui.SELECTED_SERIES not in app.session_state
+
+    def test_should_keep_following_single_runs(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.MONITOR)
+
+        # Assert
+        assert not app.exception
+        assert not any("toy / s:" == element.value[:7] for element in app.subheader)
+
+    def test_should_say_which_series_a_run_belongs_to(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.HISTORY)
+
+        # Assert
+        assert not app.exception
+        assert list(app.dataframe[0].value["series"]) == ["s", "s"]
 
 
 class TestAlgorithms:
@@ -376,6 +472,46 @@ class TestNewRun:
         assert selector.options == ["toy (Toy)", "toy (Twin)"]
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert str(twin) in command
+
+    def test_should_offer_a_series_only_with_several_runs(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        assert not [box for box in app.number_input if box.label == "Runs at a time"]
+
+        # Act
+        next(box for box in app.number_input if box.label == "Runs with different seeds").set_value(
+            3
+        ).run()
+
+        # Assert
+        assert not app.exception
+        assert [box for box in app.number_input if box.label == "Runs at a time"]
+        assert "_seed_<seed>" in texts(app)
+        assert [box for box in app.text_input if box.label == "Series identifier"]
+
+    def test_should_launch_a_series(self, configured, monkeypatch: pytest.MonkeyPatch):
+        # Arrange
+        launched = []
+
+        def fake_launch(request, count, parallel, jar, data_root, root):
+            launched.append((request.run_id, count, parallel))
+            return series.Series("toy", request.run_id, root, (), parallel, jar, data_root, root)
+
+        monkeypatch.setattr(series, "launch", fake_launch)
+        app = open_page(ui.NEW_RUN)
+        next(box for box in app.number_input if box.label == "Runs with different seeds").set_value(
+            3
+        ).run()
+        next(box for box in app.number_input if box.label == "Runs at a time").set_value(2).run()
+        next(box for box in app.text_input if box.label == "Series identifier").set_value("s").run()
+
+        # Act
+        next(button for button in app.button if button.label == "Launch").click().run()
+
+        # Assert
+        assert not app.exception
+        assert launched == [("s", 3, 2)]
+        assert app.session_state[ui.SELECTED_SERIES] == "toy / s"
 
     def test_should_open_the_algorithm_chosen_with_a_formulation_it_accepts(self, configured):
         # Act
