@@ -38,18 +38,29 @@ class TestSeriesProgressFigure:
 
 
 class TestSeriesFrontFigure:
-    def test_should_draw_the_fronts_in_grey_and_the_aggregate_in_blue_on_top(self):
-        # Arrange
+    @staticmethod
+    def figure():
         table = pd.DataFrame({"SOPwTP": [1.0], "lDDT": [0.5]})
-        aggregate = pd.DataFrame({"seed": [3], "row": [7], "SOPwTP": [1.0], "lDDT": [0.5]})
+        aggregate = pd.DataFrame(
+            {
+                "seed": [3, 4],
+                "row": [7, 8],
+                "SOPwTP": [1.0, 2.0],
+                "lDDT": [0.5, 0.4],
+                "note": ["knee", ""],
+            }
+        )
+        return charts.series_front_figure([table, table], aggregate)
 
-        # Act
-        figure = charts.series_front_figure([table, table], aggregate)
-
-        # Assert
-        assert [trace.marker.color for trace in figure.data] == [
+    def test_should_draw_the_fronts_in_grey_and_the_aggregate_in_blue_on_top(self):
+        assert [trace.marker.color for trace in self.figure().data] == [
             charts.ALL_COLOUR,
             charts.ALL_COLOUR,
             charts.FRONT_COLOUR,
+            charts.FRONT_COLOUR,
         ]
-        assert list(figure.data[-1].customdata[0]) == [3, 7]
+
+    def test_should_mark_the_solutions_with_a_note(self):
+        marked = self.figure().data[-1]
+        assert list(marked.text) == ["knee"]
+        assert list(marked.customdata[0]) == [3, 7]

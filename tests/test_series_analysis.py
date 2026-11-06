@@ -38,12 +38,15 @@ class TestAggregateFront:
         )
         assert table["seed"].tolist() == [1]
 
-    def test_should_not_recommend_a_knee(self):
+    def test_should_mark_the_knee_of_the_aggregate_and_the_extremes(self):
+        # Arrange: the balanced solution comes from another run than the extremes
         table = series_analysis.aggregate_front(
-            [finished_run(1, [(3.0, 0.1), (2.0, 0.5), (1.0, 0.6)])]
+            [finished_run(1, [(3.0, 0.1), (1.0, 0.6)]), finished_run(2, [(2.5, 0.5)])]
         )
-        assert "knee" not in table["note"].tolist()
-        assert "best SOPwTP" in table["note"].tolist()
+
+        # Assert
+        notes = dict(zip(table["note"], table["seed"]))
+        assert notes == {"best SOPwTP": 1, "knee": 2, "best lDDT": 1}
 
     def test_should_be_empty_without_runs(self):
         assert series_analysis.aggregate_front([]).empty

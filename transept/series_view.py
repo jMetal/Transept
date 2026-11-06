@@ -159,7 +159,8 @@ def _show_overview(
         point = _pick_from_chart(aggregate, finished, key)
         st.caption(
             "In grey, the front of each run; in blue, the aggregate: the non-dominated alignments "
-            "of all the runs together."
+            "of all the runs together. The knee, closest to the ideal point once both objectives "
+            "are scaled, is a place to start, not a validated recommendation."
         )
         return point
     return None

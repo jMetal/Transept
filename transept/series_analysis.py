@@ -46,8 +46,9 @@ def aggregate_front(finished: list[FinishedRun]) -> pd.DataFrame:
 
     Returns:
         The columns `seed`, `row` (of the FUN.csv of that run), the objectives and `note`
-        (`best <objective>` or empty), sorted by the first objective, best first. Of several
-        solutions with the same values, that of the first run is kept.
+        (`best <objective>`, `knee` or empty), sorted by the first objective, best first. The knee
+        is that of the aggregate, not of any run. Of several solutions with the same values, that
+        of the first run is kept.
     """
     if not finished:
         return pd.DataFrame(columns=["seed", "row", "note"])
@@ -63,7 +64,6 @@ def aggregate_front(finished: list[FinishedRun]) -> pd.DataFrame:
     summary = summary.assign(
         seed=pool["seed"].to_numpy()[summary["row"].to_numpy()],
         row=pool["origin"].to_numpy()[summary["row"].to_numpy()],
-        note=summary["note"].replace("knee", ""),
     )
     return summary[["seed", "row", *names, "note"]]
 
