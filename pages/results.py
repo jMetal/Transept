@@ -13,6 +13,7 @@ from transept import (
     datasets,
     exports,
     front,
+    reference_scores,
     runs,
     settings,
     ui,
@@ -108,13 +109,30 @@ seeds = scores[scores["method"].isin(config.get("seedMethods", []))]
 # The seeds are scored with SOPwTP and lDDT: compare only the objectives the run optimised.
 common = [name for name in names if name in seeds.columns]
 compromise = None
+metrics = None
+if reference_scores.has_reference(data_root, run.dataset):
+    with st.spinner("Comparing the alignments with the reference..."):
+        metrics = reference_scores.run_scores(current.jar, data_root, run, settings.runs_root())
+    if metrics is None:
+        st.warning(
+            "The alignments could not be compared with the reference alignment. A build of "
+            "Transept core with the score command is needed: run `make core`."
+        )
+metric_columns = [] if metrics is None else list(reference_scores.METRICS)
+
+
+def with_metrics(shown: pd.DataFrame) -> pd.DataFrame:
+    """Adds the metrics against the reference to a table of alignments, keeping its order."""
+    return shown if metrics is None else shown.merge(metrics, on="row", how="left")
 
 
 def pick_from_table(shown: pd.DataFrame, columns: list[str], caption: str) -> None:
     """A table of solutions; selecting a row shows its alignment."""
     st.caption(caption)
     picked = st.dataframe(
-        shown.assign(file=[f"MSASol{row}.fasta" for row in shown["row"]])[["file", *columns]],
+        with_metrics(shown).assign(file=[f"MSASol{row}.fasta" for row in shown["row"]])[
+            ["file", *columns, *metric_columns]
+        ],
         hide_index=True,
         width="stretch",
         height=240,
@@ -176,8 +194,8 @@ else:
     st.subheader("Non-dominated alignments")
     st.caption("Click a point of the chart or a row of the table to see its alignment.")
     picked = st.dataframe(
-        table.assign(file=[f"MSASol{row}.fasta" for row in table["row"]])[
-            ["file", front.FIRST, front.SECOND, "note"]
+        with_metrics(table).assign(file=[f"MSASol{row}.fasta" for row in table["row"]])[
+            ["file", front.FIRST, front.SECOND, "note", *metric_columns]
         ],
         hide_index=True,
         width="stretch",
@@ -203,8 +221,9 @@ selected = st.selectbox(
     rows,
     key=SELECTOR,
     on_change=follow_selector,
-    format_func=lambda row: f"MSASol{row}: " + ", ".join(
-        f"{name} {ui.format_objective(name, values.loc[row, name])}" for name in names
+    format_func=lambda row: (
+        f"MSASol{row}: "
+        + ", ".join(f"{name} {ui.format_objective(name, values.loc[row, name])}" for name in names)
     ),
 )
 
@@ -224,6 +243,52 @@ if not seeds.empty and common:
     st.caption(
         "Positive differences favour the selected alignment; the objectives of the seeds "
         "are computed with the configuration of the run."
+    )
+
+
+def show_against_the_reference(row: int) -> None:
+    """The metrics of an alignment against the reference, beside what they can be compared with."""
+    st.subheader(f"MSASol{row} against the reference alignment")
+    chosen = metrics[metrics["row"] == row]
+    if chosen.empty:
+        st.info(f"MSASol{row} could not be compared with the reference alignment.")
+        return
+    for column, name in zip(st.columns(4), reference_scores.METRICS, strict=True):
+        column.metric(name, f"{chosen[name].iloc[0]:.3f}")
+    best = metrics.loc[metrics[reference_scores.PAIR_F1].idxmax()]
+    seed_table = reference_scores.seed_scores(
+        current.jar, data_root, run, settings.runs_root(), config.get("seedMethods", [])
+    )
+    comparable = seed_table[seed_table["problem"] == ""]
+    rows = [
+        {"alignment": f"MSASol{row} (selected)", **chosen.iloc[0][metric_columns].to_dict()},
+        {
+            "alignment": f"MSASol{int(best['row'])} (best of this run)",
+            **best[metric_columns].to_dict(),
+        },
+        *[
+            {"alignment": f"seed: {seed['seed']}", **seed[metric_columns].to_dict()}
+            for _, seed in comparable.iterrows()
+        ],
+    ]
+    st.dataframe(pd.DataFrame(rows).round(3), hide_index=True, width="stretch")
+    st.caption(
+        "The reference is only used here, to evaluate: the search does not see it, and the best of "
+        "this run can only be known with a reference. Higher is better, except for the TM-gap "
+        "rate. Coverage is the number of aligned pairs relative to the reference, so low values "
+        "mean that the alignment leaves residues unaligned."
+    )
+    problems = seed_table[seed_table["problem"] != ""]
+    if not problems.empty:
+        st.caption("Seeds that could not be compared: " + ", ".join(problems["seed"]) + ".")
+
+
+if metrics is not None:
+    show_against_the_reference(selected)
+elif not reference_scores.has_reference(data_root, run.dataset):
+    st.caption(
+        "This dataset has no reference alignment, so the alignments cannot be evaluated against "
+        "one. Add it to the dataset to see Pair F1, TM-pair F1 and coverage here."
     )
 
 path = runs.alignment_file(run, selected)
