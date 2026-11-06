@@ -144,17 +144,28 @@ repair_seeds = st.checkbox(
     "The operators never create such gaps, but keep those of the seeds.",
 )
 
+OBJECTIVES_WIDGET = "new_run_objectives"
+ALGORITHM_WIDGET = "new_run_algorithm"
+wanted_algorithm = st.session_state.pop(ui.ALGORITHM_TO_USE, None)
+if wanted_algorithm in options.ALGORITHMS:
+    st.session_state[OBJECTIVES_WIDGET] = options.formulation_for(wanted_algorithm)
+    st.session_state[ALGORITHM_WIDGET] = wanted_algorithm
 objectives = st.selectbox(
     "Objectives",
     list(options.OBJECTIVES),
+    key=OBJECTIVES_WIDGET,
     format_func=lambda value: options.OBJECTIVES[value][0],
     help="What the search optimises. The algorithms offered depend on the number of objectives.",
 )
+allowed_algorithms = options.algorithms_for(objectives)
+if st.session_state.get(ALGORITHM_WIDGET) not in allowed_algorithms:
+    st.session_state.pop(ALGORITHM_WIDGET, None)
 left, right = st.columns(2)
 with left:
     algorithm = st.selectbox(
         "Algorithm",
-        options.algorithms_for(objectives),
+        allowed_algorithms,
+        key=ALGORITHM_WIDGET,
         format_func=lambda value: options.DESCRIPTIONS[value],
     )
     population_size = st.number_input(

@@ -83,6 +83,14 @@ def algorithms_for(objectives: str) -> list[str]:
     ]
 
 
+def formulation_for(algorithm: str) -> str:
+    """Returns the default formulation if the algorithm accepts it, else the first it accepts."""
+    low, high = objective_range(algorithm)
+    if low <= OBJECTIVES[DEFAULT_OBJECTIVES][1] <= high:
+        return DEFAULT_OBJECTIVES
+    return next(name for name, (_, count) in OBJECTIVES.items() if low <= count <= high)
+
+
 def default_mutation_probability(algorithm: str) -> float:
     """Returns the mutation probability the CLI uses when none is given."""
     return PAES_MUTATION_PROBABILITY if algorithm == "PAES" else DEFAULT_MUTATION_PROBABILITY
