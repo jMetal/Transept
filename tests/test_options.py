@@ -51,3 +51,16 @@ class TestObjectives:
         )
         arguments = runner.command(request, "/t.jar", "/data", tmp_path)
         assert arguments[arguments.index("--objectives") + 1] == "LDDT"
+
+
+class TestFormulationFor:
+    def test_should_prefer_the_default_formulation(self):
+        assert options.formulation_for("NSGA_II") == options.DEFAULT_OBJECTIVES
+        assert options.formulation_for("RANDOM_SEARCH") == options.DEFAULT_OBJECTIVES
+
+    def test_should_take_the_one_a_single_objective_algorithm_accepts(self):
+        assert options.formulation_for("GENETIC_ALGORITHM") == "LDDT"
+
+    def test_should_always_offer_the_algorithm_in_its_formulation(self):
+        for algorithm in options.ALGORITHMS:
+            assert algorithm in options.algorithms_for(options.formulation_for(algorithm))

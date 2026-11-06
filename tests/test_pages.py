@@ -9,7 +9,8 @@ import streamlit as st
 from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import datasets, options, settings, tutorials, ui
+from transept import algorithms, datasets, options, settings, tutorials, ui
+from transept.algorithms import Algorithm
 from transept.sections import SECTIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
@@ -81,6 +82,72 @@ class TestHome:
         links = {label for label in labels if label.startswith("Open ")}
         assert links == {f"Open {page.title}" for page in pages if page.available}
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
+
+
+class TestAlgorithms:
+    CATALOGUE = (
+        Algorithm("NSGA_II", 2, 3, "MSANSGAII.yaml", False, False, True),
+        Algorithm("GENETIC_ALGORITHM", 1, 1, "MSAGA.yaml", False, False, True),
+        Algorithm("PAES", 2, 3, None, True, False, False),
+    )
+
+    @pytest.fixture
+    def catalogue(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(algorithms, "catalogue", lambda jar: self.CATALOGUE)
+
+    def test_should_list_the_algorithms_of_the_jar(self, configured, catalogue):
+        # Act
+        app = open_page(ui.ALGORITHMS)
+
+        # Assert
+        assert not app.exception
+        table = app.dataframe[0].value
+        assert list(table["Algorithm"]) == ["NSGA_II", "GENETIC_ALGORITHM", "PAES"]
+        assert list(table["Objectives"]) == ["2-3", "1", "2-3"]
+        assert not [button for button in app.button if button.label == "Use this algorithm"]
+
+    def test_should_show_the_parameter_space_of_the_selected_one(self, configured, catalogue):
+        # Act
+        app = open_page(ui.ALGORITHMS, algorithms_selected="NSGA_II")
+
+        # Assert
+        assert not app.exception
+        assert "**Parameter space**" in texts(app)
+        names = list(app.dataframe[1].value["Parameter"])
+        assert "algorithmResult" in names
+
+    def test_should_filter_the_parameters(self, configured, catalogue):
+        # Arrange
+        app = open_page(ui.ALGORITHMS, algorithms_selected="NSGA_II")
+
+        # Act
+        app.text_input[0].set_value("no such parameter").run()
+
+        # Assert
+        assert not app.exception
+        assert 'No parameter matches "no such parameter"' in texts(app)
+
+    def test_should_show_the_notes_of_an_algorithm_without_a_space(self, configured, catalogue):
+        app = open_page(ui.ALGORITHMS, algorithms_selected="PAES")
+        assert not app.exception
+        assert "does not use the crossover" in texts(app)
+        assert "**Parameter space**" not in texts(app)
+
+    def test_should_explain_objectives_and_operators(self, configured, catalogue):
+        app = open_page(ui.ALGORITHMS)
+        assert not app.exception
+        assert algorithms.FORMULATION_DETAILS["LDDT"] in texts(app)
+        assert algorithms.CROSSOVER in texts(app)
+
+    def test_should_explain_when_the_jar_gives_no_catalogue(self, configured, monkeypatch):
+        def fail(jar):
+            raise algorithms.CatalogueError("no answer")
+
+        monkeypatch.setattr(algorithms, "catalogue", fail)
+        app = open_page(ui.ALGORITHMS)
+        assert not app.exception
+        assert "did not give its algorithms: no answer" in texts(app)
+        assert algorithms.CROSSOVER in texts(app)
 
 
 class TestTutorials:
@@ -309,6 +376,31 @@ class TestNewRun:
         assert selector.options == ["toy (Toy)", "toy (Twin)"]
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert str(twin) in command
+
+    def test_should_open_the_algorithm_chosen_with_a_formulation_it_accepts(self, configured):
+        # Act
+        app = open_page(ui.NEW_RUN, algorithm_to_use="GENETIC_ALGORITHM")
+
+        # Assert
+        assert not app.exception
+        assert next(b for b in app.selectbox if b.label == "Objectives").value == "LDDT"
+        chosen = next(b for b in app.selectbox if b.label == "Algorithm")
+        assert chosen.value == "GENETIC_ALGORITHM"
+        command = next(code.value for code in app.code if "--algorithm" in code.value)
+        assert "GENETIC_ALGORITHM" in command
+
+    def test_should_keep_the_algorithm_only_while_the_objectives_allow_it(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN, algorithm_to_use="PAES")
+        assert next(b for b in app.selectbox if b.label == "Algorithm").value == "PAES"
+
+        # Act
+        next(b for b in app.selectbox if b.label == "Objectives").set_value("LDDT").run()
+
+        # Assert
+        assert not app.exception
+        chosen = next(b for b in app.selectbox if b.label == "Algorithm")
+        assert chosen.value == options.algorithms_for("LDDT")[0]
 
     def test_should_refuse_a_dataset_that_cannot_be_used(self, configured, data_root: Path):
         # Arrange
