@@ -20,7 +20,8 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | --- | --- | --- |
 | | **Home** | What Transept offers; checks that Java, the core jar and the data are available, and edits the path of the jar |
 | **Explore** | **Datasets** | The datasets of your repositories, and whether each one is ready to use (its checklist, proteins and seed alignments); add other data directories, and go straight to optimising a dataset |
-| | Add dataset, Algorithms | Coming soon: how to add your own proteins, and what you can optimise with |
+| | **Add dataset** | Add your own proteins: give their files, check them against a checklist, and Transept computes the distances from the structures |
+| | Algorithms | Coming soon: what you can optimise with |
 | **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
 | | **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
 | | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
@@ -138,9 +139,11 @@ git clone https://github.com/TM-M2StructAlign/Dataset_Structural_GPCRs.git
 git -C Dataset_Structural_GPCRs checkout v1.0.0
 ```
 
-Your own data must follow the same layout; tutorial
-[T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md)
-of Transept core describes it.
+To align your own proteins, follow the tutorial
+[Add your own proteins](docs/tutorials/add-your-own-proteins.md). To use a folder of datasets
+without copying it, add it on the **Datasets** page; it must follow the same layout, which tutorial
+[T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md) of
+Transept core describes.
 
 ## How it works
 
@@ -162,6 +165,8 @@ Transept finds them again. Everything is kept in plain files:
 | `runs/jobs/` | What Transept keeps about each run: request, process id, log, cancellation mark |
 | `runs/trash/` | Deleted runs, until the trash is emptied |
 | `runs/baselines/` | Cached objective values of the seed alignments |
+| `datasets/` | The datasets added on the **Add dataset** page (the repository _My datasets_) |
+| `.staging/` | Datasets being checked, before they are added |
 | `settings.json` | The path of the jar and the repositories you added |
 
 `TRANSEPT_HOME` moves the settings and the runs to another directory, and `TRANSEPT_CORE_JAR`

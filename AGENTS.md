@@ -22,6 +22,7 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 | `transept/datasets.py` | Datasets, seed tools and topology files of a data directory |
 | `transept/dataset_check.py` | The checklist and contents of a dataset, without Streamlit: one report for every page |
 | `transept/options.py` | The options of `run` offered by Transept; keep them in step with the CLI |
+| `transept/dataset_builder.py`, `distances.py` | A dataset from the files of the user: laid out in `.staging/`, checked, then moved to `datasets/`; distances from PDB files |
 | `transept/runner.py` | Command line, detached launch, cancellation |
 | `transept/runs.py` | State of a run and reading of its files |
 | `transept/front.py`, `charts.py`, `alignment.py` | Non-dominated solutions, figures, alignment viewer |
