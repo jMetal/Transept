@@ -32,7 +32,7 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | | **Results of independent runs** | The fronts of the runs in grey and their aggregate in blue, a summary with medians, and the best alignment beside the seeds; open any alignment in its run |
 | | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
 | **Advanced** | Automatic configuration | Coming soon |
-| **Learn** | **Tutorials** | Step-by-step guides, read inside Transept |
+| **Learn** | One entry per tutorial | Step-by-step guides, read inside Transept: the overview and how to add your own proteins |
 
 ## Installation
 
@@ -146,8 +146,8 @@ git -C Dataset_Structural_GPCRs checkout v1.0.0
 ```
 
 To align your own proteins, follow the tutorial
-[Add your own proteins](docs/tutorials/add-your-own-proteins.md), also available on the
-**Tutorials** page and in **Add dataset**. To use a folder of datasets
+[Add your own proteins](docs/tutorials/add-your-own-proteins.md), also available in the **Learn**
+section and in **Add dataset**. To use a folder of datasets
 without copying it, add it on the **Datasets** page; it must follow the same layout, which tutorial
 [T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md) of
 Transept core describes.
