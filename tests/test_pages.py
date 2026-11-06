@@ -8,6 +8,7 @@ from conftest import ALIVE_PID, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
 from transept import options, settings, ui
+from transept.sections import SECTIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
 
@@ -51,6 +52,32 @@ class TestHome:
         app = open_page(ui.HOME)
         assert not app.exception
         assert "1 dataset in the data directory" in texts(app)
+
+    def test_should_show_a_card_for_every_page(self, configured):
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert
+        assert not app.exception
+        shown = texts(app)
+        for section in SECTIONS:
+            assert section.name.upper() in shown
+            for page in section.pages:
+                assert page.title in shown
+                assert page.description in shown
+
+    def test_should_link_only_the_available_pages(self, configured):
+        # Arrange
+        pages = [page for section in SECTIONS for page in section.pages]
+
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert
+        assert not app.exception
+        links = {link.proto.label for link in app.get("page_link")}
+        assert links == {f"Open {page.title}" for page in pages if page.available}
+        assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
 
 class TestNewRun:
