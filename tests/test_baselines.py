@@ -47,12 +47,21 @@ def test_should_cache_per_build_of_the_tool(tmp_path: Path):
     # Arrange
     jar = tmp_path / "tool.jar"
     jar.write_text("first build")
-    first = baselines.cache_file(tmp_path, "toy", "VERIFIED", str(jar))
+    first = baselines.cache_file(tmp_path, "/data", "toy", "VERIFIED", str(jar))
 
     # Act: another build of the tool
     jar.write_text("second build, longer")
-    second = baselines.cache_file(tmp_path, "toy", "VERIFIED", str(jar))
+    second = baselines.cache_file(tmp_path, "/data", "toy", "VERIFIED", str(jar))
 
     # Assert
     assert first != second
     assert first.name.startswith("toy-VERIFIED-")
+
+
+def test_should_cache_per_data_directory(tmp_path: Path):
+    # Act
+    first = baselines.cache_file(tmp_path, "/one", "toy", "VERIFIED", "/t.jar")
+    second = baselines.cache_file(tmp_path, "/two", "toy", "VERIFIED", "/t.jar")
+
+    # Assert
+    assert first != second

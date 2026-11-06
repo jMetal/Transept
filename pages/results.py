@@ -88,7 +88,7 @@ def show(row: int | None) -> None:
 
 
 current = settings.load_settings()
-data_root = config.get("dataRoot") or current.data_root
+data_root = settings.data_root_of_run(current, config.get("dataRoot"), run.dataset)
 # Runs of earlier versions used the original lDDT aggregation: their values cannot be compared
 # with seeds scored by the current tool.
 comparable = config.get("lddtAggregation") in (None, "PAIR_MEAN")

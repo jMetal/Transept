@@ -21,12 +21,16 @@ def jar_fingerprint(jar: str) -> str:
     return hashlib.sha1(description.encode()).hexdigest()[:12]
 
 
-def cache_file(runs_root: Path, dataset: str, mapping_policy: str, jar: str) -> Path:
+def cache_file(
+    runs_root: Path, data_root: str, dataset: str, mapping_policy: str, jar: str
+) -> Path:
     """Returns where the scores of a dataset computed by a build of the tool are kept.
 
-    The objectives can change between versions of the tool, so the cache depends on the jar.
+    The objectives can change between versions of the tool, so the cache depends on the jar; two
+    repositories can have datasets with the same name, so it also depends on the data directory.
     """
-    fingerprint = jar_fingerprint(jar)
+    description = f"{jar_fingerprint(jar)}:{Path(data_root).resolve()}"
+    fingerprint = hashlib.sha1(description.encode()).hexdigest()[:12]
     return runs_root / "baselines" / f"{dataset}-{mapping_policy}-{fingerprint}.csv"
 
 
@@ -56,7 +60,7 @@ def seed_scores(
     Returns:
         A table with the columns `method`, `SOPwTP` and `lDDT`; empty if scoring failed.
     """
-    cache = cache_file(runs_root, dataset, mapping_policy, jar)
+    cache = cache_file(runs_root, data_root, dataset, mapping_policy, jar)
     if not cache.is_file():
         cache.parent.mkdir(parents=True, exist_ok=True)
         partial = cache.with_suffix(".partial")

@@ -15,11 +15,14 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 
 | Path | Role |
 | --- | --- |
-| `app.py` | Navigation shell (`st.navigation`) |
+| `app.py` | Navigation shell (`st.navigation`), built from `transept/sections.py` |
 | `pages/` | One script per page; only `st.session_state` survives between them |
-| `transept/settings.py` | Paths of the jar, the data and the runs (`TRANSEPT_HOME`, `TRANSEPT_CORE_JAR`, `lib/`, `examples/`) |
+| `transept/sections.py` | The pages grouped by use case (Explore, Optimize, Analyze, Advanced, Learn): the single source of the menu and the cards of the home page |
+| `transept/settings.py` | Paths of the jar and the runs, and the repositories of datasets (`TRANSEPT_HOME`, `TRANSEPT_CORE_JAR`, `lib/`, `examples/`) |
 | `transept/datasets.py` | Datasets, seed tools and topology files of a data directory |
+| `transept/dataset_check.py` | The checklist and contents of a dataset, without Streamlit: one report for every page |
 | `transept/options.py` | The options of `run` offered by Transept; keep them in step with the CLI |
+| `transept/dataset_builder.py`, `distances.py` | A dataset from the files of the user: laid out in `.staging/`, checked, then moved to `datasets/`; distances from PDB files |
 | `transept/runner.py` | Command line, detached launch, cancellation |
 | `transept/runs.py` | State of a run and reading of its files |
 | `transept/front.py`, `charts.py`, `alignment.py` | Non-dominated solutions, figures, alignment viewer |
@@ -32,6 +35,9 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
   cancellation mark. Never keep run state only in memory.
 - The tool refuses to write into an existing run directory: never create
   `runs/ejecuciones/<dataset>/<run-id>/` from Transept.
+- Several repositories can hold datasets with the same name, so a dataset is identified by its name
+  and data directory: a run by the `dataRoot` of its `config.json`. Anything cached per dataset must
+  also depend on the data directory.
 - When Transept core adds or removes an option value, update `transept/options.py`.
   `tests/test_options_drift.py` compares it with the help of the configured jar and fails when
   they differ (it is skipped if the jar is not available).

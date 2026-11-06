@@ -3,12 +3,23 @@
 import os
 import random
 import zipfile
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
 
-from transept import datasets, internal_seeds, options, runner, runs, settings, spaces, ui
+from transept import (
+    dataset_check,
+    datasets,
+    internal_seeds,
+    options,
+    runner,
+    runs,
+    settings,
+    spaces,
+    ui,
+)
 from transept.configuration import (
     complete_values,
     configuration_string,
@@ -46,11 +57,36 @@ def last_change(data_root: str, dataset: str) -> float:
     return max((path.stat().st_mtime for path in directory.glob("*.fasta")), default=0.0)
 
 
-available = datasets.list_datasets(current.data_root)
-default_dataset = available.index("classF") if "classF" in available else 0
-dataset = st.selectbox("Dataset", available, index=default_dataset)
+DATASET = "new_run_dataset"
+entries = dataset_check.catalogue(settings.all_repositories(current))
+if not entries:
+    st.warning("There are no datasets yet: add a data directory.")
+    st.page_link(ui.DATASETS, label="Go to the datasets", icon=":material/dataset:")
+    st.stop()
+repeated = Counter(entry.name for entry in entries)
+options_by_label = {
+    (f"{entry.name} ({entry.repository.name})" if repeated[entry.name] > 1 else entry.name): entry
+    for entry in entries
+}
+labels = list(options_by_label)
+wanted = st.session_state.pop(ui.DATASET_TO_OPTIMIZE, None)
+for label, entry in options_by_label.items():
+    if (entry.repository.path, entry.name) == wanted:
+        st.session_state[DATASET] = label
+if st.session_state.get(DATASET) not in labels:
+    st.session_state[DATASET] = next(
+        (label for label, entry in options_by_label.items() if entry.name == "classF"), labels[0]
+    )
+chosen = options_by_label[st.selectbox("Dataset", labels, key=DATASET)]
+dataset = chosen.name
+data_root = chosen.repository.path
+if chosen.report.status == dataset_check.Status.NOT_USABLE:
+    for check in chosen.report.checks:
+        if check.level == dataset_check.Level.ERROR:
+            st.error(f"**{check.name}.** {check.message}")
+    st.stop()
 proteins, missing, tools, invalid = inspect_dataset(
-    current.data_root, dataset, last_change(current.data_root, dataset)
+    data_root, dataset, last_change(data_root, dataset)
 )
 mean_length = sum(len(protein.residues) for protein in proteins) / max(len(proteins), 1)
 st.caption(
@@ -99,7 +135,7 @@ if internal_seeds.NAME in seeds:
             "the runs of this dataset."
         )
         if columns[1].button("Compute them now"):
-            internal_seeds.launch(current.jar, current.data_root, root, dataset)
+            internal_seeds.launch(current.jar, data_root, root, dataset)
             st.rerun()
 repair_seeds = st.checkbox(
     "Repair the seeds",
@@ -245,13 +281,13 @@ if algorithm in options.STEADY_STATE and threads > 1:
 root = settings.runs_root()
 with st.expander("Equivalent command line"):
     st.code(
-        runner.shell_command(runner.command(request, current.jar, current.data_root, root)),
+        runner.shell_command(runner.command(request, current.jar, data_root, root)),
         language="bash",
     )
 
 if st.button("Launch", type="primary", disabled=bool(errors)):
     try:
-        runner.launch(request, current.jar, current.data_root, root)
+        runner.launch(request, current.jar, data_root, root)
     except FileExistsError as exception:
         st.error(str(exception))
     else:

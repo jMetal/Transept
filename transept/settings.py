@@ -6,26 +6,52 @@ import json
 import os
 import shutil
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-STUDIO_HOME_VARIABLE = "TRANSEPT_HOME"
+HOME_VARIABLE = "TRANSEPT_HOME"
 JAR_VARIABLE = "TRANSEPT_CORE_JAR"
 JAR_NAME = "transept-core-0.1.0-jar-with-dependencies.jar"
 SETTINGS_FILE_NAME = "settings.json"
 REPOSITORY = Path(__file__).resolve().parent.parent
 EXAMPLES = REPOSITORY / "examples" / "GPCRdb"
+EXAMPLES_NAME = "Examples"
+MY_DATASETS_NAME = "My datasets"
+BENCHMARK_FOLDER = "GPCRdb"
 
 
-def studio_home() -> Path:
+def transept_home() -> Path:
     """Returns the directory of Transept: the repository, or TRANSEPT_HOME if it is set."""
-    override = os.environ.get(STUDIO_HOME_VARIABLE)
+    override = os.environ.get(HOME_VARIABLE)
     return Path(override) if override else REPOSITORY
+
+
+def datasets_root() -> Path:
+    """Returns the repository of the datasets added in Transept."""
+    return transept_home() / "datasets"
+
+
+def staging_root() -> Path:
+    """Returns where a dataset is laid out and checked before it joins the repository."""
+    return transept_home() / ".staging"
 
 
 def runs_root() -> Path:
     """Returns the root of the runs: the tool writes to runs/ejecuciones/<dataset>/<run-id>/."""
-    return studio_home() / "runs"
+    return transept_home() / "runs"
+
+
+@dataclass(slots=True, frozen=True)
+class Repository:
+    """A directory of datasets, with the layout of GPCRdb.
+
+    Attributes:
+        name: Its name in the interface.
+        path: The directory: the GPCRdb folder of the benchmark dataset, or your own.
+    """
+
+    name: str
+    path: str
 
 
 @dataclass(slots=True)
@@ -34,12 +60,11 @@ class Settings:
 
     Attributes:
         jar: The Transept core jar with dependencies.
-        data_root: A data directory with the layout of GPCRdb (the examples of this repository,
-            the GPCRdb folder of the benchmark dataset, or your own).
+        repositories: The repositories the user added; the examples are always available too.
     """
 
     jar: str
-    data_root: str
+    repositories: list[Repository] = field(default_factory=list)
 
 
 def jar_candidates() -> list[Path]:
@@ -64,13 +89,81 @@ def default_jar() -> str:
 
 
 def default_settings() -> Settings:
-    """The jar found by default_jar and the examples of this repository."""
-    return Settings(jar=default_jar(), data_root=str(EXAMPLES))
+    """The jar found by default_jar and no repository besides the examples."""
+    return Settings(jar=default_jar())
 
 
 def settings_file() -> Path:
     """Returns the file where the settings are saved."""
-    return studio_home() / SETTINGS_FILE_NAME
+    return transept_home() / SETTINGS_FILE_NAME
+
+
+def is_repository(path: Path | str) -> bool:
+    """Tells whether a directory has the layout of a repository of datasets."""
+    return (Path(path) / "sequences" / "tmregions").is_dir()
+
+
+def all_repositories(settings: Settings) -> list[Repository]:
+    """Returns the examples, the datasets added in Transept, if any, and the other repositories."""
+    built_in = [Repository(EXAMPLES_NAME, str(EXAMPLES))]
+    if is_repository(datasets_root()):
+        built_in.append(Repository(MY_DATASETS_NAME, str(datasets_root())))
+    return [*built_in, *settings.repositories]
+
+
+def is_built_in(repository: Repository) -> bool:
+    """Tells whether a repository belongs to Transept, so that it cannot be removed."""
+    return repository.name in (EXAMPLES_NAME, MY_DATASETS_NAME)
+
+
+def default_repository_name(path: Path | str) -> str:
+    """Names a repository after its folder, or after the parent of a folder called GPCRdb."""
+    directory = Path(path)
+    return directory.parent.name if directory.name == BENCHMARK_FOLDER else directory.name
+
+
+def add_repository(settings: Settings, path: str, name: str = "") -> Settings:
+    """Returns the settings with one more repository.
+
+    Raises:
+        ValueError: If the directory is not a repository, or its path or name is already in use.
+    """
+    path = path.strip()
+    if not path:
+        raise ValueError("Enter the path of a directory.")
+    directory = Path(path).expanduser()
+    if not is_repository(directory):
+        raise ValueError(
+            f"{path} does not look like a data directory: it has no sequences/tmregions/ folder."
+        )
+    name = name.strip() or default_repository_name(directory)
+    if name in (EXAMPLES_NAME, MY_DATASETS_NAME):
+        raise ValueError(f"{name} is the name of a repository of Transept: choose another name.")
+    for existing in all_repositories(settings):
+        if Path(existing.path).resolve() == directory.resolve():
+            raise ValueError(f"This directory is already the repository {existing.name}.")
+        if existing.name == name:
+            raise ValueError(f"There is already a repository called {name}: choose another name.")
+    return Settings(settings.jar, [*settings.repositories, Repository(name, str(directory))])
+
+
+def remove_repository(settings: Settings, path: str) -> Settings:
+    """Returns the settings without a repository; its files are not touched."""
+    kept = [repository for repository in settings.repositories if repository.path != path]
+    return Settings(settings.jar, kept)
+
+
+def _saved_repositories(saved: dict) -> list[Repository]:
+    """The repositories of a settings file; `data_root`, of earlier versions, becomes one."""
+    repositories = [
+        Repository(entry["name"], entry["path"]) for entry in saved.get("repositories", [])
+    ]
+    earlier = saved.get("data_root")
+    if earlier and Path(earlier).resolve() != EXAMPLES.resolve():
+        known = [Path(repository.path).resolve() for repository in repositories]
+        if Path(earlier).resolve() not in known:
+            repositories.append(Repository(default_repository_name(earlier), earlier))
+    return repositories
 
 
 def load_settings() -> Settings:
@@ -78,8 +171,7 @@ def load_settings() -> Settings:
     path = settings_file()
     if path.is_file():
         saved = json.loads(path.read_text(encoding="utf-8"))
-        defaults = asdict(default_settings())
-        return Settings(**{key: saved.get(key) or value for key, value in defaults.items()})
+        return Settings(saved.get("jar") or default_jar(), _saved_repositories(saved))
     return default_settings()
 
 
@@ -125,9 +217,23 @@ def problems(settings: Settings) -> list[str]:
             "repository and run `make setup`, or run `make setup JAR=<path to the jar>`, or set "
             "its path below."
         )
-    if not (Path(settings.data_root) / "sequences" / "tmregions").is_dir():
+    if not any(is_repository(repository.path) for repository in all_repositories(settings)):
         found.append(
-            f"{settings.data_root} does not look like a data directory: it has no "
-            "sequences/tmregions/ folder."
+            "No data directory is available: add one in Explore > Datasets, for example the "
+            "GPCRdb folder of the benchmark dataset."
         )
     return found
+
+
+def data_root_of_run(settings: Settings, recorded: str | None, dataset: str) -> str:
+    """Returns the data directory of a run: the one it recorded, if it still exists.
+
+    Otherwise, the first repository with a dataset of that name, or an empty string if none has it.
+    """
+    if recorded and is_repository(recorded):
+        return recorded
+    for repository in all_repositories(settings):
+        topology = Path(repository.path) / "sequences" / "tmregions"
+        if (topology / f"{dataset}_predicted_topologies.3line").is_file():
+            return repository.path
+    return recorded or ""

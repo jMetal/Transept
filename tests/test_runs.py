@@ -33,7 +33,7 @@ class TestState:
         write_job(tmp_path, "live", ALIVE_PID)
         assert runs.state(run(tmp_path, "live")) == RunState.RUNNING
 
-    def test_should_be_cancelled_when_the_studio_marked_it(self, tmp_path: Path):
+    def test_should_be_cancelled_when_transept_marked_it(self, tmp_path: Path):
         # Arrange
         job = write_job(tmp_path, "stop", DEAD_PID)
         (job / runner.CANCELLED_FILE).write_text("")

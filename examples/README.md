@@ -1,7 +1,7 @@
 # Example data
 
 `GPCRdb/` holds one small dataset, `classT2_19` (19 taste receptors type 2), so that Transept can
-be tried without downloading anything else. It is the default data directory.
+be tried without downloading anything else. It is always available as the repository _Examples_.
 
 | Path | Contents |
 | --- | --- |
@@ -28,5 +28,5 @@ If you use these data, please cite:
 > Structural Bioinformatics (Version 1.0.0) [Dataset]. Zenodo.
 > <https://doi.org/10.5281/zenodo.23243974>
 
-For the other datasets of the benchmark, clone Dataset_Structural_GPCRs and set the data
-directory of Transept to its `GPCRdb` folder.
+For the other datasets of the benchmark, clone Dataset_Structural_GPCRs and add its `GPCRdb`
+folder as a repository on the **Datasets** page of Transept.

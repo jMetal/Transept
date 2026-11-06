@@ -14,13 +14,21 @@ without using the command line. The engine is [Transept core](https://github.com
 
 ## What it does
 
-| Page | |
-| --- | --- |
-| **Home** | Checks that Java, the core jar and the data directory are available, and edits their paths |
-| **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
-| **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
-| **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
-| **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
+The pages are grouped by what you want to do; the home page has a card for each one.
+
+| Section | Page | |
+| --- | --- | --- |
+| | **Home** | What Transept offers; checks that Java, the core jar and the data are available, and edits the path of the jar |
+| **Explore** | **Datasets** | The datasets of your repositories, and whether each one is ready to use (its checklist, proteins and seed alignments); add other data directories, and go straight to optimising a dataset |
+| | **Add dataset** | Add your own proteins: give their files, check them against a checklist, and Transept computes the distances from the structures |
+| | Algorithms | Coming soon: what you can optimise with |
+| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
+| | **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
+| | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
+| **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
+| | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
+| **Advanced** | Automatic configuration | Coming soon |
+| **Learn** | Tutorials | Coming soon |
 
 ## Installation
 
@@ -83,7 +91,7 @@ Transept-core: run `make setup JAR=/path/to/the.jar` instead.
 
 ### Your first run
 
-1. **Home** should say _Ready_, with the Java version and _1 dataset in the data directory_ (the
+1. **Home** should say _Ready_, with the Java version and _1 dataset in 1 repository_ (the
    example). If it lists problems instead, see [Troubleshooting](#troubleshooting).
 2. Open **New run**. The dataset is `classT2_19`, the seed alignments are `internal` (computed
    by Transept), and the algorithm is NSGA-II with its default configuration and 10 000
@@ -105,12 +113,15 @@ page (for example `mafft`, `muscle5` and `tmaligner`).
 | `make setup` fails while building the jar | Check the network connection (Maven downloads the libraries of Transept core) and run `make core` |
 | Home: _Java was not found_ | Run `make setup` again, and start Transept with `make run` (it uses the Java of the environment) |
 | Home: _The jar was not found at ..._ | Run `make setup JAR=...`, or set the path of the jar in the **Settings** of the home page |
-| Home: _... does not look like a data directory_ | Set the data directory in the **Settings** of the home page to a folder with `sequences/tmregions/` (for example `examples/GPCRdb`) |
+| Datasets: _... does not look like a data directory_ | Add a folder with `sequences/tmregions/`, such as the `GPCRdb` folder of the benchmark |
+| A dataset is _Not usable_ | **Datasets** shows what is wrong in its checklist |
 | `Port 8501 is already in use` | Transept (or another Streamlit app) is already running: use that one, or stop it |
 | A run fails | The **Monitor** shows why; the full output of the run is in `runs/jobs/<dataset>/<run-id>/log.txt` |
 
 To remove Transept, delete the `Transept` folder and the environment:
-`conda env remove -n transept`.
+`conda env remove -n transept`. Deleting the folder also deletes what you added and computed in it
+(`datasets/`, `runs/` and `settings.json`), unless `TRANSEPT_HOME` keeps them elsewhere: copy
+anything you want to keep first.
 
 ## Data
 
@@ -122,17 +133,19 @@ files are described in [examples/README.md](examples/README.md).
 
 For more datasets, use the GPCR structural benchmark
 [Dataset_Structural_GPCRs](https://github.com/TM-M2StructAlign/Dataset_Structural_GPCRs)
-(version v1.0.0, [DOI 10.5281/zenodo.23243974](https://doi.org/10.5281/zenodo.23243974)) and set
-the data directory on the home page to its `GPCRdb` folder:
+(version v1.0.0, [DOI 10.5281/zenodo.23243974](https://doi.org/10.5281/zenodo.23243974)), and add
+its `GPCRdb` folder as a repository on the **Datasets** page:
 
 ```bash
 git clone https://github.com/TM-M2StructAlign/Dataset_Structural_GPCRs.git
 git -C Dataset_Structural_GPCRs checkout v1.0.0
 ```
 
-Your own data must follow the same layout; tutorial
-[T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md)
-of Transept core describes it.
+To align your own proteins, follow the tutorial
+[Add your own proteins](docs/tutorials/add-your-own-proteins.md). To use a folder of datasets
+without copying it, add it on the **Datasets** page; it must follow the same layout, which tutorial
+[T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md) of
+Transept core describes.
 
 ## How it works
 
@@ -154,7 +167,9 @@ Transept finds them again. Everything is kept in plain files:
 | `runs/jobs/` | What Transept keeps about each run: request, process id, log, cancellation mark |
 | `runs/trash/` | Deleted runs, until the trash is emptied |
 | `runs/baselines/` | Cached objective values of the seed alignments |
-| `settings.json` | The paths of the jar and the data |
+| `datasets/` | The datasets added on the **Add dataset** page (the repository _My datasets_) |
+| `.staging/` | Datasets being checked, before they are added |
+| `settings.json` | The path of the jar and the repositories you added |
 
 `TRANSEPT_HOME` moves the settings and the runs to another directory, and `TRANSEPT_CORE_JAR`
 sets the jar.

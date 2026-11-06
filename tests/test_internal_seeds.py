@@ -1,4 +1,4 @@
-"""Internal seeds computed in advance, as the studio sees them."""
+"""Internal seeds computed in advance, as Transept sees them."""
 
 import dataclasses
 from pathlib import Path

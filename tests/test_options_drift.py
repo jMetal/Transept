@@ -1,6 +1,6 @@
-"""Drift detection: the options offered by the studio must match those of the Transept core jar.
+"""Drift detection: the options offered by Transept must match those of the Transept core jar.
 
-The test reads the help of the `run` command of the jar configured for the studio (the sibling
+The test reads the help of the `run` command of the jar configured for Transept (the sibling
 repository or TRANSEPT_CORE_JAR) and is skipped when the jar or Java is not available.
 """
 

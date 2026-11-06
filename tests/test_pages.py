@@ -1,13 +1,16 @@
 """The pages open without errors and show what they should, without a browser."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
-from conftest import ALIVE_PID, write_finished_run, write_job
+import streamlit as st
+from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import options, settings, ui
+from transept import datasets, options, settings, ui
+from transept.sections import SECTIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
 
@@ -33,9 +36,9 @@ def texts(app: AppTest) -> str:
 
 
 class TestHome:
-    def test_should_report_what_is_missing(self, studio_home: Path):
+    def test_should_report_what_is_missing(self, transept_home: Path):
         # Arrange
-        settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
+        settings.save_settings(settings.Settings("/no.jar"))
 
         # Act
         app = open_page(ui.HOME)
@@ -50,10 +53,241 @@ class TestHome:
             pytest.skip("Java is not installed")
         app = open_page(ui.HOME)
         assert not app.exception
-        assert "1 dataset in the data directory" in texts(app)
+        assert "1 dataset in 1 repository" in texts(app)
+
+    def test_should_show_a_card_for_every_page(self, configured):
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert
+        assert not app.exception
+        shown = texts(app)
+        for section in SECTIONS:
+            assert section.name.upper() in shown
+            for page in section.pages:
+                assert page.title in shown
+                assert page.description in shown
+
+    def test_should_link_only_the_available_pages(self, configured):
+        # Arrange
+        pages = [page for section in SECTIONS for page in section.pages]
+
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert
+        assert not app.exception
+        labels = [link.proto.label for link in app.get("page_link")]
+        links = {label for label in labels if label.startswith("Open ")}
+        assert links == {f"Open {page.title}" for page in pages if page.available}
+        assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
+
+
+class TestDatasets:
+    def test_should_list_the_datasets_with_their_checklist(self, configured):
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        table = app.dataframe[0].value
+        assert list(table["Dataset"]) == ["toy"]
+        assert table["Structures"][0] == "2/3"
+        assert table["Status"][0] == "Ready, with warnings"
+        assert "toy · Toy" in [element.value for element in app.subheader]
+        assert "1 of 3 proteins have no distances" in texts(app)
+
+    def test_should_add_a_repository_and_refuse_a_wrong_directory(
+        self, configured, tmp_path: Path
+    ):
+        # Arrange
+        other = tmp_path / "Other"
+        (other / "sequences" / "tmregions").mkdir(parents=True)
+        app = open_page(ui.DATASETS)
+
+        # Act: a directory without the layout
+        app.text_input[0].set_value(str(tmp_path / "wrong"))
+        next(button for button in app.button if button.label == "Add").click().run()
+
+        # Assert
+        assert "does not look like a data directory" in texts(app)
+        assert len(settings.load_settings().repositories) == 1
+
+        # Act: a repository
+        app.text_input[0].set_value(str(other))
+        next(button for button in app.button if button.label == "Add").click().run()
+
+        # Assert
+        assert not app.exception
+        names = [repository.name for repository in settings.load_settings().repositories]
+        assert names == ["Toy", "Other"]
+
+    def test_should_show_a_missing_repository_without_failing(self, configured, tmp_path: Path):
+        # Arrange
+        gone = settings.Repository("Gone", str(tmp_path / "gone"))
+        settings.save_settings(settings.Settings(configured.jar, [*configured.repositories, gone]))
+
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        assert "Directory not found" in texts(app)
+        assert list(app.dataframe[0].value["Dataset"]) == ["toy"]
+
+    def test_should_not_offer_to_optimize_a_dataset_that_cannot_be_used(
+        self, configured, data_root: Path
+    ):
+        # Arrange
+        topology = data_root / "sequences" / "tmregions" / "toy_predicted_topologies.3line"
+        topology.write_text(">only\nAC\n")
+
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        assert app.dataframe[0].value["Status"][0] == "Not usable"
+        optimize = next(b for b in app.button if b.label == "Optimize this dataset")
+        assert optimize.disabled
+
+
+class FakeUpload:
+    def __init__(self, name: str, data: bytes):
+        self.name = name
+        self.data = data
+        self.size = len(data)
+
+    def getvalue(self) -> bytes:
+        return self.data
+
+
+class TestAddDataset:
+    @pytest.fixture
+    def uploads(self, monkeypatch: pytest.MonkeyPatch) -> dict:
+        """What the file uploaders return, by the start of their label (AppTest cannot upload)."""
+        given: dict = {}
+
+        def uploader(label, accept_multiple_files=False, **options):
+            for start, value in given.items():
+                if label.startswith(start):
+                    return value
+            return [] if accept_multiple_files else None
+
+        monkeypatch.setattr(st, "file_uploader", uploader)
+        return given
+
+    @staticmethod
+    def fill(app: AppTest) -> None:
+        app.text_input[0].set_value("mine").run()
+        next(button for button in app.button if button.label == "Check the files").click().run()
+
+    def test_should_not_check_without_a_name_and_a_topology(self, configured):
+        app = open_page(ui.ADD_DATASET)
+        assert not app.exception
+        assert next(b for b in app.button if b.label == "Check the files").disabled
+
+    def test_should_add_a_dataset_after_checking_it(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        uploads["PDB"] = [
+            FakeUpload("p1.pdb", pdb_text(3).encode()),
+            FakeUpload("p2.pdb", pdb_text(4).encode()),
+            FakeUpload("other.pdb", pdb_text(3).encode()),
+        ]
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert: checked, and nothing added yet
+        assert not app.exception
+        assert "Distances computed from the PDB files of 2 protein(s)" in texts(app)
+        assert "other.pdb" in texts(app)
+        assert not settings.datasets_root().exists()
+
+        # Act
+        next(b for b in app.button if b.label == "Add to My datasets").click().run()
+
+        # Assert
+        assert not app.exception
+        assert datasets.list_datasets(settings.datasets_root()) == ["mine"]
+        assert app.title[0].value == "Datasets"
+        assert app.session_state[ui.DATASET_SELECTED][1] == "mine"
+
+    def test_should_not_add_a_dataset_that_cannot_be_used(self, configured, uploads):
+        # Arrange: no structures
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert
+        assert not app.exception
+        assert "No protein has distances" in texts(app)
+        assert next(b for b in app.button if b.label == "Add to My datasets").disabled
+
+    def test_should_explain_why_the_files_cannot_make_a_dataset(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", b">a/b\nAC\nMM\n>c\nAC\nMM\n")
+        app = open_page(ui.ADD_DATASET)
+
+        # Act
+        self.fill(app)
+
+        # Assert
+        assert not app.exception
+        assert "cannot name a file" in texts(app)
+
+    def test_should_discard_the_checklist_when_the_files_change(self, configured, uploads):
+        # Arrange
+        uploads["Sequences"] = FakeUpload("mine.3line", THREE_LINE.encode())
+        app = open_page(ui.ADD_DATASET)
+        self.fill(app)
+        assert "Checklist of mine" in [element.value for element in app.subheader]
+
+        # Act
+        uploads["PDB"] = [FakeUpload("p1.pdb", pdb_text(3).encode())]
+        app.run()
+
+        # Assert
+        assert not app.exception
+        assert "Checklist of mine" not in [element.value for element in app.subheader]
 
 
 class TestNewRun:
+    def test_should_open_the_dataset_chosen_in_datasets(self, configured, tmp_path: Path):
+        # Arrange: a dataset with the same name in another repository
+        twin = tmp_path / "Twin"
+        shutil.copytree(configured.repositories[0].path, twin)
+        repositories = [*configured.repositories, settings.Repository("Twin", str(twin))]
+        settings.save_settings(settings.Settings(configured.jar, repositories))
+
+        # Act
+        app = open_page(ui.NEW_RUN, dataset_to_optimize=(str(twin), "toy"))
+
+        # Assert
+        assert not app.exception
+        selector = next(box for box in app.selectbox if box.label == "Dataset")
+        assert selector.value == "toy (Twin)"
+        assert selector.options == ["toy (Toy)", "toy (Twin)"]
+        command = next(code.value for code in app.code if "--data-root" in code.value)
+        assert str(twin) in command
+
+    def test_should_refuse_a_dataset_that_cannot_be_used(self, configured, data_root: Path):
+        # Arrange
+        for path in (data_root / "distances" / "toy").iterdir():
+            path.unlink()
+
+        # Act
+        app = open_page(ui.NEW_RUN)
+
+        # Assert
+        assert not app.exception
+        assert "No protein has distances" in texts(app)
+        assert not [button for button in app.button if button.label == "Launch"]
+
     def test_should_offer_the_datasets_and_default_seeds(self, configured):
         if settings.java_version() is None:
             pytest.skip("Java is not installed")
@@ -156,8 +390,8 @@ class TestNewRun:
         command = next(code.value for code in app.code if "--dataset toy" in code.value)
         assert "--objectives LDDT" in command
 
-    def test_should_send_to_the_settings_when_not_ready(self, studio_home: Path):
-        settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
+    def test_should_send_to_the_settings_when_not_ready(self, transept_home: Path):
+        settings.save_settings(settings.Settings("/no.jar"))
         app = open_page(ui.NEW_RUN)
         assert not app.exception
         assert "not ready" in texts(app)
@@ -213,8 +447,7 @@ class TestMonitor:
         directory.mkdir(parents=True)
         (directory / "config.json").write_text(json.dumps({"maxEvaluations": 200}))
         (directory / "progress.jsonl").write_text(
-            '{"evaluations":100,"elapsedMs":900,'
-            '"best":{"SOPwTP":30.0,"lDDT":0.6,"coverage":0.9}}\n'
+            '{"evaluations":100,"elapsedMs":900,"best":{"SOPwTP":30.0,"lDDT":0.6,"coverage":0.9}}\n'
         )
 
         # Act
@@ -352,7 +585,7 @@ class TestResultsTools:
         write_finished_run(root, data_root)
         from transept import baselines
 
-        cache = baselines.cache_file(root, "toy", "VERIFIED", configured.jar)
+        cache = baselines.cache_file(root, str(data_root), "toy", "VERIFIED", configured.jar)
         cache.parent.mkdir(parents=True)
         cache.write_text(
             "dataset,method,SOPwTP,lDDT,file,status,message\n"
