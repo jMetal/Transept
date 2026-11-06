@@ -172,9 +172,13 @@ with left:
     population_size = st.number_input(
         "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=4
     )
-    threads = st.number_input(
-        "Evaluation threads", 1, os.cpu_count() or 1, min(4, os.cpu_count() or 1)
-    )
+    threads = 1
+    if options.is_parallel(algorithm):
+        threads = st.number_input(
+            "Evaluation threads", 1, os.cpu_count() or 1, min(4, os.cpu_count() or 1)
+        )
+    else:
+        st.caption("This algorithm evaluates one solution at a time, so it uses a single thread.")
 with right:
     stop_by = st.radio("Stop after", ["Evaluations", "Time"], horizontal=True)
     if stop_by == "Evaluations":
@@ -259,30 +263,16 @@ seed = st.number_input(
     key="random_seed",
     help="The same seed and options reproduce a run exactly.",
 )
-count_column, parallel_column = st.columns(2)
-count = count_column.number_input(
-    "Runs with different seeds",
+count = st.number_input(
+    "Independent runs",
     1,
     1000,
     1,
-    help="More than one makes a series, with consecutive seeds starting at the random seed. "
-    "Comparing methods needs several runs, because the search is stochastic.",
+    help="Repeat the search with consecutive seeds starting at the random seed. The search is "
+    "stochastic, so several runs show how much the results vary, and together they can find "
+    "better alignments than one.",
 )
-parallel = 1
-if count > 1:
-    available_cores = os.cpu_count() or 1
-    parallel = parallel_column.number_input(
-        "Runs at a time",
-        1,
-        int(count),
-        min(int(count), max(1, available_cores // int(threads))),
-        help="The results do not depend on it. The rest of the runs wait for their turn.",
-    )
-    if parallel * threads > available_cores:
-        st.warning(
-            f"{parallel} runs with {threads} threads each need more than the {available_cores} "
-            "cores of this computer: they will take longer."
-        )
+parallel = options.runs_at_a_time(algorithm, int(count), os.cpu_count() or 1)
 # The default is computed once: a widget whose default changes every second forgets what was typed.
 RUN_ID_WIDGET = "new_run_identifier"
 SUGGESTED_RUN_ID = "new_run_suggested_identifier"
@@ -297,8 +287,13 @@ elif RUN_ID_WIDGET not in st.session_state:
     st.session_state[RUN_ID_WIDGET] = suggested
 run_id = st.text_input("Run identifier" if count == 1 else "Series identifier", key=RUN_ID_WIDGET)
 if count > 1:
+    how = (
+        f"one after another, using {threads} thread(s) each"
+        if parallel == 1
+        else f"up to {parallel} at a time"
+    )
     st.caption(
-        f"{count} runs called `{run_id.strip()}_seed_<seed>`, with the seeds {int(seed)} to "
+        f"{count} runs, {how}: `{run_id.strip()}_seed_<seed>`, with the seeds {int(seed)} to "
         f"{int(seed) + count - 1}."
     )
 
@@ -329,8 +324,6 @@ if algorithm in options.ASYNCHRONOUS and threads > 1:
         "Asynchronous: every evaluated solution enters the population at once, so all threads stay "
         "busy, but the run will not repeat exactly with the same seed."
     )
-if algorithm in options.STEADY_STATE and threads > 1:
-    st.info("This algorithm evaluates one solution at a time: more threads will not speed it up.")
 
 root = settings.runs_root()
 with st.expander("Equivalent command line"):

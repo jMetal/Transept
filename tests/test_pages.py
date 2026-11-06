@@ -610,16 +610,15 @@ class TestNewRun:
     def test_should_offer_a_series_only_with_several_runs(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
-        assert not [box for box in app.number_input if box.label == "Runs at a time"]
 
         # Act
-        next(box for box in app.number_input if box.label == "Runs with different seeds").set_value(
+        next(box for box in app.number_input if box.label == "Independent runs").set_value(
             3
         ).run()
 
         # Assert
         assert not app.exception
-        assert [box for box in app.number_input if box.label == "Runs at a time"]
+        assert "one after another" in texts(app)
         assert "_seed_<seed>" in texts(app)
         assert [box for box in app.text_input if box.label == "Series identifier"]
 
@@ -633,10 +632,9 @@ class TestNewRun:
 
         monkeypatch.setattr(series, "launch", fake_launch)
         app = open_page(ui.NEW_RUN)
-        next(box for box in app.number_input if box.label == "Runs with different seeds").set_value(
+        next(box for box in app.number_input if box.label == "Independent runs").set_value(
             3
         ).run()
-        next(box for box in app.number_input if box.label == "Runs at a time").set_value(2).run()
         next(box for box in app.text_input if box.label == "Series identifier").set_value("s").run()
 
         # Act
@@ -644,7 +642,7 @@ class TestNewRun:
 
         # Assert
         assert not app.exception
-        assert launched == [("s", 3, 2)]
+        assert launched == [("s", 3, 1)]
         assert app.session_state[ui.SELECTED_SERIES] == "toy / s"
 
     def test_should_open_the_algorithm_chosen_with_a_formulation_it_accepts(self, configured):

@@ -91,6 +91,20 @@ def formulation_for(algorithm: str) -> str:
     return next(name for name, (_, count) in OBJECTIVES.items() if low <= count <= high)
 
 
+def is_parallel(algorithm: str) -> bool:
+    """Tells whether several evaluation threads speed an algorithm up."""
+    return algorithm not in STEADY_STATE
+
+
+def runs_at_a_time(algorithm: str, runs: int, cores: int) -> int:
+    """Returns how many independent runs of an algorithm to keep active.
+
+    A parallel algorithm already uses its threads, so its runs go one after another; the others
+    cannot use them, so their runs share the cores.
+    """
+    return 1 if is_parallel(algorithm) else max(1, min(runs, cores))
+
+
 def default_mutation_probability(algorithm: str) -> float:
     """Returns the mutation probability the CLI uses when none is given."""
     return PAES_MUTATION_PROBABILITY if algorithm == "PAES" else DEFAULT_MUTATION_PROBABILITY
