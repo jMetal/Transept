@@ -4,7 +4,7 @@ __pycache__/
 .ruff_cache/
 .DS_Store
 .idea/
-# Local data of the studio
+# Local data of Transept
 runs/
 settings.json
 # The core jar (make setup)

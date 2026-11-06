@@ -9,7 +9,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-STUDIO_HOME_VARIABLE = "TRANSEPT_HOME"
+HOME_VARIABLE = "TRANSEPT_HOME"
 JAR_VARIABLE = "TRANSEPT_CORE_JAR"
 JAR_NAME = "transept-core-0.1.0-jar-with-dependencies.jar"
 SETTINGS_FILE_NAME = "settings.json"
@@ -17,15 +17,15 @@ REPOSITORY = Path(__file__).resolve().parent.parent
 EXAMPLES = REPOSITORY / "examples" / "GPCRdb"
 
 
-def studio_home() -> Path:
+def transept_home() -> Path:
     """Returns the directory of Transept: the repository, or TRANSEPT_HOME if it is set."""
-    override = os.environ.get(STUDIO_HOME_VARIABLE)
+    override = os.environ.get(HOME_VARIABLE)
     return Path(override) if override else REPOSITORY
 
 
 def runs_root() -> Path:
     """Returns the root of the runs: the tool writes to runs/ejecuciones/<dataset>/<run-id>/."""
-    return studio_home() / "runs"
+    return transept_home() / "runs"
 
 
 @dataclass(slots=True)
@@ -70,7 +70,7 @@ def default_settings() -> Settings:
 
 def settings_file() -> Path:
     """Returns the file where the settings are saved."""
-    return studio_home() / SETTINGS_FILE_NAME
+    return transept_home() / SETTINGS_FILE_NAME
 
 
 def load_settings() -> Settings:

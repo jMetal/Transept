@@ -1,7 +1,7 @@
 """Internal seeds of a dataset computed in advance with the `seeds` command of the tool.
 
 The tool writes them to `<runs-root>/internal_seeds/<dataset>/` with a `manifest.tsv`, and the runs
-with `--seeds internal` read them from there. The studio launches the command in the background
+with `--seeds internal` read them from there. Transept launches the command in the background
 and only looks at the files to tell whether they are ready or being computed.
 """
 

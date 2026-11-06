@@ -33,7 +33,7 @@ def texts(app: AppTest) -> str:
 
 
 class TestHome:
-    def test_should_report_what_is_missing(self, studio_home: Path):
+    def test_should_report_what_is_missing(self, transept_home: Path):
         # Arrange
         settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
 
@@ -156,7 +156,7 @@ class TestNewRun:
         command = next(code.value for code in app.code if "--dataset toy" in code.value)
         assert "--objectives LDDT" in command
 
-    def test_should_send_to_the_settings_when_not_ready(self, studio_home: Path):
+    def test_should_send_to_the_settings_when_not_ready(self, transept_home: Path):
         settings.save_settings(settings.Settings(jar="/no.jar", data_root="/no/data"))
         app = open_page(ui.NEW_RUN)
         assert not app.exception
@@ -213,8 +213,7 @@ class TestMonitor:
         directory.mkdir(parents=True)
         (directory / "config.json").write_text(json.dumps({"maxEvaluations": 200}))
         (directory / "progress.jsonl").write_text(
-            '{"evaluations":100,"elapsedMs":900,'
-            '"best":{"SOPwTP":30.0,"lDDT":0.6,"coverage":0.9}}\n'
+            '{"evaluations":100,"elapsedMs":900,"best":{"SOPwTP":30.0,"lDDT":0.6,"coverage":0.9}}\n'
         )
 
         # Act

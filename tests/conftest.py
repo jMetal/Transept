@@ -1,4 +1,4 @@
-"""Fixtures: an isolated studio home, a tiny data directory and runs in every state."""
+"""Fixtures: an isolated Transept home, a tiny data directory and runs in every state."""
 
 from __future__ import annotations
 
@@ -33,10 +33,10 @@ ALIGNMENTS = {
 
 
 @pytest.fixture
-def studio_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    home = tmp_path / "studio"
+def transept_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv(settings.STUDIO_HOME_VARIABLE, str(home))
+    monkeypatch.setenv(settings.HOME_VARIABLE, str(home))
     return home
 
 
@@ -58,8 +58,8 @@ def data_root(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def configured(studio_home: Path, data_root: Path) -> settings.Settings:
-    jar = studio_home / "fake.jar"
+def configured(transept_home: Path, data_root: Path) -> settings.Settings:
+    jar = transept_home / "fake.jar"
     write_fake_jar(jar)
     chosen = settings.Settings(jar=str(jar), data_root=str(data_root))
     settings.save_settings(chosen)
@@ -67,7 +67,7 @@ def configured(studio_home: Path, data_root: Path) -> settings.Settings:
 
 
 def write_fake_jar(jar: Path) -> None:
-    """Writes a jar that only holds the resources the studio reads: the parameter space of
+    """Writes a jar that only holds the resources Transept reads: the parameter space of
     the configurable algorithms and their default configurations (copies of the tool's, in
     tests/data)."""
     with zipfile.ZipFile(jar, "w") as archive:
@@ -116,7 +116,7 @@ def write_finished_run(runs_root: Path, data_root: Path, run_id: str = "done") -
 
 
 def write_job(runs_root: Path, run_id: str, pid: int | None, log: str = "") -> Path:
-    """Writes the files the studio keeps about a job."""
+    """Writes the files Transept keeps about a job."""
     job = runner.job_directory(runs_root, "toy", run_id)
     job.mkdir(parents=True)
     if pid is not None:

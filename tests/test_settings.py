@@ -6,11 +6,11 @@ from transept import datasets, settings
 
 
 class TestLocations:
-    def test_should_keep_the_runs_in_the_studio_home(self, studio_home: Path):
-        assert settings.runs_root() == studio_home / "runs"
+    def test_should_keep_the_runs_in_the_transept_home(self, transept_home: Path):
+        assert settings.runs_root() == transept_home / "runs"
 
     def test_should_default_to_the_examples_and_a_jar_found_nearby(
-        self, studio_home: Path, monkeypatch: pytest.MonkeyPatch
+        self, transept_home: Path, monkeypatch: pytest.MonkeyPatch
     ):
         # Arrange
         monkeypatch.delenv(settings.JAR_VARIABLE, raising=False)
@@ -50,7 +50,7 @@ class TestLocations:
         assert "classT2_19" in datasets.list_datasets(settings.EXAMPLES)
 
     def test_should_take_the_jar_from_the_environment(
-        self, studio_home: Path, monkeypatch: pytest.MonkeyPatch
+        self, transept_home: Path, monkeypatch: pytest.MonkeyPatch
     ):
         # Arrange
         monkeypatch.setenv(settings.JAR_VARIABLE, "/somewhere/tool.jar")
@@ -85,7 +85,7 @@ class TestJava:
 
 
 class TestPersistence:
-    def test_should_load_what_was_saved(self, studio_home: Path):
+    def test_should_load_what_was_saved(self, transept_home: Path):
         # Arrange
         settings.save_settings(settings.Settings(jar="/a.jar", data_root="/data"))
 
@@ -95,7 +95,7 @@ class TestPersistence:
         # Assert
         assert loaded == settings.Settings(jar="/a.jar", data_root="/data")
 
-    def test_should_load_the_defaults_when_nothing_was_saved(self, studio_home: Path):
+    def test_should_load_the_defaults_when_nothing_was_saved(self, transept_home: Path):
         assert settings.load_settings() == settings.default_settings()
 
 
@@ -105,7 +105,7 @@ class TestProblems:
             pytest.skip("Java is not installed")
         assert settings.problems(configured) == []
 
-    def test_should_report_a_missing_jar_and_data_directory(self, studio_home: Path):
+    def test_should_report_a_missing_jar_and_data_directory(self, transept_home: Path):
         # Act
         found = settings.problems(settings.Settings(jar="/no.jar", data_root="/no/data"))
 
