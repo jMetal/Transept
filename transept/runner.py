@@ -231,12 +231,16 @@ def cancel(job: Path) -> None:
             pass
 
 
+def request_from_dict(values: dict) -> RunRequest:
+    """Returns a request saved as JSON; options of earlier versions are ignored."""
+    values = {**values, "seeds": tuple(values["seeds"])}
+    known = {name for name in RunRequest.__dataclass_fields__}
+    return RunRequest(**{key: value for key, value in values.items() if key in known})
+
+
 def read_request(job: Path) -> RunRequest | None:
     """Returns the request saved with a job, or None if there is none."""
     path = job / REQUEST_FILE
     if not path.is_file():
         return None
-    values = json.loads(path.read_text(encoding="utf-8"))
-    values["seeds"] = tuple(values["seeds"])
-    known = {name for name in RunRequest.__dataclass_fields__}
-    return RunRequest(**{key: value for key, value in values.items() if key in known})
+    return request_from_dict(json.loads(path.read_text(encoding="utf-8")))
