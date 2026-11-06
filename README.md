@@ -22,10 +22,11 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | **Explore** | **Datasets** | The datasets of your repositories, and whether each one is ready to use (its checklist, proteins and seed alignments); add other data directories, and go straight to optimising a dataset |
 | | **Add dataset** | Add your own proteins: give their files, check them against a checklist, and Transept computes the distances from the structures |
 | | **Algorithms** | What you can optimise with: every algorithm with its objectives and parameter space, read from the core jar, and the objectives and operators; go straight to using an algorithm |
-| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration, and launch one run or a series with consecutive seeds; shows the equivalent command line |
-| | **Monitor** | Follows a run or a series live (evaluations, best values), cancels it, or shows why it failed |
-| | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
+| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration, and launch one or several independent runs; shows the equivalent command line |
+| | **Monitor** | Follows runs live: the runs in progress in blue and the finished ones in grey; cancels them, or shows why one failed |
+| | **History** | Every run with its state; open one in the monitor or the results, or move runs, or all the independent runs of a launch, to the trash (restorable until it is emptied) |
 | **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features. With a reference alignment, every alignment shows its Pair F1, TM-pair F1, TM-gap rate and coverage, beside the seeds |
+| | **Results of independent runs** | The fronts of the runs in grey and their aggregate in blue, a summary with medians, and the best alignment beside the seeds; open any alignment in its run |
 | | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
 | **Advanced** | Automatic configuration | Coming soon |
 | **Learn** | **Tutorials** | Step-by-step guides, read inside Transept |
@@ -148,6 +149,13 @@ without copying it, add it on the **Datasets** page; it must follow the same lay
 [T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md) of
 Transept core describes.
 
+## Independent runs
+
+The search is stochastic, so **Independent runs** in **New run** repeats it with consecutive seeds.
+Transept decides how they share the computer: a parallel algorithm uses its threads, so its runs go
+one after another; an algorithm that evaluates one solution at a time (SMS-EMOA, MOEA/D, PAES) runs
+up to as many runs as cores at a time. The results do not depend on this.
+
 ## How it works
 
 Transept runs the core jar as a separate process and talks to it only through files:
@@ -165,7 +173,7 @@ reopening Transept finds them again. Everything is kept in plain files:
 | Path | Contents |
 | --- | --- |
 | `runs/ejecuciones/` | What the core writes for each run |
-| `runs/series/` | What Transept keeps about each series of runs |
+| `runs/series/` | What Transept keeps about each launch of independent runs |
 | `runs/jobs/` | What Transept keeps about each run: request, process id, log, cancellation mark |
 | `runs/trash/` | Deleted runs, until the trash is emptied |
 | `runs/baselines/` | Cached objective values of the seed alignments |

@@ -28,6 +28,7 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 | `transept/tutorials.py` | The tutorials of `docs/tutorials/`, shown by the Tutorials and Add dataset pages; a new file there appears without touching the code |
 | `transept/runner.py` | Command line, detached launch, cancellation |
 | `transept/series.py` | Series of runs: a detached process launches ordinary runs (`<series>_seed_<seed>`), a few at a time |
+| `transept/series_analysis.py`, `series_view.py` | What independent runs give together, without Streamlit, and its view in Results |
 | `transept/runs.py` | State of a run and reading of its files |
 | `transept/front.py`, `charts.py`, `alignment.py` | Non-dominated solutions, figures, alignment viewer |
 | `transept/ui.py` | Page paths and the selected run |
@@ -39,6 +40,8 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
   cancellation mark. Never keep run state only in memory.
 - The state of a series also comes only from files: `runs/series/<dataset>/<series-id>/` holds what
   it asks for, the PID of its process and the cancellation mark.
+- Independent runs must not add decisions for the user: `options.runs_at_a_time` decides how they
+  share the cores, and a single run is shown like one run of a series.
 - The tool refuses to write into an existing run directory: never create
   `runs/ejecuciones/<dataset>/<run-id>/` from Transept.
 - Several repositories can hold datasets with the same name, so a dataset is identified by its name
