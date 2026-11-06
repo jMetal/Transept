@@ -22,8 +22,8 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | **Explore** | **Datasets** | The datasets of your repositories, and whether each one is ready to use (its checklist, proteins and seed alignments); add other data directories, and go straight to optimising a dataset |
 | | **Add dataset** | Add your own proteins: give their files, check them against a checklist, and Transept computes the distances from the structures |
 | | **Algorithms** | What you can optimise with: every algorithm with its objectives and parameter space, read from the core jar, and the objectives and operators; go straight to using an algorithm |
-| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
-| | **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
+| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration, and launch one run or a series with consecutive seeds; shows the equivalent command line |
+| | **Monitor** | Follows a run or a series live (evaluations, best values), cancels it, or shows why it failed |
 | | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
 | **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
 | | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
@@ -159,12 +159,13 @@ Transept (Streamlit) ── java -jar transept-core-...jar run ... ──> runs/
                                                                      metadata.json or error.json
 ```
 
-Runs are detached processes: closing or reloading the browser does not stop them, and reopening
-Transept finds them again. Everything is kept in plain files:
+Runs and series are detached processes: closing or reloading the browser does not stop them, and
+reopening Transept finds them again. Everything is kept in plain files:
 
 | Path | Contents |
 | --- | --- |
 | `runs/ejecuciones/` | What the core writes for each run |
+| `runs/series/` | What Transept keeps about each series of runs |
 | `runs/jobs/` | What Transept keeps about each run: request, process id, log, cancellation mark |
 | `runs/trash/` | Deleted runs, until the trash is emptied |
 | `runs/baselines/` | Cached objective values of the seed alignments |
