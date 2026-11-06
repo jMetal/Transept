@@ -1,0 +1,14 @@
+# Only what the Dockerfile copies, so that local data never reach the image
+*
+!pyproject.toml
+!transept/
+!app.py
+!LICENSE
+!README.md
+!.streamlit/
+!pages/
+!docs/
+!examples/
+!lib/
+**/__pycache__
+**/.DS_Store

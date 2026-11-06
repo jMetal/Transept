@@ -5,7 +5,7 @@ JAR_NAME := transept-core-0.1.0-jar-with-dependencies.jar
 CORE ?= $(firstword $(wildcard ../Transept-core/pom.xml ../transept-core/pom.xml))
 CORE_DIR := $(patsubst %/pom.xml,%,$(CORE))
 
-.PHONY: setup env jar core lint format test run
+.PHONY: setup env jar core image run-image lint format test run
 
 # Creates the Conda environment (Python, Java and Maven) and puts the core jar in lib/.
 #   make setup                 builds the jar from a clone of Transept-core next to this one
@@ -40,6 +40,14 @@ core:
 	@mkdir -p lib
 	cp $(CORE_DIR)/target/$(JAR_NAME) lib/
 	@echo "Copied $(CORE_DIR)/target/$(JAR_NAME) to lib/"
+
+# Builds the Docker image from the jar of a clone of Transept-core next to this repository.
+image: core
+	docker build -t transept .
+
+# Runs the image built with `make image`; the runs and datasets stay in the transept-data volume.
+run-image:
+	docker run --rm -p 127.0.0.1:8501:8501 -v transept-data:/data transept
 
 lint:
 	$(RUN) ruff check .
