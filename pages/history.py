@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 
-from transept import runs, settings, ui
+from transept import runs, series, settings, ui
 from transept.runs import RunState
 
 CONFIRM_DELETE = "confirm_delete"
@@ -17,6 +17,7 @@ found = runs.list_runs(root)
 
 def summary_table(candidates: list[runs.Run]) -> pd.DataFrame:
     rows = []
+    series_of_runs = series.series_of_runs(root)
     for run in candidates:
         config = runs.config(run)
         metadata = runs.metadata(run) or {}
@@ -25,6 +26,7 @@ def summary_table(candidates: list[runs.Run]) -> pd.DataFrame:
             {
                 "dataset": run.dataset,
                 "run": run.run_id,
+                "series": series_of_runs.get((run.dataset, run.run_id), ""),
                 "state": runs.state(run).value,
                 "algorithm": config.get("algorithmType", ""),
                 "evaluations": config.get("maxEvaluations"),

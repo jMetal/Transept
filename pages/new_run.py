@@ -16,6 +16,7 @@ from transept import (
     options,
     runner,
     runs,
+    series,
     settings,
     spaces,
     ui,
@@ -258,8 +259,39 @@ seed = st.number_input(
     key="random_seed",
     help="The same seed and options reproduce a run exactly.",
 )
+count_column, parallel_column = st.columns(2)
+count = count_column.number_input(
+    "Runs with different seeds",
+    1,
+    1000,
+    1,
+    help="More than one makes a series, with consecutive seeds starting at the random seed. "
+    "Comparing methods needs several runs, because the search is stochastic.",
+)
+parallel = 1
+if count > 1:
+    available_cores = os.cpu_count() or 1
+    parallel = parallel_column.number_input(
+        "Runs at a time",
+        1,
+        int(count),
+        min(int(count), max(1, available_cores // int(threads))),
+        help="The results do not depend on it. The rest of the runs wait for their turn.",
+    )
+    if parallel * threads > available_cores:
+        st.warning(
+            f"{parallel} runs with {threads} threads each need more than the {available_cores} "
+            "cores of this computer: they will take longer."
+        )
 stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-run_id = st.text_input("Run identifier", f"{algorithm.lower()}-{stamp}")
+run_id = st.text_input(
+    "Run identifier" if count == 1 else "Series identifier", f"{algorithm.lower()}-{stamp}"
+)
+if count > 1:
+    st.caption(
+        f"{count} runs called `{run_id.strip()}_seed_<seed>`, with the seeds {int(seed)} to "
+        f"{int(seed) + count - 1}."
+    )
 
 request = runner.RunRequest(
     dataset=dataset,
@@ -279,6 +311,8 @@ request = runner.RunRequest(
     repair_seeds=repair_seeds,
 )
 errors = runner.validate(request)
+if count > 1:
+    errors += series.validate(request, int(count), int(parallel))
 for error in errors:
     st.error(error)
 if algorithm in options.ASYNCHRONOUS and threads > 1:
@@ -291,16 +325,28 @@ if algorithm in options.STEADY_STATE and threads > 1:
 
 root = settings.runs_root()
 with st.expander("Equivalent command line"):
+    if count > 1:
+        st.caption("Of the first run of the series; the others only change --run-id and --seed.")
+    first_request = request if count == 1 else series.member_requests(request, 1)[0]
     st.code(
-        runner.shell_command(runner.command(request, current.jar, data_root, root)),
+        runner.shell_command(runner.command(first_request, current.jar, data_root, root)),
         language="bash",
     )
 
 if st.button("Launch", type="primary", disabled=bool(errors)):
     try:
-        runner.launch(request, current.jar, data_root, root)
+        if count == 1:
+            runner.launch(request, current.jar, data_root, root)
+        else:
+            launched = series.launch(
+                request, int(count), int(parallel), current.jar, data_root, root
+            )
     except FileExistsError as exception:
         st.error(str(exception))
     else:
-        ui.select_run(runs.run_of(root, dataset, request.run_id))
+        if count == 1:
+            ui.select_run(runs.run_of(root, dataset, request.run_id))
+            st.session_state.pop(ui.SELECTED_SERIES, None)
+        else:
+            st.session_state[ui.SELECTED_SERIES] = launched.key
         st.switch_page(ui.MONITOR)

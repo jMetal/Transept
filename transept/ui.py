@@ -18,6 +18,7 @@ HISTORY = "pages/history.py"
 TUTORIALS = "pages/tutorials.py"
 
 SELECTED_RUN = "selected_run"
+SELECTED_SERIES = "selected_series"
 DATASET_TO_OPTIMIZE = "dataset_to_optimize"
 DATASET_SELECTED = "datasets_selected"
 ALGORITHM_TO_USE = "algorithm_to_use"
