@@ -9,6 +9,8 @@ description = "Graphical interface of Transept, multiobjective structure-guided 
 requires-python = ">=3.11"
 dependencies = [
     "streamlit>=1.67",
+    "numpy",
+    "biopython",
     "pandas",
     "plotly",
     "pyyaml",
