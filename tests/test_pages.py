@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -553,6 +554,58 @@ class TestNewRun:
         assert selector.options == ["toy (Toy)", "toy (Twin)"]
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert str(twin) in command
+
+    def test_should_keep_the_identifier_typed_when_the_clock_changes(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        identifier = next(box for box in app.text_input if box.label == "Run identifier")
+        identifier.set_value("mine").run()
+
+        # Act: the default used to depend on the second
+        time.sleep(1.1)
+        next(box for box in app.number_input if box.label == "Evaluations").set_value(500).run()
+
+        # Assert
+        assert not app.exception
+        assert next(box for box in app.text_input if box.label == "Run identifier").value == "mine"
+
+    def test_should_keep_the_suggested_identifier_when_the_clock_changes(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        before = next(box for box in app.text_input if box.label == "Run identifier").value
+
+        # Act
+        time.sleep(1.1)
+        next(box for box in app.number_input if box.label == "Evaluations").set_value(500).run()
+
+        # Assert
+        assert next(box for box in app.text_input if box.label == "Run identifier").value == before
+
+    def test_should_suggest_another_identifier_for_another_algorithm(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        assert next(b for b in app.text_input if b.label == "Run identifier").value.startswith(
+            "nsga_ii-"
+        )
+
+        # Act
+        next(b for b in app.selectbox if b.label == "Algorithm").set_value("PAES").run()
+
+        # Assert
+        assert next(b for b in app.text_input if b.label == "Run identifier").value.startswith(
+            "paes-"
+        )
+
+    def test_should_keep_a_typed_identifier_for_another_algorithm(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        next(b for b in app.text_input if b.label == "Run identifier").set_value("mine").run()
+
+        # Act
+        next(b for b in app.selectbox if b.label == "Algorithm").set_value("PAES").run()
+
+        # Assert
+        assert next(b for b in app.text_input if b.label == "Run identifier").value == "mine"
 
     def test_should_offer_a_series_only_with_several_runs(self, configured):
         # Arrange
