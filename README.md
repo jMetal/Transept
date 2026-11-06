@@ -28,7 +28,7 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
 | | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
 | **Advanced** | Automatic configuration | Coming soon |
-| **Learn** | Tutorials | Coming soon |
+| **Learn** | **Tutorials** | Step-by-step guides, read inside Transept |
 
 ## Installation
 
@@ -142,7 +142,8 @@ git -C Dataset_Structural_GPCRs checkout v1.0.0
 ```
 
 To align your own proteins, follow the tutorial
-[Add your own proteins](docs/tutorials/add-your-own-proteins.md). To use a folder of datasets
+[Add your own proteins](docs/tutorials/add-your-own-proteins.md), also available on the
+**Tutorials** page and in **Add dataset**. To use a folder of datasets
 without copying it, add it on the **Datasets** page; it must follow the same layout, which tutorial
 [T6](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T6-your-own-dataset.md) of
 Transept core describes.
