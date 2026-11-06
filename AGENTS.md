@@ -24,6 +24,7 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 | `transept/options.py` | The options of `run` offered by Transept; keep them in step with the CLI |
 | `transept/dataset_builder.py`, `distances.py` | A dataset from the files of the user: laid out in `.staging/`, checked, then moved to `datasets/`; distances from PDB files |
 | `transept/algorithms.py` | The catalogue of the `algorithms` command of the jar, and what each formulation means |
+| `transept/reference_scores.py` | Alignments compared with the reference, by the `score` command of the core; cached in `runs/scores/` |
 | `transept/tutorials.py` | The tutorials of `docs/tutorials/`, shown by the Tutorials and Add dataset pages; a new file there appears without touching the code |
 | `transept/runner.py` | Command line, detached launch, cancellation |
 | `transept/series.py` | Series of runs: a detached process launches ordinary runs (`<series>_seed_<seed>`), a few at a time |

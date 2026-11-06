@@ -25,7 +25,7 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration, and launch one run or a series with consecutive seeds; shows the equivalent command line |
 | | **Monitor** | Follows a run or a series live (evaluations, best values), cancels it, or shows why it failed |
 | | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
-| **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
+| **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features. With a reference alignment, every alignment shows its Pair F1, TM-pair F1, TM-gap rate and coverage, beside the seeds |
 | | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
 | **Advanced** | Automatic configuration | Coming soon |
 | **Learn** | **Tutorials** | Step-by-step guides, read inside Transept |
@@ -169,6 +169,7 @@ reopening Transept finds them again. Everything is kept in plain files:
 | `runs/jobs/` | What Transept keeps about each run: request, process id, log, cancellation mark |
 | `runs/trash/` | Deleted runs, until the trash is emptied |
 | `runs/baselines/` | Cached objective values of the seed alignments |
+| `runs/scores/` | Cached comparisons of alignments with the reference |
 | `datasets/` | The datasets added on the **Add dataset** page (the repository _My datasets_) |
 | `.staging/` | Datasets being checked, before they are added |
 | `settings.json` | The path of the jar and the repositories you added |
