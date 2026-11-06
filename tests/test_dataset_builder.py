@@ -157,9 +157,14 @@ class TestPublish:
         # Assert
         assert datasets.list_datasets(repository) == ["mine"]
         assert datasets.list_seed_tools(repository, "mine") == ["mafft"]
-        assert datasets.proteins_without_structure(
-            repository, "mine", datasets.read_topology(datasets.topology_file(repository, "mine"))
-        ) == []
+        assert (
+            datasets.proteins_without_structure(
+                repository,
+                "mine",
+                datasets.read_topology(datasets.topology_file(repository, "mine")),
+            )
+            == []
+        )
         assert not staged.root.exists()
 
     def test_should_refuse_a_dataset_that_cannot_be_used(self, tmp_path: Path):

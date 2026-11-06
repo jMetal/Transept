@@ -9,7 +9,7 @@ import streamlit as st
 from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import datasets, options, settings, ui
+from transept import datasets, options, settings, tutorials, ui
 from transept.sections import SECTIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
@@ -83,6 +83,37 @@ class TestHome:
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
 
+class TestTutorials:
+    def test_should_show_the_tutorial(self, configured):
+        app = open_page(ui.TUTORIALS)
+        assert not app.exception
+        assert "# Add your own proteins" in texts(app)
+
+    def test_should_choose_among_several(
+        self, configured, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange
+        (tmp_path / "a.md").write_text("# First\n")
+        (tmp_path / "b.md").write_text("# Second\n")
+        several = tutorials.list_tutorials(tmp_path)
+        monkeypatch.setattr(tutorials, "list_tutorials", lambda directory=None: several)
+        app = open_page(ui.TUTORIALS)
+        assert "# First" in texts(app)
+
+        # Act
+        app.selectbox[0].select_index(1).run()
+
+        # Assert
+        assert not app.exception
+        assert "# Second" in texts(app)
+
+    def test_should_say_when_there_are_none(self, configured, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(tutorials, "list_tutorials", lambda directory=None: [])
+        app = open_page(ui.TUTORIALS)
+        assert not app.exception
+        assert "were not found" in texts(app)
+
+
 class TestDatasets:
     def test_should_list_the_datasets_with_their_checklist(self, configured):
         # Act
@@ -97,9 +128,7 @@ class TestDatasets:
         assert "toy · Toy" in [element.value for element in app.subheader]
         assert "1 of 3 proteins have no distances" in texts(app)
 
-    def test_should_add_a_repository_and_refuse_a_wrong_directory(
-        self, configured, tmp_path: Path
-    ):
+    def test_should_add_a_repository_and_refuse_a_wrong_directory(self, configured, tmp_path: Path):
         # Arrange
         other = tmp_path / "Other"
         (other / "sequences" / "tmregions").mkdir(parents=True)
@@ -181,6 +210,12 @@ class TestAddDataset:
     def fill(app: AppTest) -> None:
         app.text_input[0].set_value("mine").run()
         next(button for button in app.button if button.label == "Check the files").click().run()
+
+    def test_should_offer_the_tutorial_on_the_same_page(self, configured):
+        app = open_page(ui.ADD_DATASET)
+        assert not app.exception
+        assert app.expander[0].label == "Follow the tutorial"
+        assert "Step 3: check the files" in texts(app)
 
     def test_should_not_check_without_a_name_and_a_topology(self, configured):
         app = open_page(ui.ADD_DATASET)

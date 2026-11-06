@@ -122,9 +122,7 @@ class TestCheckDataset:
 
     def test_should_count_the_helices_and_the_lengths(self, data_root: Path):
         # Arrange
-        datasets.topology_file(data_root, "toy").write_text(
-            ">p1\nACDEFG\nMMOOMM\n>p2\nAC\nOO\n"
-        )
+        datasets.topology_file(data_root, "toy").write_text(">p1\nACDEFG\nMMOOMM\n>p2\nAC\nOO\n")
 
         # Act
         report = dataset_check.check_dataset(data_root, "toy")
