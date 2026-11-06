@@ -4,12 +4,23 @@ import json
 import shutil
 from pathlib import Path
 
+import pandas as pd
 import pytest
 import streamlit as st
 from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
-from transept import algorithms, datasets, options, runner, series, settings, tutorials, ui
+from transept import (
+    algorithms,
+    datasets,
+    options,
+    reference_scores,
+    runner,
+    series,
+    settings,
+    tutorials,
+    ui,
+)
 from transept.algorithms import Algorithm
 from transept.sections import SECTIONS
 
@@ -82,6 +93,74 @@ class TestHome:
         links = {label for label in labels if label.startswith("Open ")}
         assert links == {f"Open {page.title}" for page in pages if page.available}
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
+
+
+class TestResultsAgainstTheReference:
+    @staticmethod
+    def metrics(rows: list[int], f1: list[float]) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "row": rows,
+                reference_scores.PAIR_F1: f1,
+                reference_scores.TM_PAIR_F1: [0.9] * len(rows),
+                reference_scores.TM_GAP_RATE: [0.01] * len(rows),
+                reference_scores.COVERAGE: [0.8] * len(rows),
+            }
+        )
+
+    @pytest.fixture
+    def scored(self, configured, data_root: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        write_finished_run(settings.runs_root(), data_root)
+        reference = datasets.reference_file(data_root, "toy")
+        reference.parent.mkdir(parents=True)
+        reference.write_text(">p1\nA\n")
+        table = self.metrics([0, 1, 3], [0.6, 0.7, 0.5])
+        seeds = pd.DataFrame(
+            {
+                "seed": ["mafft", "kalign"],
+                **{
+                    name: [0.4, None] if name == reference_scores.PAIR_F1 else [0.5, None]
+                    for name in reference_scores.METRICS
+                },
+                "problem": ["", "Protein IDs differ"],
+            }
+        )
+        monkeypatch.setattr(reference_scores, "run_scores", lambda *arguments: table)
+        monkeypatch.setattr(reference_scores, "seed_scores", lambda *arguments: seeds)
+
+    def test_should_show_the_metrics_beside_the_best_and_the_seeds(self, scored):
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        titles = [element.value for element in app.subheader]
+        heading = next(title for title in titles if "against the reference" in title)
+        assert heading.startswith("MSASol")
+        labels = [element.label for element in app.metric]
+        assert {"Pair F1", "TM-pair F1", "TM-gap rate", "Coverage"} <= set(labels)
+        comparison = next(f.value for f in app.dataframe if "alignment" in f.value.columns)
+        assert "MSASol1 (best of this run)" in list(comparison["alignment"])
+        assert "seed: mafft" in list(comparison["alignment"])
+        assert "seed: kalign" not in list(comparison["alignment"])
+        assert "Seeds that could not be compared: kalign." in texts(app)
+
+    def test_should_add_the_metrics_to_the_table_of_alignments(self, scored):
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        solutions = next(f.value for f in app.dataframe if "file" in f.value.columns)
+        assert reference_scores.PAIR_F1 in solutions.columns
+
+    def test_should_say_when_there_is_no_reference(self, configured, data_root: Path):
+        write_finished_run(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        assert not app.exception
+        assert "no reference alignment" in texts(app)
+
+    def test_should_explain_when_the_jar_cannot_compare(self, scored, monkeypatch):
+        monkeypatch.setattr(reference_scores, "run_scores", lambda *arguments: None)
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        assert not app.exception
+        assert "could not be compared with the reference" in texts(app)
 
 
 class TestSeries:
