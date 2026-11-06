@@ -8,6 +8,7 @@ from transept.runs import RunState
 
 CONFIRM_DELETE = "confirm_delete"
 CONFIRM_EMPTY = "confirm_empty"
+CONFIRM_DELETE_SERIES = "confirm_delete_series"
 
 st.title("History")
 
@@ -78,28 +79,81 @@ def show_actions(chosen: list[runs.Run]) -> None:
             st.rerun()
 
 
+ALL_RUNS = "All runs"
+
+
+def show_series_actions(chosen: series.Series) -> None:
+    """Deletes a whole series, after confirmation."""
+    if series.state(chosen) == series.SeriesState.RUNNING:
+        st.caption("This series is running: cancel it in the monitor before deleting it.")
+        return
+    if st.button(
+        f"Delete the {len(chosen.requests)} runs of this series…", key="ask_delete_series"
+    ):
+        st.session_state[CONFIRM_DELETE_SERIES] = chosen.key
+    if st.session_state.get(CONFIRM_DELETE_SERIES) == chosen.key:
+        st.warning(f"Move every run of {chosen.key} to the trash? They can be restored below.")
+        yes, no = st.columns(2)
+        if yes.button("Yes, move them to the trash", type="primary"):
+            series.move_to_trash(chosen)
+            st.session_state[CONFIRM_DELETE_SERIES] = None
+            if st.session_state.get(ui.SELECTED_SERIES) == chosen.key:
+                st.session_state.pop(ui.SELECTED_SERIES)
+            st.session_state.pop(ui.SELECTED_RUN, None)
+            st.rerun()
+        if no.button("Cancel", key="confirm_delete_series_no"):
+            st.session_state[CONFIRM_DELETE_SERIES] = None
+            st.rerun()
+
+
 if not found:
     st.info("There are no runs yet.")
     st.page_link(ui.NEW_RUN, label="Launch a run", icon=":material/play_arrow:")
 else:
-    event = st.dataframe(
-        summary_table(found),
-        hide_index=True,
-        width="stretch",
-        on_select="rerun",
-        selection_mode="multi-row",
-        key="history",
-    )
-    selection = event.selection.rows if event and event.selection else []
-    if selection:
-        show_actions([found[index] for index in selection])
-    else:
-        st.caption("Select one run to open it, or several to delete them.")
+    available_series = {item.key: item for item in series.list_series(root)}
+    chosen_series = None
+    if available_series:
+        label = st.selectbox("Show", [ALL_RUNS, *available_series])
+        chosen_series = available_series.get(label)
+    if chosen_series is not None:
+        identifiers = {request.run_id for request in chosen_series.requests}
+        found = [
+            run
+            for run in found
+            if run.dataset == chosen_series.dataset and run.run_id in identifiers
+        ]
+        show_series_actions(chosen_series)
+    if found:
+        event = st.dataframe(
+            summary_table(found),
+            hide_index=True,
+            width="stretch",
+            on_select="rerun",
+            selection_mode="multi-row",
+            key=f"history:{chosen_series.key if chosen_series else ALL_RUNS}",
+        )
+        selection = event.selection.rows if event and event.selection else []
+        if selection:
+            show_actions([found[index] for index in selection])
+        else:
+            st.caption("Select one run to open it, or several to delete them.")
 
 trashed = runs.list_trash(root)
 with st.expander(f"Trash ({len(trashed)})"):
     if not trashed:
         st.caption("The trash is empty.")
+    for item in series.all_series(root):
+        members = series.trashed_runs(item)
+        if len(members) > 1 and st.button(
+            f"Restore the {len(members)} runs of {item.key}", key=f"restore_series:{item.key}"
+        ):
+            try:
+                for member in members:
+                    runs.restore(root, member)
+            except FileExistsError as error:
+                st.error(str(error))
+            else:
+                st.rerun()
     for item in trashed:
         left, right = st.columns([4, 1])
         left.write(f"{item.key} (deleted {item.deleted_at})")
@@ -118,6 +172,7 @@ with st.expander(f"Trash ({len(trashed)})"):
             yes, no = st.columns(2)
             if yes.button("Yes, empty the trash", type="primary", key="confirm_empty_yes"):
                 runs.empty_trash(root)
+                series.forget_deleted(root)
                 st.session_state[CONFIRM_EMPTY] = False
                 st.rerun()
             if no.button("Cancel", key="confirm_empty_no"):

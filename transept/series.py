@@ -9,6 +9,7 @@ ordinary run, called `<series-id>_seed_<seed>`.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import threading
@@ -261,6 +262,47 @@ def list_series(runs_root: Path) -> list[Series]:
         ):
             found.append(series)
     return found
+
+
+def all_series(runs_root: Path) -> list[Series]:
+    """Returns every series, also those whose runs were all deleted."""
+    paths = (runs_root / "series").glob(f"*/*/{SERIES_FILE}")
+    return [load(path.parent) for path in sorted(paths)]
+
+
+def move_to_trash(chosen: Series) -> int:
+    """Moves the runs of a series to the trash and returns how many there were.
+
+    Raises:
+        ValueError: If the series is still running; cancel it first.
+    """
+    if state(chosen) == SeriesState.RUNNING:
+        raise ValueError(f"{chosen.key} is still running: cancel it first")
+    existing = [run for run in (_run_of(chosen, r) for r in chosen.requests) if _exists(run)]
+    for run in existing:
+        runs.move_to_trash(chosen.runs_root, run)
+    return len(existing)
+
+
+def trashed_runs(chosen: Series) -> list[runs.TrashedRun]:
+    """Returns the runs of a series that are in the trash."""
+    identifiers = {request.run_id for request in chosen.requests}
+    return [
+        item
+        for item in runs.list_trash(chosen.runs_root)
+        if item.dataset == chosen.dataset and item.run_id in identifiers
+    ]
+
+
+def forget_deleted(runs_root: Path) -> None:
+    """Removes the files of the series with no run left, neither in use nor in the trash."""
+    for item in all_series(runs_root):
+        if (
+            not _is_active(item.directory)
+            and not any(_exists(_run_of(item, request)) for request in item.requests)
+            and not trashed_runs(item)
+        ):
+            shutil.rmtree(item.directory, ignore_errors=True)
 
 
 def series_of_runs(runs_root: Path) -> dict[tuple[str, str], str]:
