@@ -1,6 +1,7 @@
 """The pages open without errors and show what they should, without a browser."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -81,7 +82,107 @@ class TestHome:
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
 
+class TestDatasets:
+    def test_should_list_the_datasets_with_their_checklist(self, configured):
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        table = app.dataframe[0].value
+        assert list(table["Dataset"]) == ["toy"]
+        assert table["Structures"][0] == "2/3"
+        assert table["Status"][0] == "Ready, with warnings"
+        assert "toy · Toy" in [element.value for element in app.subheader]
+        assert "1 of 3 proteins have no distances" in texts(app)
+
+    def test_should_add_a_repository_and_refuse_a_wrong_directory(
+        self, configured, tmp_path: Path
+    ):
+        # Arrange
+        other = tmp_path / "Other"
+        (other / "sequences" / "tmregions").mkdir(parents=True)
+        app = open_page(ui.DATASETS)
+
+        # Act: a directory without the layout
+        app.text_input[0].set_value(str(tmp_path / "wrong"))
+        next(button for button in app.button if button.label == "Add").click().run()
+
+        # Assert
+        assert "does not look like a data directory" in texts(app)
+        assert len(settings.load_settings().repositories) == 1
+
+        # Act: a repository
+        app.text_input[0].set_value(str(other))
+        next(button for button in app.button if button.label == "Add").click().run()
+
+        # Assert
+        assert not app.exception
+        names = [repository.name for repository in settings.load_settings().repositories]
+        assert names == ["Toy", "Other"]
+
+    def test_should_show_a_missing_repository_without_failing(self, configured, tmp_path: Path):
+        # Arrange
+        gone = settings.Repository("Gone", str(tmp_path / "gone"))
+        settings.save_settings(settings.Settings(configured.jar, [*configured.repositories, gone]))
+
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        assert "Directory not found" in texts(app)
+        assert list(app.dataframe[0].value["Dataset"]) == ["toy"]
+
+    def test_should_not_offer_to_optimize_a_dataset_that_cannot_be_used(
+        self, configured, data_root: Path
+    ):
+        # Arrange
+        topology = data_root / "sequences" / "tmregions" / "toy_predicted_topologies.3line"
+        topology.write_text(">only\nAC\n")
+
+        # Act
+        app = open_page(ui.DATASETS)
+
+        # Assert
+        assert not app.exception
+        assert app.dataframe[0].value["Status"][0] == "Not usable"
+        optimize = next(b for b in app.button if b.label == "Optimize this dataset")
+        assert optimize.disabled
+
+
 class TestNewRun:
+    def test_should_open_the_dataset_chosen_in_datasets(self, configured, tmp_path: Path):
+        # Arrange: a dataset with the same name in another repository
+        twin = tmp_path / "Twin"
+        shutil.copytree(configured.repositories[0].path, twin)
+        repositories = [*configured.repositories, settings.Repository("Twin", str(twin))]
+        settings.save_settings(settings.Settings(configured.jar, repositories))
+
+        # Act
+        app = open_page(ui.NEW_RUN, dataset_to_optimize=(str(twin), "toy"))
+
+        # Assert
+        assert not app.exception
+        selector = next(box for box in app.selectbox if box.label == "Dataset")
+        assert selector.value == "toy (Twin)"
+        assert selector.options == ["toy (Toy)", "toy (Twin)"]
+        command = next(code.value for code in app.code if "--data-root" in code.value)
+        assert str(twin) in command
+
+    def test_should_refuse_a_dataset_that_cannot_be_used(self, configured, data_root: Path):
+        # Arrange
+        for path in (data_root / "distances" / "toy").iterdir():
+            path.unlink()
+
+        # Act
+        app = open_page(ui.NEW_RUN)
+
+        # Assert
+        assert not app.exception
+        assert "No protein has distances" in texts(app)
+        assert not [button for button in app.button if button.label == "Launch"]
+
     def test_should_offer_the_datasets_and_default_seeds(self, configured):
         if settings.java_version() is None:
             pytest.skip("Java is not installed")

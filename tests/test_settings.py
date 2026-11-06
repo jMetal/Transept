@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -99,6 +100,28 @@ class TestPersistence:
         # Assert
         assert loaded == chosen
 
+    def test_should_turn_an_earlier_data_directory_into_a_repository(self, transept_home: Path):
+        # Arrange
+        settings.settings_file().write_text(
+            '{"jar": "/a.jar", "data_root": "/benchmark/GPCRdb"}', encoding="utf-8"
+        )
+
+        # Act
+        loaded = settings.load_settings()
+
+        # Assert
+        assert loaded.jar == "/a.jar"
+        assert loaded.repositories == [settings.Repository("benchmark", "/benchmark/GPCRdb")]
+
+    def test_should_not_add_the_examples_as_an_earlier_repository(self, transept_home: Path):
+        # Arrange
+        settings.settings_file().write_text(
+            json.dumps({"jar": "/a.jar", "data_root": str(settings.EXAMPLES)}), encoding="utf-8"
+        )
+
+        # Act & Assert
+        assert settings.load_settings().repositories == []
+
     def test_should_load_the_defaults_when_nothing_was_saved(self, transept_home: Path):
         assert settings.load_settings() == settings.default_settings()
 
@@ -116,3 +139,56 @@ class TestProblems:
         # Assert
         assert any("jar was not found" in problem for problem in found)
         assert any("No data directory is available" in problem for problem in found)
+
+
+class TestRepositories:
+    def test_should_add_a_directory_with_the_layout(self, transept_home: Path, data_root: Path):
+        # Act
+        chosen = settings.add_repository(settings.Settings("/a.jar"), str(data_root), "Mine")
+
+        # Assert
+        assert chosen.repositories == [settings.Repository("Mine", str(data_root))]
+
+    def test_should_name_a_repository_after_its_folder(self):
+        assert settings.default_repository_name("/benchmark/GPCRdb") == "benchmark"
+        assert settings.default_repository_name("/my/proteins") == "proteins"
+
+    def test_should_refuse_a_directory_without_the_layout(self, transept_home, tmp_path: Path):
+        with pytest.raises(ValueError, match="does not look like a data directory"):
+            settings.add_repository(settings.Settings("/a.jar"), str(tmp_path))
+
+    def test_should_refuse_a_repeated_path_or_name(self, transept_home, data_root: Path, tmp_path):
+        # Arrange
+        chosen = settings.add_repository(settings.Settings("/a.jar"), str(data_root), "Mine")
+        other = tmp_path / "other"
+        (other / "sequences" / "tmregions").mkdir(parents=True)
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="already the repository Mine"):
+            settings.add_repository(chosen, str(data_root), "Another")
+        with pytest.raises(ValueError, match="already a repository called Mine"):
+            settings.add_repository(chosen, str(other), "Mine")
+
+    def test_should_only_forget_a_removed_repository(self, transept_home, data_root: Path):
+        # Arrange
+        chosen = settings.add_repository(settings.Settings("/a.jar"), str(data_root))
+
+        # Act
+        chosen = settings.remove_repository(chosen, str(data_root))
+
+        # Assert
+        assert chosen.repositories == []
+        assert data_root.is_dir()
+
+
+class TestDataRootOfRun:
+    def test_should_prefer_the_directory_the_run_recorded(self, configured, data_root: Path):
+        assert settings.data_root_of_run(configured, str(data_root), "other") == str(data_root)
+
+    def test_should_look_for_the_dataset_when_the_directory_is_gone(self, configured, data_root):
+        assert settings.data_root_of_run(configured, "/gone", "toy") == str(data_root)
+        assert settings.data_root_of_run(configured, None, "toy") == str(data_root)
+
+    def test_should_keep_what_was_recorded_when_no_repository_has_it(self, configured):
+        assert settings.data_root_of_run(configured, "/gone", "other") == "/gone"
+        assert settings.data_root_of_run(configured, None, "other") == ""
