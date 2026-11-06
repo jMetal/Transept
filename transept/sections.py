@@ -73,6 +73,7 @@ SECTIONS = (
                 ":material/category:",
                 "Browse the algorithms, objectives and operators you can optimise with, and the "
                 "parameters of each configurable algorithm.",
+                ui.ALGORITHMS,
             ),
         ),
     ),

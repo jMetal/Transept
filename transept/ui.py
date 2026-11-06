@@ -10,6 +10,7 @@ from transept.dataset_check import Level
 HOME = "pages/home.py"
 DATASETS = "pages/datasets.py"
 ADD_DATASET = "pages/add_dataset.py"
+ALGORITHMS = "pages/algorithms.py"
 NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
@@ -19,6 +20,8 @@ TUTORIALS = "pages/tutorials.py"
 SELECTED_RUN = "selected_run"
 DATASET_TO_OPTIMIZE = "dataset_to_optimize"
 DATASET_SELECTED = "datasets_selected"
+ALGORITHM_TO_USE = "algorithm_to_use"
+ALGORITHM_SELECTED = "algorithms_selected"
 LEVEL_MARKS = {
     Level.OK: ":green[:material/check_circle:]",
     Level.INFO: ":blue[:material/info:]",

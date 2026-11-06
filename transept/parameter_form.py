@@ -12,13 +12,57 @@ import streamlit as st
 from transept.configuration import same_value
 from transept.parameter_space import (
     CategoricalParameter,
+    ParameterRow,
     ParameterSpec,
     RangeParameter,
     active_sub_parameters,
+    filter_rows,
+    parameter_rows,
+    summarize_parameter_space,
 )
 
 CONFIGURATION_FORM_COLUMNS = 3
 MODIFIED_MARK = " ✏️"
+
+
+def render_parameter_space_table(parameters: list[ParameterSpec], key: str) -> None:
+    """Render a parameter space as a read-only table, one row per parameter.
+
+    Above the table, a one-line summary of the size of the space and a filter by text. Each
+    sub-parameter is indented under its parent, and "Active if" says when it applies. Filtering
+    keeps the ancestors of every match.
+
+    Args:
+        parameters: The top-level parameters to render.
+        key: Prefix for widget keys, unique per table on the page.
+    """
+    summary = summarize_parameter_space(parameters)
+    st.markdown(
+        f"**{summary.total}** parameters · **{summary.top_level}** top-level · "
+        f"**{summary.categorical}** categorical · **{summary.numeric}** numeric · "
+        f"maximum depth **{summary.max_depth}**"
+    )
+    text = st.text_input(
+        "Filter parameters",
+        key=f"{key}_filter",
+        placeholder="Name, value or condition (e.g. mutation, archive)",
+    )
+    rows = filter_rows(parameter_rows(parameters), text)
+    if not rows:
+        st.info(f'No parameter matches "{text}".')
+        return
+    st.dataframe([_table_row(row) for row in rows], hide_index=True, width="stretch")
+
+
+def _table_row(row: ParameterRow) -> dict[str, str]:
+    # Non-breaking spaces: the table would trim ordinary leading ones.
+    indent = "\u00a0" * 5 * (row.depth - 1) + "\u00a0└\u00a0" if row.depth else ""
+    return {
+        "Parameter": f"{indent}{row.name}",
+        "Type": row.kind,
+        "Active if": row.condition,
+        "Domain": row.domain,
+    }
 
 
 def render_configuration_form(
