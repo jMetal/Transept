@@ -119,7 +119,9 @@ page (for example `mafft`, `muscle5` and `tmaligner`).
 | A run fails | The **Monitor** shows why; the full output of the run is in `runs/jobs/<dataset>/<run-id>/log.txt` |
 
 To remove Transept, delete the `Transept` folder and the environment:
-`conda env remove -n transept`.
+`conda env remove -n transept`. Deleting the folder also deletes what you added and computed in it
+(`datasets/`, `runs/` and `settings.json`), unless `TRANSEPT_HOME` keeps them elsewhere: copy
+anything you want to keep first.
 
 ## Data
 
