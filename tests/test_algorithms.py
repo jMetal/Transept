@@ -39,6 +39,11 @@ class TestAlgorithm:
     def test_should_use_the_name_of_an_unknown_algorithm(self):
         assert algorithm(name="NEW").description == "NEW"
 
+    def test_should_be_parallel_unless_it_evaluates_one_solution_at_a_time(self):
+        assert algorithm().parallel
+        assert algorithm(asynchronous=True).parallel
+        assert not algorithm(steadyState=True).parallel
+
     def test_should_warn_about_what_limits_it(self):
         notes = " ".join(
             algorithm(

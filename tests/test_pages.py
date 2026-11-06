@@ -200,6 +200,8 @@ class TestAlgorithms:
         table = app.dataframe[0].value
         assert list(table["Algorithm"]) == ["NSGA_II", "GENETIC_ALGORITHM", "PAES"]
         assert list(table["Objectives"]) == ["2-3", "1", "2-3"]
+        assert list(table["Parallel"]) == [True, True, False]
+        assert "Asynchronous" not in table.columns
         assert not [button for button in app.button if button.label == "Use this algorithm"]
 
     def test_should_show_the_parameter_space_of_the_selected_one(self, configured, catalogue):
