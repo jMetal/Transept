@@ -91,7 +91,8 @@ how stable the results are, and together the runs can find better alignments tha
    computer.
 2. **Monitor** draws the runs in progress in blue and the finished ones in grey.
 3. **Results** shows the front of each run in grey and their **aggregate** in blue: the best
-   alignments of all the runs together. Select one to open it in its run.
+   alignments of all the runs together. The **knee** marks a balanced one, a good place to start, not
+   a validated recommendation. Select an alignment to open it in its run.
 
 ## Workflow 4: evaluate against a reference
 
