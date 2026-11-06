@@ -202,7 +202,7 @@ class TestSeries:
         table = app.dataframe[0].value
         assert list(table["seed"]) == [1, 2]
         assert list(table["state"]) == ["finished", "finished"]
-        assert "Every run of the series has finished." in texts(app)
+        assert "Every run has finished." in texts(app)
 
     def test_should_open_the_results_of_a_run_of_the_series(self, configured, data_root: Path):
         # Arrange
@@ -210,43 +210,57 @@ class TestSeries:
         app = open_page(ui.MONITOR, selected_series="toy / s")
 
         # Act
-        next(b for b in app.button if b.label == "Open the results").click().run()
+        next(b for b in app.button if b.label == "Open the results of this run").click().run()
 
         # Assert
         assert not app.exception
         assert app.title[0].value == "Results"
         assert app.session_state[ui.SELECTED_RUN] == ("toy", "s_seed_1")
 
-    def test_should_switch_to_a_run_that_has_not_finished(self, configured, data_root: Path):
-        # Arrange: a run of the series that was cancelled
+    def test_should_say_why_a_run_of_the_series_failed(self, configured, data_root: Path):
+        # Arrange: a run of the series that failed
         root = settings.runs_root()
         self.finished_series(root, data_root)
-        (runner.run_directory(root, "toy", "s_seed_2") / "metadata.json").unlink()
-        job = runner.job_directory(root, "toy", "s_seed_2")
-        job.mkdir(parents=True)
-        (job / runner.CANCELLED_FILE).touch()
+        results = runner.run_directory(root, "toy", "s_seed_2")
+        (results / "metadata.json").unlink()
+        (results / "error.json").write_text('{"type": "Error", "message": "no seeds"}')
         app = open_page(ui.MONITOR, selected_series="toy / s")
         assert "toy / s: finished, with problems" in [e.value for e in app.subheader]
+        assert "1 run(s) did not finish" in texts(app)
 
         # Act
         next(b for b in app.selectbox if b.label == "Run of the series").set_value("s_seed_2").run()
-        next(b for b in app.button if b.label == "Monitor this run").click().run()
 
         # Assert
         assert not app.exception
-        assert "toy / s_seed_2: cancelled" in [e.value for e in app.subheader]
-        assert ui.SELECTED_SERIES not in app.session_state
+        assert any("no seeds" in code.value for code in app.code)
 
-    def test_should_keep_following_single_runs(self, configured, data_root: Path):
+    def test_should_offer_one_entry_per_series_or_single_run(self, configured, data_root: Path):
         # Arrange
-        self.finished_series(settings.runs_root(), data_root)
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        write_finished_run(root, data_root, "alone")
 
         # Act
         app = open_page(ui.MONITOR)
 
         # Assert
         assert not app.exception
-        assert not any("toy / s:" == element.value[:7] for element in app.subheader)
+        selector = next(box for box in app.selectbox if box.label == "Run")
+        assert sorted(selector.options) == ["toy / alone", "toy / s (2 runs)"]
+
+    def test_should_show_a_single_run_as_before(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        write_finished_run(root, data_root, "alone")
+
+        # Act
+        app = open_page(ui.MONITOR, selected_run=("toy", "alone"))
+
+        # Assert
+        assert not app.exception
+        assert "toy / alone: finished" in [element.value for element in app.subheader]
 
     def test_should_say_which_series_a_run_belongs_to(self, configured, data_root: Path):
         # Arrange
@@ -612,9 +626,7 @@ class TestNewRun:
         app = open_page(ui.NEW_RUN)
 
         # Act
-        next(box for box in app.number_input if box.label == "Independent runs").set_value(
-            3
-        ).run()
+        next(box for box in app.number_input if box.label == "Independent runs").set_value(3).run()
 
         # Assert
         assert not app.exception
@@ -632,9 +644,7 @@ class TestNewRun:
 
         monkeypatch.setattr(series, "launch", fake_launch)
         app = open_page(ui.NEW_RUN)
-        next(box for box in app.number_input if box.label == "Independent runs").set_value(
-            3
-        ).run()
+        next(box for box in app.number_input if box.label == "Independent runs").set_value(3).run()
         next(box for box in app.text_input if box.label == "Series identifier").set_value("s").run()
 
         # Act

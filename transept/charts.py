@@ -36,6 +36,45 @@ def progress_figure(records: pd.DataFrame) -> go.Figure:
     return figure
 
 
+def series_progress_figure(finished: list[pd.DataFrame], active: list[pd.DataFrame]) -> go.Figure:
+    """Best value of each objective of several runs: the active ones stand out over the others.
+
+    Args:
+        finished: The progress records of the finished runs, in grey.
+        active: The progress records of the runs in progress, in blue.
+    """
+    with_data = [records for records in [*active, *finished] if not records.empty]
+    names = []
+    if with_data:
+        names = [c for c in with_data[0].columns if c not in ("evaluations", "seconds")]
+    figure = make_subplots(
+        rows=1, cols=max(len(names), 1), subplot_titles=[f"Best {name}" for name in names]
+    )
+    styles = (
+        (finished, {"color": ALL_COLOUR, "width": 1}, 0.7),
+        (active, {"color": FRONT_COLOUR, "width": 2.5}, 1.0),
+    )
+    for column, name in enumerate(names, start=1):
+        for group, line, opacity in styles:  # the active runs last, so that they are on top
+            for records in group:
+                if not records.empty:
+                    figure.add_trace(
+                        go.Scatter(
+                            x=records["evaluations"],
+                            y=records[name],
+                            mode="lines",
+                            line=line,
+                            opacity=opacity,
+                            hoverinfo="x+y",
+                        ),
+                        row=1,
+                        col=column,
+                    )
+        figure.update_xaxes(title_text="Evaluations", row=1, col=column)
+    figure.update_layout(showlegend=False, height=320, margin={"t": 40, "b": 40})
+    return figure
+
+
 SEED_COLOUR = "#2ca02c"
 COMPROMISE_COLOUR = "#ff7f0e"
 

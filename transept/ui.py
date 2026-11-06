@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from transept import dataset_check, runs, settings
+from transept import dataset_check, runs, series, settings
 from transept.dataset_check import Level
 
 HOME = "pages/home.py"
@@ -59,6 +59,63 @@ def choose_run(label: str, candidates: list[runs.Run]) -> runs.Run | None:
         st.selectbox(label, range(len(candidates)), index=index, format_func=lambda i: keys[i])
     ]
     select_run(chosen)
+    return chosen
+
+
+def choose_run_or_series(
+    label: str, candidates: list[runs.Run], all_series: list[series.Series]
+) -> runs.Run | series.Series | None:
+    """Shows a selector with one entry per single run or series, and remembers the choice.
+
+    The runs of a series do not have entries of their own: a series counts as one, in the place of
+    its newest run, and a series with no run yet comes first.
+
+    Args:
+        label: The label of the selector.
+        candidates: The runs to offer, newest first.
+        all_series: The series to offer.
+    """
+    by_key = {(item.dataset, item.series_id): item for item in all_series}
+    owner = {
+        (item.dataset, request.run_id): item for item in all_series for request in item.requests
+    }
+    entries: list[runs.Run | series.Series] = []
+    started = set()
+    for run in candidates:
+        item = owner.get((run.dataset, run.run_id))
+        if item is None:
+            entries.append(run)
+        elif item.key not in started:
+            started.add(item.key)
+            entries.append(item)
+    waiting = [item for item in by_key.values() if item.key not in started]
+    entries = [*waiting, *entries]
+    if not entries:
+        return None
+    remembered_run = selected_run()
+    wanted = st.session_state.get(SELECTED_SERIES)
+    if remembered_run is not None and not wanted:
+        member_of = owner.get((remembered_run.dataset, remembered_run.run_id))
+        wanted = member_of.key if member_of else remembered_run.key
+    keys = [entry.key for entry in entries]
+    index = keys.index(wanted) if wanted in keys else 0
+    chosen = entries[
+        st.selectbox(
+            label,
+            range(len(entries)),
+            index=index,
+            format_func=lambda i: (
+                f"{keys[i]} ({len(entries[i].requests)} runs)"
+                if isinstance(entries[i], series.Series)
+                else keys[i]
+            ),
+        )
+    ]
+    if isinstance(chosen, series.Series):
+        st.session_state[SELECTED_SERIES] = chosen.key
+    else:
+        st.session_state.pop(SELECTED_SERIES, None)
+        select_run(chosen)
     return chosen
 
 
