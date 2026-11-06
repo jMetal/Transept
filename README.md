@@ -9,6 +9,9 @@ alignments that trade sequence and structural consistency. This repository is th
 interface: launch runs, follow them while they are active, and explore the alignments they find,
 without using the command line. The engine is [Transept core](https://github.com/jMetal/Transept-core).
 
+New to Transept? Start with the [Overview](docs/tutorials/overview.md): what it is for, who it is for
+and its usual workflows, also available inside the tool.
+
 > **Status: prototype (0.1).** For local use. Please report problems and suggestions in the
 > [issues](https://github.com/jMetal/Transept/issues).
 
