@@ -14,13 +14,19 @@ without using the command line. The engine is [Transept core](https://github.com
 
 ## What it does
 
-| Page | |
-| --- | --- |
-| **Home** | Checks that Java, the core jar and the data directory are available, and edits their paths |
-| **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
-| **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
-| **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
-| **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
+The pages are grouped by what you want to do; the home page has a card for each one.
+
+| Section | Page | |
+| --- | --- | --- |
+| | **Home** | What Transept offers; checks that Java, the core jar and the data directory are available, and edits their paths |
+| **Explore** | Datasets, Add dataset, Algorithms | Coming soon: the datasets available, how to add your own, and what you can optimise with |
+| **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration; shows the equivalent command line |
+| | **Monitor** | Follows a run live (evaluations, best values), cancels it, or shows why it failed |
+| | **History** | Every run with its state; open one in the monitor or the results, or move runs to the trash (restorable until it is emptied) |
+| **Analyze** | **Results** | The alignments of a finished run with their extremes, knee and seed alignments; pick an alignment from the chart, the table or a list, browse it helix by helix (gaps that break a helix in red), compare it with a seed or another solution, and download it as FASTA, Clustal, Stockholm with topology or Jalview features |
+| | Compare | Coming soon: compare runs, seed alignments and alignments of other tools |
+| **Advanced** | Automatic configuration | Coming soon |
+| **Learn** | Tutorials | Coming soon |
 
 ## Installation
 
