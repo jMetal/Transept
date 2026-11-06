@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from transept import tutorials
+from transept import settings, tutorials
 
 
 class TestAbsoluteLinks:
@@ -34,6 +34,12 @@ class TestListTutorials:
         # Assert
         assert [(item.name, item.title) for item in found] == [("a", "First"), ("b", "Second")]
 
+    def test_should_put_the_overview_first(self, tmp_path: Path):
+        (tmp_path / "add.md").write_text("# Add\n")
+        (tmp_path / "overview.md").write_text("# Overview\n")
+        found = tutorials.list_tutorials(tmp_path)
+        assert [item.name for item in found] == ["overview", "add"]
+
     def test_should_use_the_file_name_without_a_heading(self, tmp_path: Path):
         (tmp_path / "plain.md").write_text("No heading\n")
         assert tutorials.list_tutorials(tmp_path)[0].title == "plain"
@@ -47,3 +53,9 @@ class TestListTutorials:
         assert tutorial is not None
         assert tutorial.title == "Add your own proteins"
         assert "../../" not in tutorial.text
+
+    def test_should_link_every_tutorial_to_files_that_exist(self):
+        root = settings.REPOSITORY
+        for path in (root / tutorials.DIRECTORY).glob("*.md"):
+            for target in tutorials.RELATIVE_LINK.findall(path.read_text(encoding="utf-8")):
+                assert (path.parent / target).exists(), f"{path.name}: {target}"
