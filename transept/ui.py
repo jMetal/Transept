@@ -14,6 +14,7 @@ NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
 HISTORY = "pages/history.py"
+TUTORIALS = "pages/tutorials.py"
 
 SELECTED_RUN = "selected_run"
 DATASET_TO_OPTIMIZE = "dataset_to_optimize"

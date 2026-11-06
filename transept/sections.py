@@ -137,7 +137,8 @@ SECTIONS = (
             Page(
                 "Tutorials",
                 ":material/school:",
-                "Step-by-step examples of how to optimise and analyse alignments.",
+                "Step-by-step guides, such as how to add and align your own proteins.",
+                ui.TUTORIALS,
             ),
         ),
     ),
