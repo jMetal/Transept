@@ -71,6 +71,11 @@ class Algorithm:
         return self.parameter_space is not None
 
     @property
+    def parallel(self) -> bool:
+        """Whether several evaluation threads speed it up."""
+        return not self.steady_state
+
+    @property
     def formulations(self) -> list[str]:
         """The formulations of --objectives it accepts."""
         return [
@@ -91,11 +96,13 @@ class Algorithm:
             found.append("Only the mutation and the probabilities can be set in **New run**.")
         if self.asynchronous:
             found.append(
-                "All threads stay busy, but with more than one thread a run does not repeat "
-                "exactly with the same seed."
+                "With more than one thread, a run does not repeat exactly with the same seed."
             )
         if self.steady_state:
-            found.append("It evaluates one solution at a time: more threads do not speed it up.")
+            found.append(
+                "It is not parallel: it evaluates one solution at a time, so more threads do not "
+                "speed it up."
+            )
         if not self.uses_crossover:
             found.append("It does not use the crossover.")
         return found

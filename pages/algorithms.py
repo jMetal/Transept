@@ -19,10 +19,9 @@ def pick_algorithm(catalogue: tuple[Algorithm, ...]) -> Algorithm | None:
                     "Algorithm": algorithm.name,
                     "Description": algorithm.description,
                     "Objectives": algorithm.objectives,
+                    "Parallel": algorithm.parallel,
                     "Configurable": algorithm.configurable,
                     "Crossover": algorithm.uses_crossover,
-                    "Steady state": algorithm.steady_state,
-                    "Asynchronous": algorithm.asynchronous,
                 }
                 for algorithm in catalogue
             ]
