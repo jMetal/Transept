@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from transept import dataset_builder, settings, ui
+from transept import dataset_builder, settings, tutorials, ui
 from transept.dataset_builder import DatasetBuildError, DatasetFiles, Source
 from transept.dataset_check import Status
 
@@ -29,6 +29,12 @@ st.write(
     "originals are not touched. Give what you have and check it: the checklist says what is "
     "missing before anything is added."
 )
+
+tutorial = tutorials.tutorial_named(tutorials.ADD_YOUR_OWN_PROTEINS)
+if tutorial is not None:
+    # On this page, because going to another one would lose the files already uploaded
+    with st.expander("Follow the tutorial", icon=":material/school:"):
+        st.markdown(tutorial.text)
 
 name = st.text_input(
     "Name of the dataset", help="Letters, digits, '.', '_' and '-'; for example my_receptors."
