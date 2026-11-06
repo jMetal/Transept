@@ -283,10 +283,19 @@ if count > 1:
             f"{parallel} runs with {threads} threads each need more than the {available_cores} "
             "cores of this computer: they will take longer."
         )
-stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-run_id = st.text_input(
-    "Run identifier" if count == 1 else "Series identifier", f"{algorithm.lower()}-{stamp}"
-)
+# The default is computed once: a widget whose default changes every second forgets what was typed.
+RUN_ID_WIDGET = "new_run_identifier"
+SUGGESTED_RUN_ID = "new_run_suggested_identifier"
+suggested = st.session_state.get(SUGGESTED_RUN_ID, "")
+if st.session_state.get(RUN_ID_WIDGET, suggested) == suggested and not suggested.startswith(
+    f"{algorithm.lower()}-"
+):
+    suggested = f"{algorithm.lower()}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    st.session_state[SUGGESTED_RUN_ID] = suggested
+    st.session_state[RUN_ID_WIDGET] = suggested
+elif RUN_ID_WIDGET not in st.session_state:
+    st.session_state[RUN_ID_WIDGET] = suggested
+run_id = st.text_input("Run identifier" if count == 1 else "Series identifier", key=RUN_ID_WIDGET)
 if count > 1:
     st.caption(
         f"{count} runs called `{run_id.strip()}_seed_<seed>`, with the seeds {int(seed)} to "
@@ -349,4 +358,5 @@ if st.button("Launch", type="primary", disabled=bool(errors)):
             st.session_state.pop(ui.SELECTED_SERIES, None)
         else:
             st.session_state[ui.SELECTED_SERIES] = launched.key
+        st.session_state.pop(SUGGESTED_RUN_ID, None)  # the next run gets a new identifier
         st.switch_page(ui.MONITOR)
