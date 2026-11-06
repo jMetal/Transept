@@ -75,6 +75,52 @@ def series_progress_figure(finished: list[pd.DataFrame], active: list[pd.DataFra
     return figure
 
 
+def series_front_figure(fronts: list[pd.DataFrame], aggregate: pd.DataFrame) -> go.Figure:
+    """The front of each run in grey and their aggregate in blue.
+
+    The solutions of the aggregate carry their seed and row as custom data, so that a click can
+    open them.
+
+    Args:
+        fronts: The non-dominated solutions of each run, with the columns SOPwTP and lDDT.
+        aggregate: The aggregate, with the columns `seed`, `row`, SOPwTP and lDDT.
+    """
+    figure = go.Figure()
+    for table in fronts:
+        figure.add_trace(
+            go.Scatter(
+                x=table[FIRST],
+                y=table[SECOND],
+                mode="markers",
+                marker={"color": ALL_COLOUR, "size": 6},
+                opacity=0.7,
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
+    figure.add_trace(
+        go.Scatter(
+            x=aggregate[FIRST],
+            y=aggregate[SECOND],
+            mode="lines+markers",
+            name="Aggregate",
+            marker={"color": FRONT_COLOUR, "size": 8},
+            line={"color": FRONT_COLOUR},
+            customdata=aggregate[["seed", "row"]].to_numpy().tolist(),
+            hovertemplate=f"seed %{{customdata[0]}}, MSASol%{{customdata[1]}}<br>{FIRST} %{{x}}<br>"
+            f"{SECOND} %{{y:.4f}}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        xaxis_title=FIRST,
+        yaxis_title=SECOND,
+        height=420,
+        margin={"t": 20, "b": 40},
+        showlegend=False,
+    )
+    return figure
+
+
 SEED_COLOUR = "#2ca02c"
 COMPROMISE_COLOUR = "#ff7f0e"
 

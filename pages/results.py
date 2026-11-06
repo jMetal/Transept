@@ -15,6 +15,8 @@ from transept import (
     front,
     reference_scores,
     runs,
+    series,
+    series_view,
     settings,
     ui,
 )
@@ -25,10 +27,28 @@ st.title("Results")
 finished = [
     run for run in runs.list_runs(settings.runs_root()) if runs.state(run) == RunState.FINISHED
 ]
-run = ui.choose_run("Run", finished)
-if run is None:
+opened_run = None if ui.SELECTED_SERIES in st.session_state else ui.selected_run()
+chosen = ui.choose_run_or_series(
+    "Run",
+    finished,
+    [
+        item
+        for item in series.list_series(settings.runs_root())
+        if any(
+            run.dataset == item.dataset and run.run_id in {r.run_id for r in item.requests}
+            for run in finished
+        )
+    ],
+)
+if chosen is None:
     st.info("There are no finished runs yet.")
     st.stop()
+if isinstance(chosen, series.Series):
+    run = series_view.choose_view(chosen, opened_run)
+    if run is None:
+        st.stop()
+else:
+    run = chosen
 
 config = runs.config(run)
 metadata = runs.metadata(run) or {}
