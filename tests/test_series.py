@@ -211,6 +211,61 @@ class TestStates:
         assert series.state(chosen) == SeriesState.CANCELLED
 
 
+class TestTrash:
+    @staticmethod
+    def finished(tmp_path: Path) -> series.Series:
+        chosen = make(tmp_path, count=2, parallel=2)
+        series.drive(chosen, poll_seconds=0.02)
+        for member in series.members(chosen):
+            wait_until_it_ends(member.run)
+        return chosen
+
+    def test_should_move_every_run_and_restore_them(self, tmp_path: Path, fake_tool):
+        # Arrange
+        chosen = self.finished(tmp_path)
+
+        # Act
+        assert series.move_to_trash(chosen) == 2
+
+        # Assert
+        assert states(chosen) == [series.DELETED] * 2
+        members = series.trashed_runs(chosen)
+        assert len(members) == 2
+
+        # Act
+        for member in members:
+            runs.restore(tmp_path, member)
+
+        # Assert
+        assert states(chosen) == ["finished", "finished"]
+        assert [item.key for item in series.list_series(tmp_path)] == ["toy / s"]
+
+    def test_should_refuse_a_series_that_is_running(self, tmp_path: Path):
+        chosen = make(tmp_path)
+        (chosen.directory / runner.PID_FILE).write_text(f"{os.getpid()}\n")
+        with pytest.raises(ValueError, match="still running"):
+            series.move_to_trash(chosen)
+
+    def test_should_forget_a_series_only_when_nothing_is_left(self, tmp_path: Path, fake_tool):
+        # Arrange
+        chosen = self.finished(tmp_path)
+        series.move_to_trash(chosen)
+
+        # Act: still in the trash
+        series.forget_deleted(tmp_path)
+
+        # Assert
+        assert chosen.directory.is_dir()
+
+        # Act
+        runs.empty_trash(tmp_path)
+        series.forget_deleted(tmp_path)
+
+        # Assert: the identifier can be used again
+        assert not chosen.directory.exists()
+        assert series.all_series(tmp_path) == []
+
+
 class TestList:
     def test_should_map_runs_to_their_series(self, tmp_path: Path, fake_tool):
         # Arrange

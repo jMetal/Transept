@@ -18,6 +18,7 @@ from transept import (
     options,
     reference_scores,
     runner,
+    runs,
     series,
     settings,
     tutorials,
@@ -359,6 +360,45 @@ class TestSeries:
         assert "(best of all runs)" in table["alignment"].iloc[0]
         solutions = next(f.value for f in app.dataframe if "file" in f.value.columns)
         assert reference_scores.PAIR_F1 in solutions.columns
+
+    def test_should_filter_history_by_series(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        write_finished_run(root, data_root, "alone")
+        app = open_page(ui.HISTORY)
+        assert len(app.dataframe[0].value) == 3
+
+        # Act
+        next(box for box in app.selectbox if box.label == "Show").set_value("toy / s").run()
+
+        # Assert
+        assert not app.exception
+        assert sorted(app.dataframe[0].value["run"]) == ["s_seed_1", "s_seed_2"]
+
+    def test_should_delete_and_restore_a_whole_series(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        app = open_page(ui.HISTORY)
+        next(box for box in app.selectbox if box.label == "Show").set_value("toy / s").run()
+
+        # Act
+        next(b for b in app.button if b.label.startswith("Delete the 2 runs")).click().run()
+        next(b for b in app.button if b.label == "Yes, move them to the trash").click().run()
+
+        # Assert
+        assert not app.exception
+        assert len(runs.list_trash(root)) == 2
+        assert not runs.list_runs(root)
+
+        # Act
+        next(b for b in app.button if b.label == "Restore the 2 runs of toy / s").click().run()
+
+        # Assert
+        assert not app.exception
+        assert len(runs.list_runs(root)) == 2
+        assert runs.list_trash(root) == []
 
     def test_should_say_which_series_a_run_belongs_to(self, configured, data_root: Path):
         # Arrange
