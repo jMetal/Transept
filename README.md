@@ -40,7 +40,7 @@ The pages are grouped by what you want to do; the home page has a card for each 
 
 | | |
 | --- | --- |
-| **Operating system** | macOS or Linux. On Windows, use [WSL](https://learn.microsoft.com/windows/wsl/install) (not tested yet) |
+| **Operating system** | macOS or Linux. On Windows, use [WSL](https://learn.microsoft.com/windows/wsl/install) or [Docker](#running-transept-with-docker) (not tested yet) |
 | **git and make** | macOS: `xcode-select --install`. Debian/Ubuntu: `sudo apt install git make` |
 | **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python, Java and Maven for Transept, in an environment of its own: you do not need to install them yourself |
 | **Disk and network** | About 2 GB, downloaded once: the Conda environment and the libraries of Transept core |
@@ -126,6 +126,42 @@ To remove Transept, delete the `Transept` folder and the environment:
 `conda env remove -n transept`. Deleting the folder also deletes what you added and computed in it
 (`datasets/`, `runs/` and `settings.json`), unless `TRANSEPT_HOME` keeps them elsewhere: copy
 anything you want to keep first.
+
+## Running Transept with Docker
+
+Docker runs Transept with its own Python and Java, on Linux, macOS or Windows. You need
+[Docker](https://docs.docker.com/get-started/get-docker/) and, for now, the same two repositories
+and Conda environment to build the image, because it is not published yet:
+
+```bash
+make image       # builds the jar, and then the image
+make run-image   # starts it; open http://localhost:8501
+```
+
+`make run-image` runs this command:
+
+```bash
+docker run --rm -p 127.0.0.1:8501:8501 -v transept-data:/data transept
+```
+
+| Part | What it does |
+| --- | --- |
+| `--rm` | Deletes the container when it stops; your data are not in it |
+| `-p 127.0.0.1:8501:8501` | Makes Transept reachable only from your machine |
+| `-v transept-data:/data` | Keeps your runs, datasets and settings in a volume called `transept-data` |
+
+Press `Ctrl+C` to stop it. **Stopping the container stops its runs**, unlike closing the browser, so
+keep it running until they finish. Results are the same as without Docker.
+
+| To... | Do this |
+| --- | --- |
+| Use a folder of datasets of your computer | Add `-v /path/to/GPCRdb:/datasets:ro` to the command, and add `/datasets` on the **Datasets** page |
+| Add your own proteins | Upload the files on the **Add dataset** page; a folder must be mounted as above first |
+| Copy your results out | `docker run --rm -v transept-data:/data -v "$PWD":/out --entrypoint cp transept -r /data/runs /out` |
+| Delete all your data | `docker volume rm transept-data` |
+| Give it more CPU or memory | On macOS and Windows, in **Settings > Resources** of Docker Desktop |
+
+On Windows, Docker Desktop needs WSL 2; this has not been tested yet.
 
 ## Data
 
