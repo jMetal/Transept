@@ -64,3 +64,15 @@ class TestFormulationFor:
     def test_should_always_offer_the_algorithm_in_its_formulation(self):
         for algorithm in options.ALGORITHMS:
             assert algorithm in options.algorithms_for(options.formulation_for(algorithm))
+
+
+class TestRunsAtATime:
+    def test_should_run_a_parallel_algorithm_one_after_another(self):
+        assert options.is_parallel("NSGA_II")
+        assert options.runs_at_a_time("NSGA_II", 10, 18) == 1
+
+    def test_should_share_the_cores_otherwise(self):
+        assert not options.is_parallel("PAES")
+        assert options.runs_at_a_time("PAES", 10, 4) == 4
+        assert options.runs_at_a_time("PAES", 3, 18) == 3
+        assert options.runs_at_a_time("PAES", 1, 18) == 1

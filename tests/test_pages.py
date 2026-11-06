@@ -1,6 +1,7 @@
 """The pages open without errors and show what they should, without a browser."""
 
 import json
+import os
 import shutil
 import time
 from pathlib import Path
@@ -568,6 +569,31 @@ class TestNewRun:
         assert selector.options == ["toy (Toy)", "toy (Twin)"]
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert str(twin) in command
+
+    def test_should_share_the_cores_when_the_algorithm_is_not_parallel(
+        self, configured, monkeypatch
+    ):
+        # Arrange
+        monkeypatch.setattr(os, "cpu_count", lambda: 2)
+        launched = []
+
+        def fake_launch(request, count, parallel, jar, data_root, root):
+            launched.append((request.threads, parallel))
+            return series.Series("toy", request.run_id, root, (), parallel, jar, data_root, root)
+
+        monkeypatch.setattr(series, "launch", fake_launch)
+        app = open_page(ui.NEW_RUN)
+        next(box for box in app.selectbox if box.label == "Algorithm").set_value("PAES").run()
+        assert not [box for box in app.number_input if box.label == "Evaluation threads"]
+
+        # Act
+        next(box for box in app.number_input if box.label == "Independent runs").set_value(3).run()
+        assert "up to 2 at a time" in texts(app)
+        next(button for button in app.button if button.label == "Launch").click().run()
+
+        # Assert
+        assert not app.exception
+        assert launched == [(1, 2)]
 
     def test_should_keep_the_identifier_typed_when_the_clock_changes(self, configured):
         # Arrange
