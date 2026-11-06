@@ -41,6 +41,4 @@ def write_distances(model: Path, directory: Path, protein: str) -> None:
         fmt="%.4f",
         delimiter=",",
     )
-    np.savetxt(
-        directory / f"{protein}_idx.csv", [residue.id[1] for residue in residues], fmt="%d"
-    )
+    np.savetxt(directory / f"{protein}_idx.csv", [residue.id[1] for residue in residues], fmt="%d")
