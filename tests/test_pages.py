@@ -378,7 +378,7 @@ class TestResultsTools:
         write_finished_run(root, data_root)
         from transept import baselines
 
-        cache = baselines.cache_file(root, "toy", "VERIFIED", configured.jar)
+        cache = baselines.cache_file(root, str(data_root), "toy", "VERIFIED", configured.jar)
         cache.parent.mkdir(parents=True)
         cache.write_text(
             "dataset,method,SOPwTP,lDDT,file,status,message\n"
