@@ -27,6 +27,8 @@ st.write(
     "they find."
 )
 
+st.page_link(ui.TUTORIALS, label="New here? Read the overview", icon=":material/school:")
+
 current = settings.load_settings()
 problems = settings.problems(current)
 if problems:

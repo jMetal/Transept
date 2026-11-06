@@ -11,6 +11,7 @@ from transept import settings
 
 REPOSITORY_URL = "https://github.com/jMetal/Transept/blob/main"
 DIRECTORY = "docs/tutorials"
+OVERVIEW = "overview"
 ADD_YOUR_OWN_PROTEINS = "add-your-own-proteins"
 RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
 
@@ -50,9 +51,10 @@ def read_tutorial(path: Path) -> Tutorial:
 
 
 def list_tutorials(directory: Path | None = None) -> list[Tutorial]:
-    """Returns the tutorials, ordered by the name of their files."""
+    """Returns the tutorials: the overview first, and the others by the name of their files."""
     folder = directory or settings.REPOSITORY / DIRECTORY
-    return [read_tutorial(path) for path in sorted(folder.glob("*.md"))]
+    paths = sorted(folder.glob("*.md"), key=lambda path: (path.stem != OVERVIEW, path.stem))
+    return [read_tutorial(path) for path in paths]
 
 
 def tutorial_named(name: str, directory: Path | None = None) -> Tutorial | None:

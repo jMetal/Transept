@@ -484,7 +484,9 @@ class TestTutorials:
     def test_should_show_the_tutorial(self, configured):
         app = open_page(ui.TUTORIALS)
         assert not app.exception
-        assert "# Add your own proteins" in texts(app)
+        assert "# Overview" in texts(app)
+        selector = next(box for box in app.selectbox if box.label == "Tutorial")
+        assert selector.options == ["Overview", "Add your own proteins"]
 
     def test_should_choose_among_several(
         self, configured, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

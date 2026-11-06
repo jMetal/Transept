@@ -138,7 +138,8 @@ SECTIONS = (
             Page(
                 "Tutorials",
                 ":material/school:",
-                "Step-by-step guides, such as how to add and align your own proteins.",
+                "What Transept is for, its usual workflows, and how to add and align your own "
+                "proteins.",
                 ui.TUTORIALS,
             ),
         ),
