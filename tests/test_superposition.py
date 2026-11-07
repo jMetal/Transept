@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from transept import datasets, superposition, viewer3d
+from transept import datasets, superposition
 from transept.alignment import AlignedRow
 
 SEQUENCE = "ACDEF"
@@ -137,21 +137,3 @@ class TestColumnSpread:
         # Assert
         assert set(spread) == {1, 2, 3, 4}
         assert max(spread.values()) > 0.1
-
-
-class TestPage:
-    def test_should_hold_the_library_and_the_moved_structures(self, tmp_path: Path):
-        # Arrange
-        placed, _ = superposition.superpose(
-            [structure(tmp_path, "a", POINTS), structure(tmp_path, "b", rotate(POINTS))]
-        )
-
-        # Act
-        page = viewer3d.page(placed, 2, True)
-
-        # Assert
-        assert "$3Dmol" in page
-        assert page.count("</script>") == 3
-        for placeholder in ("__HEIGHT__", "__MODELS__", "__LIBRARY__", "__SHOW_OTHERS__"):
-            assert placeholder not in page
-        assert '"highlight": 3' in page

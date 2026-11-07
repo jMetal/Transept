@@ -482,6 +482,34 @@ class TestAlgorithms:
         assert algorithms.CROSSOVER in texts(app)
 
 
+class TestResultsStructures:
+    STRUCTURES = "Structures for ChimeraX and PyMOL (zip)"
+
+    def test_should_offer_the_structures_when_there_are_models(self, configured, data_root: Path):
+        # Arrange
+        write_finished_run(settings.runs_root(), data_root)
+        models = data_root / "alphafold_pdb" / "toy"
+        models.mkdir(parents=True)
+        for protein in datasets.read_topology(datasets.topology_file(data_root, "toy"))[:2]:
+            sequence = protein.residues
+            (models / f"{protein.id}.pdb").write_text(pdb_text(len(sequence), sequence))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        labels = [button.proto.label for button in app.get("download_button")]
+        assert self.STRUCTURES in labels
+
+    def test_should_say_what_it_lacks_without_models(self, configured, data_root: Path):
+        write_finished_run(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        assert not app.exception
+        assert self.STRUCTURES not in [button.proto.label for button in app.get("download_button")]
+        assert "needs the structure models of at least two" in texts(app)
+
+
 class TestTutorials:
     def test_should_offer_every_tutorial_in_the_card_of_the_home_page(self, configured):
         # Act
