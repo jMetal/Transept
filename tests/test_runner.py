@@ -1,6 +1,7 @@
 import dataclasses
 import sys
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,20 @@ class TestCommand:
         assert options["--output-root"] == str(tmp_path)
         assert options["--algorithm"] == "NSGA_II"
         assert "--mutation-probability" not in options
+
+    def test_should_pass_the_settings_of_the_operators_only_when_they_change(self, tmp_path: Path):
+        # Arrange
+        default = replace(REQUEST, algorithm="PAES", objectives="SOPWTP_LDDT")
+        changed = replace(default, max_shift=10, cut_candidates=8)
+
+        # Act
+        before = runner.command(default, "/t.jar", "/data", tmp_path)
+        after = runner.command(changed, "/t.jar", "/data", tmp_path)
+
+        # Assert: earlier builds of the tool do not know these options
+        assert "--max-shift" not in before and "--cut-candidates" not in before
+        assert after[after.index("--max-shift") + 1] == "10"
+        assert after[after.index("--cut-candidates") + 1] == "8"
 
     def test_should_pass_an_explicit_mutation_probability(self, tmp_path: Path):
         # Arrange: NSGA-II takes its operators from its configuration instead

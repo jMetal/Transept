@@ -736,6 +736,52 @@ class TestNewRun:
         assert not app.exception
         assert launched == [(1, 2)]
 
+    def test_should_offer_the_settings_of_the_operators_with_their_defaults(self, configured):
+        # Act: an algorithm not configured from a parameter space
+        app = open_page(ui.NEW_RUN)
+        next(box for box in app.selectbox if box.label == "Algorithm").set_value("SMS_EMOA").run()
+
+        # Assert
+        assert not app.exception
+        shift = next(b for b in app.number_input if b.label == "Largest gap shift (columns)")
+        cuts = next(b for b in app.number_input if b.label == "Candidate cuts of the crossover")
+        assert (shift.value, cuts.value) == (0, 1)
+        assert "0 means no limit" in shift.help
+        command = next(code.value for code in app.code if "--data-root" in code.value)
+        assert "--max-shift" not in command
+
+        # Act
+        shift.set_value(10).run()
+
+        # Assert
+        command = next(code.value for code in app.code if "--data-root" in code.value)
+        assert "--max-shift 10" in command
+
+    def test_should_offer_only_the_settings_that_apply(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        next(box for box in app.selectbox if box.label == "Algorithm").set_value("PAES").run()
+        labels = [box.label for box in app.number_input]
+
+        # Assert: PAES does not use the crossover
+        assert "Largest gap shift (columns)" in labels
+        assert "Candidate cuts of the crossover" not in labels
+
+        # Act: this mutation moves no run at random
+        next(box for box in app.selectbox if box.label == "Mutation").set_value(
+            "MERGE_GAP_RUNS"
+        ).run()
+
+        # Assert
+        assert "Largest gap shift (columns)" not in [box.label for box in app.number_input]
+
+    def test_should_explain_the_settings_in_the_configuration_form(self, configured):
+        app = open_page(ui.NEW_RUN)
+        assert not app.exception
+        shift = next(box for box in app.number_input if box.label == "maxShift")
+        assert shift.value == 0
+        assert "0 means no limit" in shift.help
+
     def test_should_keep_the_identifier_typed_when_the_clock_changes(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
