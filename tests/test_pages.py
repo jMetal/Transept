@@ -782,6 +782,30 @@ class TestNewRun:
         assert shift.value == 0
         assert "0 means no limit" in shift.help
 
+    @pytest.mark.parametrize(
+        ("mutation", "parameter", "default"),
+        [("tmSafeBlockShift", "blockShift", 1), ("tmSafeWindowRealign", "realignWindow", 50)],
+    )
+    def test_should_show_the_parameter_of_each_new_mutation(
+        self, configured, mutation, parameter, default
+    ):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+
+        # Act
+        next(box for box in app.selectbox if box.label == "mutation").set_value(mutation).run()
+
+        # Assert
+        assert not app.exception
+        boxes = [box for box in app.number_input if box.label.startswith(parameter)]
+        assert [box.value for box in boxes] == [default]
+        assert "maxShift" not in [box.label for box in app.number_input]
+
+    def test_should_explain_the_external_archive(self, configured):
+        app = open_page(ui.NEW_RUN)
+        result = next(box for box in app.selectbox if box.label == "algorithmResult")
+        assert "external archive" in result.help
+
     def test_should_keep_the_identifier_typed_when_the_clock_changes(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
