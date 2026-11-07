@@ -18,6 +18,7 @@ from transept import (
     series,
     series_view,
     settings,
+    structure_export,
     ui,
 )
 from transept.runs import RunState
@@ -444,6 +445,25 @@ with view:
         exports.jalview_features(proteins),
         file_name=f"{run.dataset}_tm_features.txt",
     )
+    models = {
+        row.id: model
+        for row in aligned
+        if (model := datasets.structure_model_file(data_root, run.dataset, row.id)).is_file()
+    }
+    if len(models) >= 2:
+        st.download_button(
+            "Structures for ChimeraX and PyMOL (zip)",
+            lambda: exports.bundle(structure_export.files(aligned, proteins, models, stem)),
+            file_name=f"{stem}_structures.zip",
+            help="The structure models superposed according to this alignment, with the alignment "
+            "and scripts that open them in ChimeraX (linked to the alignment) or PyMOL, with the "
+            "transmembrane helices coloured. See README.txt inside.",
+        )
+    else:
+        st.caption(
+            "Structures for ChimeraX and PyMOL: this dataset needs the structure models of at "
+            "least two of these proteins."
+        )
 
     highlighted = {"selected": selected}
     if len(names) > 1:

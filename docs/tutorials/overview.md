@@ -70,7 +70,9 @@ About five minutes, with the included example.
 2. Press **Launch**. **Monitor** follows the run, which takes one or two minutes.
 3. Press **Open the results**. Every dot of the chart is an alignment.
 4. Click a dot and browse its alignment helix by helix. Gaps that break a helix appear in red.
-5. Download the one you prefer, as FASTA, Clustal or Stockholm.
+5. Download the one you prefer, as FASTA, Clustal or Stockholm. To see it in 3D, download
+   **Structures for ChimeraX and PyMOL**: the structures come superposed according to the
+   alignment, with a script that opens them with the helices coloured.
 
 ## Workflow 2: your own proteins
 

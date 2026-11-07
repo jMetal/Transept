@@ -8,6 +8,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from Bio.Data.PDBData import protein_letters_3to1
 
 from transept import runner, settings
 
@@ -35,13 +36,17 @@ ALIGNMENTS = {
 THREE_LINE = ">p1\nACD\nMMO\n>p2\nACDE\nOMMO\n"
 
 
-def pdb_text(residues: int) -> str:
-    """A structure model with one Cα atom every 3 Å along the x axis."""
-    lines = [
-        f"ATOM  {i:5d}  CA  ALA A{i:4d}    {3.0 * i:8.3f}{0.0:8.3f}{0.0:8.3f}"
-        "  1.00 90.00           C"
-        for i in range(1, residues + 1)
-    ]
+def pdb_text(residues: int, sequence: str = "") -> str:
+    """A structure model with one Cα atom every 3 Å; with a sequence, it also bends."""
+    names = {letter: name for name, letter in protein_letters_3to1.items() if len(name) == 3}
+    lines = []
+    for i in range(1, residues + 1):
+        name = names[sequence[i - 1]] if sequence else "ALA"
+        y, z = ((i % 3) * 1.5, (i % 5) * 1.1) if sequence else (0.0, 0.0)
+        lines.append(
+            f"ATOM  {i:5d}  CA  {name} A{i:4d}    {3.0 * i:8.3f}{y:8.3f}{z:8.3f}"
+            "  1.00 90.00           C"
+        )
     return "\n".join(lines) + "\nEND\n"
 
 
