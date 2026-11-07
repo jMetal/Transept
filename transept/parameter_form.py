@@ -159,6 +159,7 @@ def _choice_widget(parameter: CategoricalParameter, label: str, value: str, key:
         format_func=lambda option: (
             option if option in allowed else f"{option} (not in the parameter space)"
         ),
+        help=PARAMETER_HELP.get(parameter.name),
         key=key,
     )
 

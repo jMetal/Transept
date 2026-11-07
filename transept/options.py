@@ -36,7 +36,13 @@ ASYNCHRONOUS = ("ASYNC_NSGA_II", "ASYNC_GENETIC_ALGORITHM")
 
 # Population sizes with weight vectors for MOEA/D with three objectives.
 MOEAD_THREE_OBJECTIVE_SIZES = (91, 100, 136, 300, 500, 600, 800, 1000, 1200)
-MUTATIONS = ("TM_SAFE_GAP_SHIFT", "MERGE_GAP_RUNS", "RANDOM_CHOICE")
+MUTATIONS = (
+    "TM_SAFE_GAP_SHIFT",
+    "MERGE_GAP_RUNS",
+    "RANDOM_CHOICE",
+    "TM_SAFE_BLOCK_SHIFT",
+    "TM_SAFE_WINDOW_REALIGN",
+)
 
 STEADY_STATE = ("SMS_EMOA", "MOEA_D", "PAES")
 
@@ -51,6 +57,14 @@ PARAMETER_HELP = {
     "maxShift": "Largest number of columns a gap run can move at once; 0 means no limit.",
     "cutCandidates": "Valid cuts drawn per crossover, of which the one that adds the fewest gaps "
     "is used; 1 means a cut at random.",
+    "blockShift": "Largest number of columns a block of gaps shared by several rows can move.",
+    "realignWindow": "Number of columns of the window in which one row is realigned.",
+    "algorithmResult": "What the algorithm returns: its final population, or an external archive "
+    "that keeps the best solutions found during the whole run.",
+    "archiveType": "With an external archive: bounded by crowding distance, or unbounded.",
+    "populationSizeWithArchive": "Population size when an external archive is used.",
+    "mutation": "Mutation operator; every one keeps the transmembrane helices whole.",
+    "selection": "How the parents are chosen.",
 }
 
 DESCRIPTIONS = {
@@ -70,6 +84,8 @@ DESCRIPTIONS = {
     "TM_SAFE_GAP_SHIFT": "Gap shift that never breaks a transmembrane helix",
     "MERGE_GAP_RUNS": "Joins two consecutive gap runs of a row",
     "RANDOM_CHOICE": "TM_SAFE_GAP_SHIFT or MERGE_GAP_RUNS, chosen at random",
+    "TM_SAFE_BLOCK_SHIFT": "Moves a block of gaps shared by several rows one column",
+    "TM_SAFE_WINDOW_REALIGN": "Realigns one row inside a window of 50 columns",
 }
 
 DEFAULT_MAX_EVALUATIONS = 10_000
