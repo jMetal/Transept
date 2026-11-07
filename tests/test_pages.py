@@ -502,6 +502,23 @@ class TestResultsStructures:
         labels = [button.proto.label for button in app.get("download_button")]
         assert self.STRUCTURES in labels
 
+    def test_should_draw_the_superposed_traces(self, configured, data_root: Path):
+        # Arrange
+        write_finished_run(settings.runs_root(), data_root)
+        models = data_root / "alphafold_pdb" / "toy"
+        models.mkdir(parents=True)
+        for protein in datasets.read_topology(datasets.topology_file(data_root, "toy"))[:2]:
+            sequence = protein.residues
+            (models / f"{protein.id}.pdb").write_text(pdb_text(len(sequence), sequence))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        charts = [json.loads(chart.proto.spec) for chart in app.get("plotly_chart")]
+        assert any(trace["type"] == "scatter3d" for chart in charts for trace in chart["data"])
+
     def test_should_say_what_it_lacks_without_models(self, configured, data_root: Path):
         write_finished_run(settings.runs_root(), data_root)
         app = open_page(ui.RESULTS, selected_run=("toy", "done"))
@@ -1338,6 +1355,7 @@ class TestResultsTabs:
             "Per protein",
             "Per helix",
             "Compare",
+            "3D (trial)",
         ]
         labels = {metric.label: metric.value for metric in app.metric}
         assert labels["Shared residue pairs"] == "100.0%"  # the toy solutions repeat mafft
