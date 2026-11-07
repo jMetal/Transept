@@ -1,5 +1,6 @@
 """Results: the non-dominated alignments of a finished run, and each alignment."""
 
+import statistics
 from pathlib import Path
 
 import pandas as pd
@@ -18,12 +19,93 @@ from transept import (
     series,
     series_view,
     settings,
+    structure_chart,
     structure_export,
+    superposition,
     ui,
 )
 from transept.runs import RunState
 
+DEFAULT_STRUCTURES = 5
+
 st.title("Results")
+
+
+def show_structures(rows, proteins, data_root, run) -> None:
+    """Draws the proteins superposed according to the alignment, as traces of their Cα atoms."""
+    st.caption(
+        "The proteins superposed according to this alignment, using their aligned transmembrane "
+        "residues: if the columns are right, their residues coincide in space. Each line joins "
+        "the Cα atoms of a protein; drag to rotate, scroll to zoom, hover to see a residue."
+    )
+    available = [
+        row.id
+        for row in rows
+        if row.id in proteins
+        and datasets.structure_model_file(data_root, run.dataset, row.id).is_file()
+    ]
+    if len(available) < 2:
+        st.info("This needs the PDB files of at least two proteins of the dataset.")
+        return
+    chosen = st.multiselect(
+        "Proteins (the first one is the fixed one)",
+        available,
+        default=available[: min(DEFAULT_STRUCTURES, len(available))],
+        key=f"structures:{run.key}",
+    )
+    if len(chosen) < 2:
+        st.info("Choose at least two proteins.")
+        return
+    by_id = {row.id: row for row in rows}
+    placed, left_out = superposition.superpose(
+        [
+            superposition.read_structure(
+                by_id[name],
+                proteins[name],
+                datasets.structure_model_file(data_root, run.dataset, name),
+            )
+            for name in chosen
+        ]
+    )
+    if left_out:
+        st.warning(
+            "This alignment shares too few transmembrane residues with the first protein to "
+            f"place: {', '.join(left_out)}. That is a problem of the alignment, worth looking at."
+        )
+    spread = superposition.column_spread(placed)
+    column = None
+    if spread:
+        ordered = sorted(spread, key=spread.get, reverse=True)
+        column = st.selectbox(
+            "Column to mark, in red (the most spread first)",
+            ordered,
+            format_func=lambda c: f"column {c + 1}: spread {spread[c]:.2f} Å",
+            key=f"structures_column:{run.key}",
+        )
+        values = list(spread.values())
+        st.caption(
+            f"{len(values)} columns are transmembrane in all these proteins; their residues are a "
+            f"median of {statistics.median(values):.2f} Å from their centre."
+        )
+    show_others = st.toggle(
+        "Show the regions outside the membrane",
+        value=True,
+        key=f"structures_others:{run.key}",
+    )
+    st.plotly_chart(structure_chart.figure(placed, column, show_others), width="stretch")
+    st.dataframe(
+        [
+            {
+                "protein": item.structure.id,
+                "pairs with the first": item.pairs,
+                "RMSD (Å)": round(item.rmsd, 2),
+            }
+            for item in placed
+        ],
+        hide_index=True,
+        width="stretch",
+    )
+
 
 finished = [
     run for run in runs.list_runs(settings.runs_root()) if runs.state(run) == RunState.FINISHED
@@ -343,9 +425,12 @@ def viewer(prefix: str, agreement=None, changed=None) -> None:
 
 
 st.subheader(f"Alignment MSASol{selected}")
-view, per_protein, per_helix, comparison_tab = st.tabs(
-    ["Alignment", "Per protein", "Per helix", "Compare"]
+view, per_protein, per_helix, comparison_tab, structures_tab = st.tabs(
+    ["Alignment", "Per protein", "Per helix", "Compare", "3D (trial)"]
 )
+
+with structures_tab:
+    show_structures(aligned, proteins, data_root, run)
 
 with per_protein:
     st.dataframe(
