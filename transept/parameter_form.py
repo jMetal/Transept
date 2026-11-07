@@ -10,6 +10,7 @@ from collections.abc import Mapping
 import streamlit as st
 
 from transept.configuration import same_value
+from transept.options import PARAMETER_HELP
 from transept.parameter_space import (
     CategoricalParameter,
     ParameterRow,
@@ -169,6 +170,8 @@ def _range_widget(parameter: RangeParameter, label: str, value: str, key: str) -
         number = parameter.lower_bound
     lower, upper = min(parameter.lower_bound, number), max(parameter.upper_bound, number)
     help_text = f"{parameter.kind}, from {parameter.lower_bound:g} to {parameter.upper_bound:g}"
+    if parameter.name in PARAMETER_HELP:
+        help_text = f"{PARAMETER_HELP[parameter.name]} {help_text.capitalize()}."
     if not parameter.lower_bound <= number <= parameter.upper_bound:
         help_text = f"{value} is outside the parameter space ({help_text})"
     if parameter.kind == "integer":

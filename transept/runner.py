@@ -49,6 +49,8 @@ class RunRequest:
             evaluations.
         objectives: Value of --objectives.
         repair_seeds: Whether to pass --repair-seeds.
+        max_shift: Value of --max-shift, for algorithms not configured from a parameter space.
+        cut_candidates: Value of --cut-candidates, likewise.
     """
 
     dataset: str
@@ -67,6 +69,8 @@ class RunRequest:
     max_time: float | None = None
     objectives: str = options.DEFAULT_OBJECTIVES
     repair_seeds: bool = False
+    max_shift: int = options.DEFAULT_MAX_SHIFT
+    cut_candidates: int = options.DEFAULT_CUT_CANDIDATES
 
 
 def validate(request: RunRequest) -> list[str]:
@@ -162,6 +166,10 @@ def command(request: RunRequest, jar: str, data_root: str, runs_root: Path) -> l
     ]
     if request.mutation_probability is not None:
         arguments += ["--mutation-probability", str(request.mutation_probability)]
+    if request.max_shift != options.DEFAULT_MAX_SHIFT:
+        arguments += ["--max-shift", str(request.max_shift)]
+    if request.cut_candidates != options.DEFAULT_CUT_CANDIDATES:
+        arguments += ["--cut-candidates", str(request.cut_candidates)]
     return arguments
 
 

@@ -40,6 +40,19 @@ MUTATIONS = ("TM_SAFE_GAP_SHIFT", "MERGE_GAP_RUNS", "RANDOM_CHOICE")
 
 STEADY_STATE = ("SMS_EMOA", "MOEA_D", "PAES")
 
+# Mutations that move gap runs at random, which --max-shift limits.
+SHIFTING_MUTATIONS = ("TM_SAFE_GAP_SHIFT", "RANDOM_CHOICE")
+# Algorithms that do not use the crossover, or that ignore the operators altogether.
+WITHOUT_CROSSOVER = ("PAES", "RANDOM_SEARCH", "RANDOM_SEEDED")
+WITHOUT_OPERATORS = ("RANDOM_SEARCH",)
+
+# What the parameters of the operators mean, for their widgets.
+PARAMETER_HELP = {
+    "maxShift": "Largest number of columns a gap run can move at once; 0 means no limit.",
+    "cutCandidates": "Valid cuts drawn per crossover, of which the one that adds the fewest gaps "
+    "is used; 1 means a cut at random.",
+}
+
 DESCRIPTIONS = {
     "NSGA_II": "NSGA-II, the published configuration",
     "ASYNC_NSGA_II": "NSGA-II, asynchronous (keeps all threads busy)",
@@ -63,6 +76,10 @@ DEFAULT_MAX_EVALUATIONS = 10_000
 DEFAULT_POPULATION_SIZE = 100
 DEFAULT_CROSSOVER_PROBABILITY = 0.8
 DEFAULT_MUTATION_PROBABILITY = 0.2
+DEFAULT_MAX_SHIFT = 0
+DEFAULT_CUT_CANDIDATES = 1
+MAX_SHIFT_LIMIT = 200
+CUT_CANDIDATES_LIMIT = 64
 PAES_MUTATION_PROBABILITY = 1.0
 
 

@@ -201,6 +201,8 @@ with right:
 mutation = "TM_SAFE_GAP_SHIFT"
 crossover_probability = options.DEFAULT_CROSSOVER_PROBABILITY
 mutation_probability = options.default_mutation_probability(algorithm)
+max_shift = options.DEFAULT_MAX_SHIFT
+cut_candidates = options.DEFAULT_CUT_CANDIDATES
 configuration = ""
 parameters = None
 if spaces.is_configurable(algorithm):
@@ -253,6 +255,23 @@ else:
     mutation_probability = operators[2].slider(
         "Mutation probability", 0.0, 1.0, options.default_mutation_probability(algorithm), 0.05
     )
+    settings_columns = st.columns(3)
+    if mutation in options.SHIFTING_MUTATIONS and algorithm not in options.WITHOUT_OPERATORS:
+        max_shift = settings_columns[0].number_input(
+            "Largest gap shift (columns)",
+            0,
+            options.MAX_SHIFT_LIMIT,
+            options.DEFAULT_MAX_SHIFT,
+            help=options.PARAMETER_HELP["maxShift"],
+        )
+    if algorithm not in options.WITHOUT_CROSSOVER:
+        cut_candidates = settings_columns[1].number_input(
+            "Candidate cuts of the crossover",
+            1,
+            options.CUT_CANDIDATES_LIMIT,
+            options.DEFAULT_CUT_CANDIDATES,
+            help=options.PARAMETER_HELP["cutCandidates"],
+        )
 
 if "random_seed" not in st.session_state:
     st.session_state["random_seed"] = random.randint(0, 999_999)
@@ -313,6 +332,8 @@ request = runner.RunRequest(
     max_time=None if max_time is None else float(max_time),
     objectives=objectives,
     repair_seeds=repair_seeds,
+    max_shift=int(max_shift),
+    cut_candidates=int(cut_candidates),
 )
 errors = runner.validate(request)
 if count > 1:

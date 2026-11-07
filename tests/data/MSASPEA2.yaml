@@ -37,6 +37,9 @@ variation:
             crossoverProbability:
               type: double
               range: [0.0, 1.0]
+            cutCandidates:
+              type: integer
+              range: [1, 64]
           values:
             tmSafeSinglePoint:
         mutation:
@@ -47,8 +50,16 @@ variation:
               range: [0.0, 1.0]
           values:
             tmSafeGapShift:
+              conditionalParameters:
+                maxShift:
+                  type: integer
+                  range: [0, 200]
             mergeGapRuns:
             randomChoice:
+              conditionalParameters:
+                maxShift:
+                  type: integer
+                  range: [0, 200]
 #
 densityEstimator:
   type: categorical
