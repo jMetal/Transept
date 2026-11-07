@@ -1355,7 +1355,7 @@ class TestResultsTabs:
             "Per protein",
             "Per helix",
             "Compare",
-            "3D (trial)",
+            "3D",
         ]
         labels = {metric.label: metric.value for metric in app.metric}
         assert labels["Shared residue pairs"] == "100.0%"  # the toy solutions repeat mafft

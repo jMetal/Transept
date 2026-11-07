@@ -426,7 +426,7 @@ def viewer(prefix: str, agreement=None, changed=None) -> None:
 
 st.subheader(f"Alignment MSASol{selected}")
 view, per_protein, per_helix, comparison_tab, structures_tab = st.tabs(
-    ["Alignment", "Per protein", "Per helix", "Compare", "3D (trial)"]
+    ["Alignment", "Per protein", "Per helix", "Compare", "3D"]
 )
 
 with structures_tab:
