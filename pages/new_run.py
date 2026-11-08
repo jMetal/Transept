@@ -19,6 +19,7 @@ from transept import (
     series,
     settings,
     spaces,
+    tutorials,
     ui,
 )
 from transept.configuration import (
@@ -206,6 +207,11 @@ max_shift = options.DEFAULT_MAX_SHIFT
 cut_candidates = options.DEFAULT_CUT_CANDIDATES
 configuration = ""
 parameters = None
+guide = tutorials.tutorial_named(tutorials.OPERATORS)
+if guide is not None and algorithm not in options.WITHOUT_OPERATORS:
+    # Here and not on its own page, so that the choices made in this form are kept
+    with st.expander("How to choose the operators", icon=":material/school:"):
+        st.markdown(guide.text)
 if spaces.is_configurable(algorithm):
     try:
         parameters = spaces.parameter_space(current.jar, algorithm)

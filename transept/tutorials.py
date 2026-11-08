@@ -13,6 +13,7 @@ REPOSITORY_URL = "https://github.com/jMetal/Transept/blob/main"
 DIRECTORY = "docs/tutorials"
 OVERVIEW = "overview"
 ADD_YOUR_OWN_PROTEINS = "add-your-own-proteins"
+OPERATORS = "operators"
 RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
 
 
