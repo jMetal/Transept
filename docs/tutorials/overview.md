@@ -96,6 +96,9 @@ how stable the results are, and together the runs can find better alignments tha
    alignments of all the runs together. The **knee** marks a balanced one, a good place to start, not
    a validated recommendation. Select an alignment to open it in its run.
 
+The tutorial [Choose the operators](operators.md) explains the crossovers and mutations, and what
+we have seen them do; repeated runs are the way to compare them on your proteins.
+
 ## Workflow 4: evaluate against a reference
 
 If your dataset has a reference alignment, such as those of GPCRdb, **Results** shows how close each
