@@ -802,6 +802,29 @@ class TestNewRun:
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert "--max-shift 10" in command
 
+    def test_should_offer_the_uniform_crossover(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        next(box for box in app.selectbox if box.label == "Algorithm").set_value("SMS_EMOA").run()
+        assert "Candidate cuts of the crossover" in [box.label for box in app.number_input]
+
+        # Act
+        next(box for box in app.selectbox if box.label == "Crossover").set_value(
+            "TM_SAFE_UNIFORM"
+        ).run()
+
+        # Assert: the candidate cuts belong to the single-point crossover
+        assert not app.exception
+        assert "Candidate cuts of the crossover" not in [box.label for box in app.number_input]
+        command = next(code.value for code in app.code if "--data-root" in code.value)
+        assert "--crossover TM_SAFE_UNIFORM" in command
+
+    def test_should_offer_the_uniform_crossover_in_the_configuration(self, configured):
+        app = open_page(ui.NEW_RUN)
+        crossover = next(box for box in app.selectbox if box.label == "crossover")
+        assert crossover.options == ["tmSafeSinglePoint", "tmSafeUniform"]
+        assert "neither cuts" in crossover.help
+
     def test_should_offer_only_the_settings_that_apply(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
@@ -811,6 +834,7 @@ class TestNewRun:
         # Assert: PAES does not use the crossover
         assert "Largest gap shift (columns)" in labels
         assert "Candidate cuts of the crossover" not in labels
+        assert "Crossover" not in [box.label for box in app.selectbox]
 
         # Act: this mutation moves no run at random
         next(box for box in app.selectbox if box.label == "Mutation").set_value(

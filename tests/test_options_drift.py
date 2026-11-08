@@ -43,6 +43,7 @@ def candidates(text: str, label: str) -> tuple[str, ...]:
     [
         ("Search algorithm", options.ALGORITHMS),
         ("Mutation operator", options.MUTATIONS),
+        ("Crossover operator", options.CROSSOVERS),
     ],
 )
 def test_should_offer_exactly_the_values_of_the_tool(run_help, label, offered):
@@ -54,13 +55,19 @@ def test_should_describe_every_value(run_help):
     for value in (
         *options.ALGORITHMS,
         *options.MUTATIONS,
+        *options.CROSSOVERS,
     ):
         assert value in options.DESCRIPTIONS
 
 
 def test_should_pass_only_options_that_the_tool_accepts(run_help):
     request = runner.RunRequest(
-        dataset="classF", seeds=("mafft", "muscle5"), run_id="r", seed=1, mutation_probability=0.2
+        dataset="classF",
+        seeds=("mafft", "muscle5"),
+        run_id="r",
+        seed=1,
+        mutation_probability=0.2,
+        crossover="TM_SAFE_UNIFORM",
     )
     arguments = runner.command(request, JAR, "data", Path("runs"))
     for flag in (argument for argument in arguments if argument.startswith("--")):
