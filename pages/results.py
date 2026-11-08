@@ -27,12 +27,18 @@ from transept import (
 from transept.runs import RunState
 
 DEFAULT_STRUCTURES = 5
+# With this many proteins or fewer, all of them are drawn at first.
+ALL_STRUCTURES_UP_TO = 8
 
 st.title("Results")
 
 
-def show_structures(rows, proteins, data_root, run) -> None:
-    """Draws the proteins superposed according to the alignment, as traces of their Cα atoms."""
+def show_structures(rows, proteins, data_root, run, alignment_start: str) -> None:
+    """Draws the proteins superposed according to the alignment, as traces of their Cα atoms.
+
+    Args:
+        alignment_start: The key of the first column shown in the Alignment tab.
+    """
     st.caption(
         "The proteins superposed according to this alignment, using their aligned transmembrane "
         "residues: if the columns are right, their residues coincide in space. Each line joins "
@@ -50,7 +56,9 @@ def show_structures(rows, proteins, data_root, run) -> None:
     chosen = st.multiselect(
         "Proteins (the first one is the fixed one)",
         available,
-        default=available[: min(DEFAULT_STRUCTURES, len(available))],
+        default=available
+        if len(available) <= ALL_STRUCTURES_UP_TO
+        else available[:DEFAULT_STRUCTURES],
         key=f"structures:{run.key}",
     )
     if len(chosen) < 2:
@@ -93,6 +101,30 @@ def show_structures(rows, proteins, data_root, run) -> None:
         key=f"structures_others:{run.key}",
     )
     st.plotly_chart(structure_chart.figure(placed, column, show_others), width="stretch")
+    if column is not None:
+        st.markdown(f"**Residues of column {column + 1}**, the farthest from the others first")
+        st.dataframe(
+            [
+                {
+                    "protein": item.protein,
+                    "residue": item.residue,
+                    "distance from the centre (Å)": round(item.distance, 2),
+                }
+                for item in superposition.column_residues(placed, column)
+            ],
+            hide_index=True,
+            width="stretch",
+        )
+
+        def show_in_alignment() -> None:
+            # A few columns of context on the left
+            st.session_state[alignment_start] = max(1, column + 1 - 10)
+
+        st.button(
+            f"Show column {column + 1} in the Alignment tab",
+            on_click=show_in_alignment,
+            help="Moves the Alignment tab to this column; then open that tab.",
+        )
     st.dataframe(
         [
             {
@@ -430,7 +462,7 @@ view, per_protein, per_helix, comparison_tab, structures_tab = st.tabs(
 )
 
 with structures_tab:
-    show_structures(aligned, proteins, data_root, run)
+    show_structures(aligned, proteins, data_root, run, f"start:{run.key}:{selected}")
 
 with per_protein:
     st.dataframe(

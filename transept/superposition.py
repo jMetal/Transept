@@ -175,3 +175,35 @@ def column_spread(placed: list[PlacedStructure]) -> dict[int, float]:
         points = np.array([item.position(column) for item in placed])
         spread[column] = float(np.linalg.norm(points - points.mean(0), axis=1).mean())
     return spread
+
+
+@dataclass(slots=True, frozen=True)
+class ColumnResidue:
+    """The residue of one protein in a column, placed in space.
+
+    Attributes:
+        protein: The protein.
+        residue: Its PDB residue number.
+        distance: How far it is from the centre of the residues of the column, in Å.
+    """
+
+    protein: str
+    residue: int
+    distance: float
+
+
+def column_residues(placed: list[PlacedStructure], column: int) -> list[ColumnResidue]:
+    """Returns the residues of a column with a structure, farthest from the centre first."""
+    found = [
+        (item.structure.id, item.structure.columns[column], point)
+        for item in placed
+        if (point := item.position(column)) is not None
+    ]
+    if not found:
+        return []
+    centre = np.mean([point for _, _, point in found], axis=0)
+    residues = [
+        ColumnResidue(protein, residue, float(np.linalg.norm(point - centre)))
+        for protein, residue, point in found
+    ]
+    return sorted(residues, key=lambda item: item.distance, reverse=True)
