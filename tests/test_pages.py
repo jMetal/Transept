@@ -823,6 +823,12 @@ class TestNewRun:
         command = next(code.value for code in app.code if "--data-root" in code.value)
         assert "--max-shift 10" in command
 
+    def test_should_explain_the_operators_in_new_run(self, configured):
+        app = open_page(ui.NEW_RUN)
+        assert not app.exception
+        assert "How to choose the operators" in [item.label for item in app.expander]
+        assert "# Choose the operators" in texts(app)
+
     def test_should_offer_the_uniform_crossover(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
