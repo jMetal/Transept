@@ -137,3 +137,33 @@ class TestColumnSpread:
         # Assert
         assert set(spread) == {1, 2, 3, 4}
         assert max(spread.values()) > 0.1
+
+
+class TestColumnResidues:
+    def test_should_put_the_misplaced_residue_first(self, tmp_path: Path):
+        # Arrange: the third protein is shifted one residue in the alignment
+        irregular = np.array(
+            [[0.0, 0.0, 0.0], [3.0, 1.0, 0.5], [4.0, 4.0, 1.0], [2.0, 6.0, 4.0], [7.0, 5.0, 6.0]]
+        )
+        placed, _ = superposition.superpose(
+            [
+                structure(tmp_path, "a", irregular, "ACDEF-"),
+                structure(tmp_path, "b", rotate(irregular), "ACDEF-"),
+                structure(tmp_path, "c", irregular, "-ACDEF"),
+            ]
+        )
+
+        # Act
+        residues = superposition.column_residues(placed, 2)
+
+        # Assert
+        assert residues[0].protein == "c"
+        assert residues[0].residue == 2
+        assert residues[0].distance > residues[-1].distance
+
+    def test_should_skip_the_proteins_without_a_residue_in_the_column(self, tmp_path: Path):
+        placed, _ = superposition.superpose(
+            [structure(tmp_path, "a", POINTS, "ACDEF-"), structure(tmp_path, "b", POINTS, "ACDE-F")]
+        )
+        assert [item.protein for item in superposition.column_residues(placed, 5)] == ["b"]
+        assert superposition.column_residues(placed, 5)[0].distance == pytest.approx(0.0)

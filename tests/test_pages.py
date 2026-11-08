@@ -519,6 +519,27 @@ class TestResultsStructures:
         charts = [json.loads(chart.proto.spec) for chart in app.get("plotly_chart")]
         assert any(trace["type"] == "scatter3d" for chart in charts for trace in chart["data"])
 
+    def test_should_list_the_residues_of_the_marked_column(self, configured, data_root: Path):
+        # Arrange
+        write_finished_run(settings.runs_root(), data_root)
+        models = data_root / "alphafold_pdb" / "toy"
+        models.mkdir(parents=True)
+        for protein in datasets.read_topology(datasets.topology_file(data_root, "toy"))[:2]:
+            sequence = protein.residues
+            (models / f"{protein.id}.pdb").write_text(pdb_text(len(sequence), sequence))
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        assert any(box.label.startswith("Column to mark") for box in app.selectbox)
+
+        # Act
+        next(b for b in app.button if b.label.startswith("Show column")).click().run()
+
+        # Assert: the Alignment tab starts up to ten columns before it (the toy has nine columns)
+        assert not app.exception
+        start = next(slider for slider in app.slider if slider.label == "First column")
+        assert start.value == 1
+        assert "Residues of column" in texts(app)
+        assert len(app.dataframe) >= 2
+
     def test_should_say_what_it_lacks_without_models(self, configured, data_root: Path):
         write_finished_run(settings.runs_root(), data_root)
         app = open_page(ui.RESULTS, selected_run=("toy", "done"))
