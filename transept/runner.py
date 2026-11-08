@@ -39,6 +39,7 @@ class RunRequest:
         population_size: Population size.
         threads: Evaluation threads.
         mutation: Value of --mutation.
+        crossover: Value of --crossover.
         crossover_probability: Probability of the crossover.
         mutation_probability: Probability of the mutation; None for the default of the algorithm.
         progress_interval: Evaluations between progress records.
@@ -62,6 +63,7 @@ class RunRequest:
     population_size: int = options.DEFAULT_POPULATION_SIZE
     threads: int = 1
     mutation: str = "TM_SAFE_GAP_SHIFT"
+    crossover: str = options.DEFAULT_CROSSOVER
     crossover_probability: float = options.DEFAULT_CROSSOVER_PROBABILITY
     mutation_probability: float | None = None
     progress_interval: int = 100
@@ -164,6 +166,8 @@ def command(request: RunRequest, jar: str, data_root: str, runs_root: Path) -> l
         "--crossover-probability",
         str(request.crossover_probability),
     ]
+    if request.crossover != options.DEFAULT_CROSSOVER:
+        arguments += ["--crossover", request.crossover]
     if request.mutation_probability is not None:
         arguments += ["--mutation-probability", str(request.mutation_probability)]
     if request.max_shift != options.DEFAULT_MAX_SHIFT:

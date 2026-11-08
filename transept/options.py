@@ -43,6 +43,8 @@ MUTATIONS = (
     "TM_SAFE_BLOCK_SHIFT",
     "TM_SAFE_WINDOW_REALIGN",
 )
+CROSSOVERS = ("TM_SAFE_SINGLE_POINT", "TM_SAFE_UNIFORM")
+DEFAULT_CROSSOVER = "TM_SAFE_SINGLE_POINT"
 
 STEADY_STATE = ("SMS_EMOA", "MOEA_D", "PAES")
 
@@ -64,6 +66,7 @@ PARAMETER_HELP = {
     "archiveType": "With an external archive: bounded by crowding distance, or unbounded.",
     "populationSizeWithArchive": "Population size when an external archive is used.",
     "mutation": "Mutation operator; every one keeps the transmembrane helices whole.",
+    "crossover": "Crossover operator; neither cuts a transmembrane helix.",
     "selection": "How the parents are chosen.",
 }
 
@@ -86,6 +89,8 @@ DESCRIPTIONS = {
     "RANDOM_CHOICE": "TM_SAFE_GAP_SHIFT or MERGE_GAP_RUNS, chosen at random",
     "TM_SAFE_BLOCK_SHIFT": "Moves a block of gaps shared by several rows one column",
     "TM_SAFE_WINDOW_REALIGN": "Realigns one row inside a window of 50 columns",
+    "TM_SAFE_SINGLE_POINT": "Single point, at a column that cuts no helix",
+    "TM_SAFE_UNIFORM": "Uniform, between the columns where both parents agree; adds no gap",
 }
 
 DEFAULT_MAX_EVALUATIONS = 10_000

@@ -199,6 +199,7 @@ with right:
         )
 
 mutation = "TM_SAFE_GAP_SHIFT"
+crossover = options.DEFAULT_CROSSOVER
 crossover_probability = options.DEFAULT_CROSSOVER_PROBABILITY
 mutation_probability = options.default_mutation_probability(algorithm)
 max_shift = options.DEFAULT_MAX_SHIFT
@@ -245,15 +246,20 @@ if parameters is not None:
     with st.expander("Complete configuration"):
         st.code(configuration_string(parameters, edited), language=None, wrap_lines=True)
 else:
-    operators = st.columns(3)
+    operators = st.columns(2)
     mutation = operators[0].selectbox(
         "Mutation", options.MUTATIONS, format_func=lambda value: options.DESCRIPTIONS[value]
     )
-    crossover_probability = operators[1].slider(
-        "Crossover probability", 0.0, 1.0, options.DEFAULT_CROSSOVER_PROBABILITY, 0.05
-    )
-    mutation_probability = operators[2].slider(
+    if algorithm not in options.WITHOUT_CROSSOVER:
+        crossover = operators[1].selectbox(
+            "Crossover", options.CROSSOVERS, format_func=lambda value: options.DESCRIPTIONS[value]
+        )
+    probabilities = st.columns(2)
+    mutation_probability = probabilities[0].slider(
         "Mutation probability", 0.0, 1.0, options.default_mutation_probability(algorithm), 0.05
+    )
+    crossover_probability = probabilities[1].slider(
+        "Crossover probability", 0.0, 1.0, options.DEFAULT_CROSSOVER_PROBABILITY, 0.05
     )
     settings_columns = st.columns(3)
     if mutation in options.SHIFTING_MUTATIONS and algorithm not in options.WITHOUT_OPERATORS:
@@ -264,7 +270,7 @@ else:
             options.DEFAULT_MAX_SHIFT,
             help=options.PARAMETER_HELP["maxShift"],
         )
-    if algorithm not in options.WITHOUT_CROSSOVER:
+    if algorithm not in options.WITHOUT_CROSSOVER and crossover == options.DEFAULT_CROSSOVER:
         cut_candidates = settings_columns[1].number_input(
             "Candidate cuts of the crossover",
             1,
@@ -326,6 +332,7 @@ request = runner.RunRequest(
     population_size=int(population_size),
     threads=int(threads),
     mutation=mutation,
+    crossover=crossover,
     crossover_probability=float(crossover_probability),
     mutation_probability=float(mutation_probability),
     configuration=configuration,
