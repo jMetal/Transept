@@ -1348,6 +1348,39 @@ class TestResultsTools:
         # Assert
         assert finished.session_state["row:toy / done"] == 0
 
+    def test_should_show_the_internal_seeds_that_the_run_used(self, configured, data_root: Path):
+        # Arrange: a run seeded with internal seeds, which it saved in its own folder
+        from transept import baselines
+
+        root = settings.runs_root()
+        directory = write_finished_run(root, data_root)
+        config = json.loads((directory / "config.json").read_text())
+        config["seedMethods"] = ["internal"]
+        (directory / "config.json").write_text(json.dumps(config))
+        seed = directory / "seeds" / "biojava-g20x2.fasta"
+        seed.parent.mkdir()
+        seed.write_text((directory / "MSASol0.fasta").read_text())
+        metadata = json.loads((directory / "metadata.json").read_text())
+        metadata["seeds"] = [
+            {"method": "internal:biojava-g20x2", "file": str(seed), "sha256": "s1"}
+        ]
+        (directory / "metadata.json").write_text(json.dumps(metadata))
+        cache = baselines.internal_cache_file(
+            root, str(data_root), "toy", "VERIFIED", configured.jar, metadata
+        )
+        cache.parent.mkdir(parents=True)
+        cache.write_text(
+            'dataset,method,SOPwTP,lDDT,file,status,message\ntoy,biojava-g20x2,26.0,0.55,f,ok,""\n'
+        )
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert: the seed is compared with the selected alignment, and drawn in the chart
+        assert not app.exception
+        seeds = app.dataframe[1].value
+        assert list(seeds["method"]) == ["internal:biojava-g20x2"]
+
     def test_should_offer_the_downloads_and_the_navigation(self, finished):
         labels = [button.label for button in finished.button]
         assert "Start" in labels
