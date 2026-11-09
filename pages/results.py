@@ -298,6 +298,50 @@ if ranked is not None:
         "The best alignment is shown first; copies counts the members of the final population "
         "with the same value. Click a row to see its alignment.",
     )
+elif len(names) == 3:
+    st.subheader("Non-dominated alignments")
+    pairs = [(names[0], names[1]), (names[0], names[2]), (names[1], names[2])]
+    views = ["3D", *(f"{a} – {b}" for a, b in pairs)]
+    view = st.radio(
+        "View",
+        views,
+        horizontal=True,
+        key=f"front_view:{run.key}",
+        help="The 3D view can be rotated; in a projection, click a point to see its alignment.",
+    )
+    if view == "3D":
+        st.plotly_chart(
+            charts.front3d_figure(values, table, st.session_state[SELECTED_ROW]),
+            key=f"chart3d:{run.key}",
+            width="stretch",
+        )
+    else:
+        first, second = pairs[views.index(view) - 1]
+        event = st.plotly_chart(
+            charts.front_figure(
+                values, table, st.session_state[SELECTED_ROW], seeds, None, first, second, False
+            ),
+            on_select="rerun",
+            selection_mode="points",
+            key=f"chart:{run.key}:{first}:{second}",
+            width="stretch",
+        )
+        points = event.selection.points if event and event.selection else []
+        clicked = points[0].get("customdata") if points else None
+        if isinstance(clicked, list):
+            clicked = clicked[0]
+        show(ui.new_choice(seen, f"chart {view}", None if clicked is None else int(clicked)))
+        if first == front.FIRST and second == front.SECOND and not seeds.empty:
+            st.caption(
+                "The seed alignments are only in this projection: their coverage is not computed."
+            )
+    pick_from_table(
+        table,
+        [*names, "note"],
+        "Non-dominated in the three objectives. In a projection, some of them can look dominated: "
+        "they are better in the third objective. The knee is closest to the ideal point once every "
+        "objective is scaled to [0, 1]. Click a row to see its alignment.",
+    )
 elif not published:
     st.subheader("Non-dominated alignments")
     pick_from_table(

@@ -159,7 +159,7 @@ def objective_names(run: Run) -> tuple[str, ...]:
 
 
 def has_default_objectives(run: Run) -> bool:
-    """Whether the run optimised SOPwTP and lDDT, the only formulation Transept analyses."""
+    """Whether the run optimised SOPwTP and lDDT, the formulation with a weighted compromise."""
     return objective_names(run) == OBJECTIVES
 
 

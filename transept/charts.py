@@ -146,43 +146,53 @@ def front_figure(
     selected: int | None,
     seeds: pd.DataFrame | None = None,
     compromise: int | None = None,
+    first: str = FIRST,
+    second: str = SECOND,
+    connect: bool = True,
 ) -> go.Figure:
     """All solutions, the non-dominated ones joined by a line, the seeds and the chosen ones.
 
     Every solution carries its row of FUN.csv as custom data, so that a click can select it.
-    Seeds (columns `method`, SOPwTP, lDDT) carry no row and cannot be selected.
+    Seeds (columns `method` and objectives) carry no row and cannot be selected; they are drawn
+    only if they have both objectives of the chart.
+
+    Args:
+        first: The objective of the horizontal axis.
+        second: The objective of the vertical axis.
+        connect: Whether to join the non-dominated solutions by a line; not for the projection of a
+            front of three objectives, whose points are not in order on two of them.
     """
     figure = go.Figure()
     figure.add_trace(
         go.Scatter(
-            x=values[FIRST],
-            y=values[SECOND],
+            x=values[first],
+            y=values[second],
             mode="markers",
             name="All solutions",
             marker={"color": ALL_COLOUR, "size": 7},
             customdata=list(values.index),
-            hovertemplate=f"MSASol%{{customdata}}<br>{FIRST} %{{x}}<br>"
-            f"{SECOND} %{{y:.4f}}<extra></extra>",
+            hovertemplate=f"MSASol%{{customdata}}<br>{first} %{{x}}<br>"
+            f"{second} %{{y:.4f}}<extra></extra>",
         )
     )
     figure.add_trace(
         go.Scatter(
-            x=front[FIRST],
-            y=front[SECOND],
-            mode="lines+markers",
+            x=front[first],
+            y=front[second],
+            mode="lines+markers" if connect else "markers",
             name="Non-dominated",
             marker={"color": FRONT_COLOUR, "size": 8},
             line={"color": FRONT_COLOUR},
             customdata=list(front["row"]),
-            hovertemplate=f"MSASol%{{customdata}}<br>{FIRST} %{{x}}<br>"
-            f"{SECOND} %{{y:.4f}}<extra></extra>",
+            hovertemplate=f"MSASol%{{customdata}}<br>{first} %{{x}}<br>"
+            f"{second} %{{y:.4f}}<extra></extra>",
         )
     )
     marked = front[front["note"] != ""]
     figure.add_trace(
         go.Scatter(
-            x=marked[FIRST],
-            y=marked[SECOND],
+            x=marked[first],
+            y=marked[second],
             mode="markers+text",
             name="Extremes, knee",
             text=marked["note"],
@@ -192,24 +202,24 @@ def front_figure(
             hoverinfo="skip",
         )
     )
-    if seeds is not None and not seeds.empty:
+    if seeds is not None and not seeds.empty and {first, second} <= set(seeds.columns):
         figure.add_trace(
             go.Scatter(
-                x=seeds[FIRST],
-                y=seeds[SECOND],
+                x=seeds[first],
+                y=seeds[second],
                 mode="markers+text",
                 name="Seed alignments",
                 text=seeds["method"],
                 textposition="bottom center",
                 marker={"color": SEED_COLOUR, "size": 10, "symbol": "square"},
-                hovertemplate=f"%{{text}}<br>{FIRST} %{{x}}<br>{SECOND} %{{y:.4f}}<extra></extra>",
+                hovertemplate=f"%{{text}}<br>{first} %{{x}}<br>{second} %{{y:.4f}}<extra></extra>",
             )
         )
     if compromise is not None and compromise in values.index:
         figure.add_trace(
             go.Scatter(
-                x=[values.loc[compromise, FIRST]],
-                y=[values.loc[compromise, SECOND]],
+                x=[values.loc[compromise, first]],
+                y=[values.loc[compromise, second]],
                 mode="markers",
                 name="Weighted compromise",
                 marker={
@@ -225,8 +235,8 @@ def front_figure(
     if selected is not None and selected in values.index:
         figure.add_trace(
             go.Scatter(
-                x=[values.loc[selected, FIRST]],
-                y=[values.loc[selected, SECOND]],
+                x=[values.loc[selected, first]],
+                y=[values.loc[selected, second]],
                 mode="markers",
                 name=f"MSASol{selected}",
                 marker={"color": SELECTED_COLOUR, "size": 16, "symbol": "star"},
@@ -235,11 +245,60 @@ def front_figure(
             )
         )
     figure.update_layout(
-        xaxis_title=f"{FIRST} (higher is better)",
-        yaxis_title=f"{SECOND} (higher is better)",
+        xaxis_title=f"{first} (higher is better)",
+        yaxis_title=f"{second} (higher is better)",
         height=480,
         margin={"t": 20},
         legend={"orientation": "h", "y": -0.2},
+    )
+    return figure
+
+
+def front3d_figure(values: pd.DataFrame, front: pd.DataFrame, selected: int | None) -> go.Figure:
+    """The solutions of three objectives in 3D: all, the non-dominated, the extremes and knee, and
+    the chosen one. It can be rotated, but not clicked: the solutions are chosen elsewhere."""
+    names = list(values.columns)
+    x, y, z = names
+
+    def trace(data: pd.DataFrame, rows: list, name: str, marker: dict, **extra) -> go.Scatter3d:
+        return go.Scatter3d(
+            x=data[x], y=data[y], z=data[z], name=name, marker=marker, customdata=rows,
+            hovertemplate=f"MSASol%{{customdata}}<br>{x} %{{x}}<br>{y} %{{y:.4f}}<br>"
+            f"{z} %{{z:.4f}}<extra></extra>",
+            **{"mode": "markers", **extra},
+        )  # fmt: skip
+
+    figure = go.Figure()
+    figure.add_trace(
+        trace(values, list(values.index), "All solutions", {"color": ALL_COLOUR, "size": 3})
+    )
+    figure.add_trace(
+        trace(front, list(front["row"]), "Non-dominated", {"color": FRONT_COLOUR, "size": 4})
+    )
+    marked = front[front["note"] != ""]
+    figure.add_trace(
+        trace(
+            marked, list(marked["row"]), "Extremes, knee",
+            {"color": FRONT_COLOUR, "size": 7, "symbol": "diamond"},
+            mode="markers+text", text=marked["note"],
+        )
+    )  # fmt: skip
+    if selected is not None and selected in values.index:
+        figure.add_trace(
+            trace(
+                values.loc[[selected]], [selected], f"MSASol{selected}",
+                {"color": SELECTED_COLOUR, "size": 8},
+            )
+        )  # fmt: skip
+    figure.update_layout(
+        height=560,
+        margin={"l": 0, "r": 0, "t": 20, "b": 0},
+        legend={"orientation": "h", "y": -0.05},
+        scene={
+            "xaxis_title": x,
+            "yaxis_title": y,
+            "zaxis_title": z,
+        },
     )
     return figure
 
