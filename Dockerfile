@@ -5,6 +5,8 @@ FROM eclipse-temurin:21-jre AS java
 
 FROM python:3.11-slim
 ENV JAVA_HOME=/opt/java/openjdk
+# On the PATH too, so that the command line of Transept core can be used inside the container.
+ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY --from=java /opt/java/openjdk /opt/java/openjdk
 
 # tini reaps the detached runs: a run that ended must not look alive to Transept.

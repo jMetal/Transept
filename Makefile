@@ -5,7 +5,7 @@ JAR_NAME := transept-core-0.1.0-jar-with-dependencies.jar
 CORE ?= $(firstword $(wildcard ../Transept-core/pom.xml ../transept-core/pom.xml))
 CORE_DIR := $(patsubst %/pom.xml,%,$(CORE))
 
-.PHONY: setup env jar core image run-image lint format test run
+.PHONY: setup env jar core image image-multiarch run-image lint format test run
 
 # Creates the Conda environment (Python, Java and Maven) and puts the core jar in lib/.
 #   make setup                 builds the jar from a clone of Transept-core next to this one
@@ -44,6 +44,13 @@ core:
 # Builds the Docker image from the jar of a clone of Transept-core next to this repository.
 image: core
 	docker build -t transept .
+
+# The same image for Intel and ARM machines (linux/amd64 and linux/arm64), e.g. before publishing it.
+# The other architecture is emulated, so it takes longer. Keeping both locally needs the containerd
+# image store of Docker (the default in recent Docker Desktop).
+PLATFORMS ?= linux/amd64,linux/arm64
+image-multiarch: core
+	docker buildx build --platform $(PLATFORMS) -t transept --load .
 
 # Runs the image built with `make image`; the runs and datasets stay in the transept-data volume.
 run-image:

@@ -160,6 +160,11 @@ keep it running until they finish. Results are the same as without Docker.
 | Copy your results out | `docker run --rm -v transept-data:/data -v "$PWD":/out --entrypoint cp transept -r /data/runs /out` |
 | Delete all your data | `docker volume rm transept-data` |
 | Give it more CPU or memory | On macOS and Windows, in **Settings > Resources** of Docker Desktop |
+| Use the command line of Transept core | `docker run --rm --entrypoint java transept -jar /app/lib/transept-core.jar --help` |
+
+`make image` builds the image for the architecture of your machine. `make image-multiarch` builds it
+for both Intel and ARM machines (`linux/amd64` and `linux/arm64`), emulating the other one, which
+takes longer.
 
 On Windows, Docker Desktop needs WSL 2; this has not been tested yet.
 
