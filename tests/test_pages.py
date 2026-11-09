@@ -1159,6 +1159,21 @@ class TestMonitor:
         assert not app.exception
         assert any(button.label == "Cancel the run" for button in app.button)
 
+    def test_should_stop_a_running_run_and_keep_its_results(self, configured):
+        # Arrange: a running run whose search has started
+        write_job(settings.runs_root(), "live", ALIVE_PID)
+        results = settings.runs_root() / "ejecuciones" / "toy" / "live"
+        results.mkdir(parents=True)
+        app = open_page(ui.MONITOR)
+
+        # Act
+        next(b for b in app.button if b.label == "Stop and keep the results").click().run()
+
+        # Assert
+        assert not app.exception
+        assert (results / runner.STOP_FILE).is_file()
+        assert "Stopping" in texts(app)
+
     def test_should_show_the_progress_by_time(self, configured):
         # Arrange
         job = write_job(settings.runs_root(), "timed", ALIVE_PID)
@@ -1250,6 +1265,20 @@ class TestResults:
         # Assert
         assert not app.exception
         assert any("--selection random" in code.value for code in app.code)
+
+    def test_should_say_that_a_run_was_stopped_early(self, configured, data_root: Path):
+        # Arrange
+        directory = write_finished_run(settings.runs_root(), data_root)
+        metadata = json.loads((directory / "metadata.json").read_text())
+        metadata["stoppedByUser"] = True
+        (directory / "metadata.json").write_text(json.dumps(metadata))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert: the toy run planned 200 evaluations and did 200
+        assert not app.exception
+        assert "stopped at your request after 200 of 200 evaluations" in texts(app)
 
     def test_should_say_there_are_no_finished_runs(self, configured):
         app = open_page(ui.RESULTS)

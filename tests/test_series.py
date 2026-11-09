@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -17,7 +18,8 @@ REQUEST = RunRequest(dataset="toy", seeds=("internal",), run_id="s", seed=5)
 
 @pytest.fixture
 def fake_tool(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    """Replaces the tool: writes metadata.json after the seconds given as the jar."""
+    """Replaces the tool: writes metadata.json after the seconds given as the jar, or as soon as a
+    STOP file appears, as the tool does."""
 
     def fake_command(request, jar, data_root, runs_root):
         results = runner.run_directory(runs_root, request.dataset, request.run_id)
@@ -25,8 +27,11 @@ def fake_tool(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
             "import pathlib, time\n"
             f"directory = pathlib.Path({str(results)!r})\n"
             "directory.mkdir(parents=True)\n"
-            f"time.sleep({jar})\n"
-            "(directory / 'metadata.json').write_text('{}')\n"
+            "end = time.time() + " + str(jar) + "\n"
+            "while time.time() < end and not (directory / 'STOP').exists():\n"
+            "    time.sleep(0.02)\n"
+            "stopped = 'true' if (directory / 'STOP').exists() else 'false'\n"
+            "(directory / 'metadata.json').write_text('{\"stoppedByUser\": ' + stopped + '}')\n"
         )
         return [sys.executable, "-c", code]
 
@@ -209,6 +214,32 @@ class TestStates:
         assert not runner.is_alive(pid)
         assert (job / runner.CANCELLED_FILE).is_file()
         assert series.state(chosen) == SeriesState.CANCELLED
+
+
+class TestStop:
+    def test_should_keep_the_results_and_launch_no_more_runs(self, tmp_path: Path, fake_tool):
+        # Arrange: one run at a time, each too long to finish
+        chosen = make(tmp_path, count=3, parallel=1, jar="30")
+        driver = threading.Thread(
+            target=series.drive, args=(chosen,), kwargs={"poll_seconds": 0.02}
+        )
+        driver.start()
+        first = series.members(chosen)[0].run
+        for _ in range(200):
+            if first.results.is_dir():
+                break
+            time.sleep(0.02)
+
+        # Act
+        series.stop(chosen)
+        driver.join(timeout=10)
+        wait_until_it_ends(first)
+
+        # Assert
+        assert not driver.is_alive()
+        assert states(chosen) == [runs.RunState.FINISHED.value] + [series.NOT_STARTED] * 2
+        assert runs.stopped_by_user(first)
+        assert series.state(chosen) == SeriesState.STOPPED_BY_USER
 
 
 class TestTrash:

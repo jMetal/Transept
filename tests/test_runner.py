@@ -148,6 +148,14 @@ class TestLaunch:
         with pytest.raises(FileExistsError):
             runner.launch(REQUEST, "0", "/data", tmp_path)
 
+    def test_should_ask_the_tool_to_stop_only_once_the_run_has_started(self, tmp_path: Path):
+        results = tmp_path / "ejecuciones" / "toy" / "r"
+        assert not runner.request_stop(results)
+        assert not results.exists()
+        results.mkdir(parents=True)
+        assert runner.request_stop(results)
+        assert runner.stop_requested(results)
+
     def test_should_cancel_a_running_job(self, tmp_path: Path, fake_tool):
         # Arrange
         job = runner.launch(REQUEST, "30", "/data", tmp_path)
