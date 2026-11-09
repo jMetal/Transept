@@ -73,3 +73,76 @@ def seed_scores(
     table = pd.read_csv(cache)
     table = table[table["status"] == "ok"]
     return table[["method", "SOPwTP", "lDDT"]].reset_index(drop=True)
+
+
+INTERNAL_PREFIX = "internal:"
+
+
+def internal_seed_files(metadata: dict) -> list[Path]:
+    """Returns the files of the internal seeds that a run used, as its metadata.json lists them."""
+    return [
+        Path(entry["file"])
+        for entry in metadata.get("seeds", [])
+        if str(entry.get("method", "")).startswith(INTERNAL_PREFIX)
+        and entry.get("file")
+        and Path(entry["file"]).is_file()
+    ]
+
+
+def internal_cache_file(
+    runs_root: Path, data_root: str, dataset: str, mapping_policy: str, jar: str, metadata: dict
+) -> Path:
+    """Returns where the scores of the internal seeds of a run are kept.
+
+    Besides the build of the tool and the data directory, it depends on the content of the seeds
+    (their sha256 in metadata.json), so that runs with the same seeds share it.
+    """
+    contents = sorted(
+        entry.get("sha256", "")
+        for entry in metadata.get("seeds", [])
+        if str(entry.get("method", "")).startswith(INTERNAL_PREFIX)
+    )
+    description = f"{jar_fingerprint(jar)}:{Path(data_root).resolve()}:{':'.join(contents)}"
+    fingerprint = hashlib.sha1(description.encode()).hexdigest()[:12]
+    return runs_root / "baselines" / f"{dataset}-internal-{mapping_policy}-{fingerprint}.csv"
+
+
+def internal_seed_scores(
+    jar: str,
+    data_root: str,
+    dataset: str,
+    metadata: dict,
+    runs_root: Path,
+    mapping_policy: str = "VERIFIED",
+) -> pd.DataFrame:
+    """Returns SOPwTP and lDDT of the internal seeds that a run used.
+
+    They are computed by the tool, as the precomputed ones, and cached per build of the tool,
+    mapping policy and content of the seeds.
+
+    Returns:
+        A table with the columns `method` (`internal:<name>`), `SOPwTP` and `lDDT`; empty if the run
+        used no internal seeds or scoring failed.
+    """
+    empty = pd.DataFrame(columns=["method", "SOPwTP", "lDDT"])
+    files = internal_seed_files(metadata)
+    if not files:
+        return empty
+    cache = internal_cache_file(runs_root, data_root, dataset, mapping_policy, jar, metadata)
+    if not cache.is_file():
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        partial = cache.with_suffix(".partial")
+        arguments = [
+            *command(jar, data_root, dataset, mapping_policy, partial),
+            "--alignments",
+            ",".join(str(file) for file in files),
+        ]
+        try:
+            subprocess.run(arguments, capture_output=True, timeout=TIMEOUT_SECONDS, check=True)
+        except (OSError, subprocess.SubprocessError):
+            return empty
+        partial.replace(cache)
+    table = pd.read_csv(cache)
+    table = table[table["status"] == "ok"]
+    table = table.assign(method=INTERNAL_PREFIX + table["method"].astype(str))
+    return table[["method", "SOPwTP", "lDDT"]].reset_index(drop=True)

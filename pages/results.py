@@ -234,13 +234,21 @@ if comparable:
             current.jar, data_root, run.dataset, settings.runs_root(),
             config.get("mappingPolicy", "VERIFIED"),
         )  # fmt: skip
+        internal = baselines.internal_seed_scores(
+            current.jar, data_root, run.dataset, metadata, settings.runs_root(),
+            config.get("mappingPolicy", "VERIFIED"),
+        )  # fmt: skip
 else:
     st.info(
         "This run used the original lDDT aggregation of an earlier version, so the seed "
         "alignments are not shown: their values would not be comparable."
     )
     scores = pd.DataFrame(columns=["method", "SOPwTP", "lDDT"])
+    internal = scores
 seeds = scores[scores["method"].isin(config.get("seedMethods", []))]
+# The internal seeds are not in the dataset: they are scored from the files the run recorded.
+if not internal.empty:
+    seeds = pd.concat([seeds, internal], ignore_index=True)
 # The seeds are scored with SOPwTP and lDDT: compare only the objectives the run optimised.
 common = [name for name in names if name in seeds.columns]
 compromise = None
