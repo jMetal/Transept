@@ -167,6 +167,14 @@ else:
 
 config = runs.config(run)
 metadata = runs.metadata(run) or {}
+if runs.stopped_by_user(run):
+    planned = config.get("maxEvaluations")
+    st.info(
+        f"This run was stopped at your request after {metadata.get('evaluations', '?')} "
+        + (f"of {planned} " if planned else "")
+        + "evaluations: its alignments are those it had found by then. It cannot be repeated "
+        "exactly."
+    )
 names = list(runs.objective_names(run))
 published = runs.has_default_objectives(run)
 values = runs.objective_values(run)

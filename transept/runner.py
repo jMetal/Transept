@@ -23,6 +23,8 @@ REQUEST_FILE = "request.json"
 PID_FILE = "pid.txt"
 LOG_FILE = "log.txt"
 CANCELLED_FILE = "cancelled"
+# Created in the results directory of a run, it makes the tool end the run and keep its results.
+STOP_FILE = "STOP"
 
 
 @dataclass(slots=True, frozen=True)
@@ -230,6 +232,26 @@ def is_alive(pid: int | None) -> bool:
     except PermissionError:
         return True
     return True
+
+
+def request_stop(results: Path) -> bool:
+    """Asks a running search to end now and keep its results.
+
+    The tool creates the results directory when the run starts; until then there is nothing to
+    stop, and creating the directory would make the run fail.
+
+    Returns:
+        Whether the request was made.
+    """
+    if not results.is_dir():
+        return False
+    (results / STOP_FILE).write_text("stopped by the user\n", encoding="utf-8")
+    return True
+
+
+def stop_requested(results: Path) -> bool:
+    """Whether a stop was requested and the tool has not handled it yet."""
+    return (results / STOP_FILE).is_file()
 
 
 def cancel(job: Path) -> None:

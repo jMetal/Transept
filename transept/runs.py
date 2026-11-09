@@ -116,6 +116,11 @@ def config(run: Run) -> dict:
     }
 
 
+def stopped_by_user(run: Run) -> bool:
+    """Whether the run was stopped early at the user's request (it kept its results)."""
+    return bool((metadata(run) or {}).get("stoppedByUser"))
+
+
 def metadata(run: Run) -> dict | None:
     """Returns metadata.json of a finished run, or None."""
     return read_json(run.results / "metadata.json")

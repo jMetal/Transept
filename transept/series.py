@@ -25,6 +25,7 @@ SERIES_FILE = "series.json"
 PID_FILE = "pid.txt"
 LOG_FILE = "log.txt"
 CANCELLED_FILE = "cancelled"
+STOP_FILE = "stop_requested"
 MAX_SEED = 2**31 - 1
 POLL_SECONDS = 1.0
 
@@ -37,6 +38,7 @@ class SeriesState(Enum):
     FINISHED_WITH_PROBLEMS = "finished, with problems"
     CANCELLED = "cancelled"
     STOPPED = "stopped before finishing"
+    STOPPED_BY_USER = "stopped at your request"
 
 
 QUEUED = "queued"
@@ -137,6 +139,10 @@ def _is_cancelled(directory: Path) -> bool:
     return (directory / CANCELLED_FILE).is_file()
 
 
+def _is_stop_requested(directory: Path) -> bool:
+    return (directory / STOP_FILE).is_file()
+
+
 def _run_of(series: Series, request: runner.RunRequest) -> runs.Run:
     return runs.run_of(series.runs_root, series.dataset, request.run_id)
 
@@ -147,7 +153,11 @@ def _exists(run: runs.Run) -> bool:
 
 def members(series: Series) -> list[Member]:
     """Returns the runs of a series with their states."""
-    active = _is_active(series.directory) and not _is_cancelled(series.directory)
+    active = (
+        _is_active(series.directory)
+        and not _is_cancelled(series.directory)
+        and not _is_stop_requested(series.directory)
+    )
     found = []
     for request in series.requests:
         run = _run_of(series, request)
@@ -170,6 +180,8 @@ def state(series: Series) -> SeriesState:
         return SeriesState.RUNNING
     if _is_cancelled(series.directory):
         return SeriesState.CANCELLED
+    if _is_stop_requested(series.directory):
+        return SeriesState.STOPPED_BY_USER
     if NOT_STARTED in states:
         return SeriesState.STOPPED
     if all(value == runs.RunState.FINISHED.value for value in states):
@@ -223,13 +235,21 @@ def cancel(series: Series) -> None:
             runner.cancel(member.run.job)
 
 
+def stop(series: Series) -> None:
+    """Launches no more runs, and asks the active ones to end now and keep their results."""
+    (series.directory / STOP_FILE).write_text("stopped by the user\n", encoding="utf-8")
+    for member in members(series):
+        if member.state == runs.RunState.RUNNING.value:
+            runner.request_stop(member.run.results)
+
+
 def drive(series: Series, poll_seconds: float = POLL_SECONDS) -> None:
     """Launches the runs of a series, keeping at most `parallel` active, until none is left."""
     pending = deque(series.requests)
     active: list[runs.Run] = []
     while True:
         active = [run for run in active if runs.state(run) == runs.RunState.RUNNING]
-        if _is_cancelled(series.directory):
+        if _is_cancelled(series.directory) or _is_stop_requested(series.directory):
             return
         while pending and len(active) < series.parallel:
             request = pending.popleft()
@@ -242,6 +262,8 @@ def drive(series: Series, poll_seconds: float = POLL_SECONDS) -> None:
             active.append(_run_of(series, request))
             if _is_cancelled(series.directory):  # cancelled while it was being launched
                 runner.cancel(job)
+                return
+            if _is_stop_requested(series.directory):  # stopped while it was being launched
                 return
         if not pending and not active:
             return

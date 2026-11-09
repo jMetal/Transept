@@ -49,6 +49,27 @@ def show_member(members: list[series.Member]) -> None:
         st.caption(f"{chosen.run.run_id}: {chosen.state}.")
 
 
+def series_controls(chosen: series.Series) -> None:
+    """Stop or cancel a running series."""
+    stopping = (chosen.directory / series.STOP_FILE).is_file()
+    buttons = st.columns(2)
+    if buttons[0].button(
+        "Stop and keep the results",
+        disabled=stopping,
+        help="The runs in progress end at their next generation and keep their results; the "
+        "runs not started yet are not launched. Results analyses what there is.",
+    ):
+        series.stop(chosen)
+        st.rerun(scope="app")
+    if buttons[1].button(
+        "Cancel the runs", type="secondary", help="Stops every run and keeps nothing of them."
+    ):
+        series.cancel(chosen)
+        st.rerun(scope="app")
+    if stopping:
+        st.info("Stopping: the runs in progress are writing their results.")
+
+
 def show_series(chosen: series.Series, members: list[series.Member]) -> None:
     current = series.state(chosen)
     finished = [m for m in members if m.state == RunState.FINISHED.value]
@@ -70,9 +91,8 @@ def show_series(chosen: series.Series, members: list[series.Member]) -> None:
         "In blue, the runs in progress; in grey, those already finished."
         + (f" {stopped} run(s) did not finish and are not shown." if stopped else "")
     )
-    if current == SeriesState.RUNNING and st.button("Cancel the runs", type="secondary"):
-        series.cancel(chosen)
-        st.rerun(scope="app")
+    if current == SeriesState.RUNNING:
+        series_controls(chosen)
     if current == SeriesState.FINISHED:
         st.success("Every run has finished.")
         if st.button("Open the results", type="primary", key="open_series_results"):
@@ -82,6 +102,14 @@ def show_series(chosen: series.Series, members: list[series.Member]) -> None:
         st.warning("Some runs did not finish: see them below.")
     elif current == SeriesState.CANCELLED:
         st.warning("The runs were cancelled.")
+    elif current == SeriesState.STOPPED_BY_USER:
+        st.info(
+            f"Stopped at your request: {len(finished)} of {len(members)} runs have results, some "
+            "of them shorter than planned."
+        )
+        if finished and st.button("Open the results", type="primary", key="open_stopped_series"):
+            st.session_state[ui.SELECTED_SERIES] = chosen.key
+            st.switch_page(ui.RESULTS)
     elif current == SeriesState.STOPPED:
         st.warning("The process that launches the runs stopped before launching them all.")
     with st.expander(f"Runs ({len(members)})"):
@@ -141,11 +169,36 @@ def show_progress(run: runs.Run, state: RunState) -> None:
         st.plotly_chart(charts.progress_figure(records), width="stretch")
 
 
+def run_controls(run: runs.Run) -> None:
+    """Stop or cancel a running run."""
+    stopping = runner.stop_requested(run.results)
+    buttons = st.columns(2)
+    if buttons[0].button(
+        "Stop and keep the results",
+        disabled=stopping,
+        help="The run ends at its next generation and writes its results as if it had "
+        "finished, so that you can analyse them. It cannot be repeated exactly.",
+    ):
+        if not runner.request_stop(run.results):
+            st.warning("The search has not started yet: try again in a moment.")
+        else:
+            st.rerun(scope="app")
+    if buttons[1].button(
+        "Cancel the run", type="secondary", help="Stops the run and keeps nothing of it."
+    ):
+        runner.cancel(run.job)
+        st.rerun(scope="app")
+    if stopping:
+        st.info("Stopping: the run is writing its results.")
+
+
 def show_outcome(run: runs.Run, state: RunState) -> None:
     if state == RunState.RUNNING:
-        if st.button("Cancel the run", type="secondary"):
-            runner.cancel(run.job)
-            st.rerun(scope="app")
+        run_controls(run)
+    elif state == RunState.FINISHED and runs.stopped_by_user(run):
+        st.success("The run was stopped at your request and kept its results.")
+        if st.button("Open the results", type="primary"):
+            st.switch_page(ui.RESULTS)
     elif state == RunState.FINISHED:
         st.success("The run has finished.")
         if st.button("Open the results", type="primary"):
