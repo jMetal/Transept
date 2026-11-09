@@ -1251,24 +1251,6 @@ class TestResults:
         assert not app.exception
         assert any("--selection random" in code.value for code in app.code)
 
-    def test_should_show_a_three_objective_run(self, configured, data_root: Path):
-        # Arrange
-        directory = write_finished_run(settings.runs_root(), data_root)
-        metadata = json.loads((directory / "metadata.json").read_text())
-        metadata["objectives"] = ["SOPwTP", "lDDT", "coverage"]
-        (directory / "metadata.json").write_text(json.dumps(metadata))
-        (directory / "FUN.csv").write_text("30,0.5,0.9\n25,0.6,0.8\n30,0.5,0.9\n20,0.55,0.95\n")
-
-        # Act
-        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
-
-        # Assert
-        assert not app.exception
-        assert "no front chart yet" in texts(app)
-        assert not app.get("plotly_chart") or all(
-            "Pareto" not in str(chart.proto) for chart in app.get("plotly_chart")
-        )
-
     def test_should_say_there_are_no_finished_runs(self, configured):
         app = open_page(ui.RESULTS)
         assert "no finished runs" in texts(app)
@@ -1314,6 +1296,29 @@ class TestChoosingAnAlignment:
         assert not app.exception
         assert app.session_state["row:toy / done"] == 3
         assert app.selectbox(key="selector:toy / done").value == 3
+
+
+class TestResultsThreeObjectives:
+    def test_should_draw_the_front_in_3d_and_in_projections(self, configured, data_root: Path):
+        # Arrange: a run of SOPwTP, lDDT and coverage
+        directory = write_finished_run(settings.runs_root(), data_root)
+        (directory / "FUN.csv").write_text("30,0.5,0.8\n25,0.6,0.7\n30,0.5,0.8\n20,0.55,0.9\n")
+        metadata = json.loads((directory / "metadata.json").read_text())
+        metadata["objectives"] = ["SOPwTP", "lDDT", "coverage"]
+        (directory / "metadata.json").write_text(json.dumps(metadata))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert: the 3D view first, then a projection that can be clicked
+        assert not app.exception
+        view = next(radio for radio in app.radio if radio.label == "View")
+        assert view.options == ["3D", "SOPwTP – lDDT", "SOPwTP – coverage", "lDDT – coverage"]
+        assert any("scatter3d" in chart.proto.spec for chart in app.get("plotly_chart"))
+        view.set_value("lDDT – coverage").run()
+        assert not app.exception
+        assert not any("scatter3d" in chart.proto.spec for chart in app.get("plotly_chart"))
+        assert len(app.dataframe[0].value) == 3
 
 
 class TestResultsTools:

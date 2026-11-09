@@ -64,3 +64,40 @@ class TestSeriesFrontFigure:
         marked = self.figure().data[-1]
         assert list(marked.text) == ["knee"]
         assert list(marked.customdata[0]) == [3, 7]
+
+
+def three_objectives() -> tuple[pd.DataFrame, pd.DataFrame]:
+    from transept import front
+
+    values = pd.DataFrame(
+        {
+            "SOPwTP": [30.0, 25.0, 20.0, 10.0],
+            "lDDT": [0.5, 0.6, 0.55, 0.4],
+            "coverage": [0.8, 0.7, 0.9, 0.5],
+        }
+    )
+    return values, front.summarize(values)
+
+
+def test_should_draw_three_objectives_in_3d():
+    values, table = three_objectives()
+    figure = charts.front3d_figure(values, table, 2)
+    assert {trace.type for trace in figure.data} == {"scatter3d"}
+    assert [trace.name for trace in figure.data][-1] == "MSASol2"
+    assert figure.layout.scene.zaxis.title.text == "coverage"
+
+
+def test_should_project_three_objectives_without_joining_the_front():
+    values, table = three_objectives()
+    seeds = pd.DataFrame({"method": ["mafft"], "SOPwTP": [22.0], "lDDT": [0.45]})
+
+    # Act
+    projection = charts.front_figure(values, table, None, seeds, None, "lDDT", "coverage", False)
+    default = charts.front_figure(values, table, None, seeds)
+
+    # Assert: the seeds have no coverage, so they are only in the SOPwTP-lDDT chart
+    front = next(trace for trace in projection.data if trace.name == "Non-dominated")
+    assert front.mode == "markers"
+    assert "Seed alignments" not in [trace.name for trace in projection.data]
+    assert "Seed alignments" in [trace.name for trace in default.data]
+    assert projection.layout.xaxis.title.text.startswith("lDDT")
