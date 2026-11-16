@@ -29,7 +29,9 @@ STYLE = f"""
 .st-key-home_facts [data-testid="stMetricLabel"],
 .st-key-home_facts [data-testid="stMetricLabel"] *,
 .st-key-home_facts [data-testid="stMetricValue"] {{ color: #FFFFFF; }}
-.st-key-home_facts svg {{ color: rgba(255, 255, 255, 0.75) !important; }}
+.st-key-home_facts [data-testid="stTooltipIcon"] svg {{
+  stroke: rgba(255, 255, 255, 0.85) !important;
+}}
 [class*="st-key-home_step_"] {{
   background: {PALE_BLUE}; border-top: 5px solid {YELLOW}; border-radius: 0.9rem;
   padding: 1rem 1rem 1.25rem;
