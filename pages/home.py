@@ -4,11 +4,13 @@ comes from transept/home_panel.py."""
 
 import streamlit as st
 
-from transept import dataset_check, home_panel, runner, runs, settings, tutorials, ui
+from transept import charts, dataset_check, front, home_panel, runner, runs, settings, tutorials, ui
+from transept.branding import MARK
 from transept.sections import SECTIONS, Page, Section
 
 STEPS = ("Explore", "Optimize", "Analyze")
 RECENT_RUNS = 4
+PICTURE_HEIGHT = 320
 STATE_BADGES = {
     runs.RunState.RUNNING: ("Running", ":material/sync:", "blue"),
     runs.RunState.FINISHED: ("Finished", ":material/check_circle:", "green"),
@@ -42,7 +44,57 @@ def plural(count: int, noun: str, many: str | None = None) -> str:
     return f"{count} {noun if count == 1 else many or noun + 's'}"
 
 
-def render_hero(current: settings.Settings, problems: list[str]) -> None:
+def result_figure(run: runs.Run):
+    """The result of a run, small: its front with the knee, in 3D with three objectives, or its
+    convergence with one."""
+    values = runs.objective_values(run)
+    if len(values.columns) == 1 or values.empty:
+        return charts.progress_figure(runs.progress(run))
+    table = front.summarize(values)
+    knee = front.knee_row(table)
+    if len(values.columns) == 3:
+        return charts.front3d_figure(values, table, knee)
+    return charts.front_figure(values, table, knee)
+
+
+def render_picture(summary: home_panel.Activity) -> None:
+    """The run in progress, or else the result of the latest run, or else the logo."""
+    run = summary.active or summary.latest_result
+    if run is None:
+        st.image(MARK, width=220)
+        return
+    active = run is summary.active
+    figure = charts.progress_figure(runs.progress(run)) if active else result_figure(run)
+    figure.update_layout(height=PICTURE_HEIGHT, margin={"l": 0, "r": 0, "t": 10, "b": 0})
+    st.plotly_chart(figure, config={"displayModeBar": False}, width="stretch")
+    if active:
+        st.caption(f"In progress: {describe(run)}.")
+        if st.button("Follow it in the Monitor", icon=":material/monitoring:"):
+            ui.select_run(run)
+            st.switch_page(ui.MONITOR)
+    else:
+        st.caption(f"Latest result: {describe(run)} ({run.run_id}). The knee is marked.")
+        if st.button("Open it in Results", icon=":material/scatter_plot:"):
+            ui.select_run(run)
+            st.switch_page(ui.RESULTS)
+
+
+def render_facts(ready: tuple[int, int]) -> None:
+    facts = home_panel.project_facts(*ready, len(tutorials.list_tutorials()))
+    for column, fact in zip(st.columns(len(facts)), facts, strict=True):
+        with column.container(border=True):
+            st.metric(fact.label, fact.value, help=fact.detail)
+
+
+def render_hero(current: settings.Settings, problems: list[str], summary) -> None:
+    text, picture = st.columns([5, 4], vertical_alignment="center", gap="large")
+    with text:
+        render_presentation(current, problems)
+    with picture:
+        render_picture(summary)
+
+
+def render_presentation(current: settings.Settings, problems: list[str]) -> None:
     st.title("Transept: topology-aware alignment of transmembrane proteins")
     st.markdown("#### Alignments that keep every helix whole")
     st.markdown(
@@ -51,7 +103,7 @@ def render_hero(current: settings.Settings, problems: list[str]) -> None:
     )
     for problem in problems:
         st.error(problem)
-    first, second, third, overview_column = st.columns([1, 1, 1, 1.3], vertical_alignment="center")
+    first, second, third = st.columns(3, vertical_alignment="center")
     if first.button(
         "Run the example",
         type="primary",
@@ -68,7 +120,7 @@ def render_hero(current: settings.Settings, problems: list[str]) -> None:
     )
     overview = tutorials.tutorial_named(tutorials.OVERVIEW)
     if overview is not None:
-        overview_column.page_link(
+        st.page_link(
             ui.tutorial_page(overview),
             label="New here? Read the overview",
             icon=":material/school:",
@@ -134,10 +186,7 @@ def render_step(
     for page in section.pages:
         render_page(page)
     if section.name == "Optimize" and summary.active is not None:
-        st.info(f"Running now: {describe(summary.active)}.")
-        if st.button("Follow it in the Monitor", icon=":material/monitoring:"):
-            ui.select_run(summary.active)
-            st.switch_page(ui.MONITOR)
+        st.info(f"Running now: {describe(summary.active)}. It is drawn at the top of the page.")
     if section.name == "Analyze":
         render_recent(summary)
 
@@ -184,7 +233,8 @@ problems = settings.problems(current)
 summary = home_panel.activity(settings.runs_root(), limit=RECENT_RUNS)
 ready = datasets_ready(current) if not problems else (0, 0)
 
-render_hero(current, problems)
+render_hero(current, problems, summary)
+render_facts(ready)
 st.divider()
 sections = {section.name: section for section in SECTIONS}
 for number, (column, name) in enumerate(zip(st.columns(3, gap="large"), STEPS), start=1):

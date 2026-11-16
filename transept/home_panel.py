@@ -148,3 +148,43 @@ def example_request(now: datetime | None = None) -> runner.RunRequest:
         population_size=options.DEFAULT_POPULATION_SIZE,
         threads=min(4, os.cpu_count() or 1),
     )
+
+
+@dataclass(slots=True, frozen=True)
+class Fact:
+    """A figure about what Transept offers, for the row under the title of the home page.
+
+    Attributes:
+        label: What it counts.
+        value: The figure.
+        detail: A short explanation, shown on hover.
+    """
+
+    label: str
+    value: str
+    detail: str
+
+
+def project_facts(datasets: int, repositories: int, tutorials: int) -> list[Fact]:
+    """What Transept offers: its datasets, algorithms, formulations, operators and tutorials."""
+    places = "repository" if repositories == 1 else "repositories"
+    return [
+        Fact("Datasets", str(datasets), f"In {repositories} {places}, ready to align"),
+        Fact(
+            "Algorithms",
+            str(len(options.ALGORITHMS)),
+            "NSGA-II, SPEA2, a genetic algorithm and others, with two random searches as checks",
+        ),
+        Fact(
+            "Formulations",
+            str(len(options.OBJECTIVES)),
+            "Objectives to optimise: SOPwTP and lDDT, lDDT alone, or both with coverage",
+        ),
+        Fact(
+            "Operators",
+            str(len(options.CROSSOVERS) + len(options.MUTATIONS)),
+            f"{len(options.CROSSOVERS)} crossovers and {len(options.MUTATIONS)} mutations, none "
+            "of them breaks a helix",
+        ),
+        Fact("Tutorials", str(tutorials), "Guides inside Transept, in Learn"),
+    ]
