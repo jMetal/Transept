@@ -60,8 +60,9 @@ class TestHome:
 
         # Assert
         assert not app.exception
-        assert app.title[0].value == "Transept"
+        assert app.title[0].value.startswith("Align transmembrane proteins")
         assert "jar was not found" in texts(app)
+        assert next(b for b in app.button if b.label == "Run the example").disabled
 
     def test_should_say_it_is_ready(self, configured):
         if settings.java_version() is None:
@@ -78,10 +79,50 @@ class TestHome:
         assert not app.exception
         shown = texts(app)
         for section in SECTIONS:
-            assert section.name.upper() in shown
-            for page in section.pages:
+            pages = [page for page in section.pages if not page.is_tutorials]
+            if pages:
+                assert section.name.upper() in shown
+            for page in pages:
                 assert page.title in shown
                 assert page.description in shown
+
+    def test_should_summarise_the_activity_and_open_a_recent_run(self, configured, data_root: Path):
+        # Arrange
+        write_finished_run(settings.runs_root(), data_root)
+
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert: one finished run, drawn as the latest result and listed as recent
+        assert not app.exception
+        metrics = {metric.label: metric.value for metric in app.metric}
+        assert metrics == {"Runs": "1", "With results": "1", "Running now": "0", "Series": "0"}
+        assert "Latest result: NSGA-II on toy (done)" in texts(app)
+        assert "**NSGA-II** on toy" in texts(app)
+
+        # Act
+        next(b for b in app.button if b.key == "home_open_toy / done").click().run()
+
+        # Assert
+        assert app.session_state[ui.SELECTED_RUN] == ("toy", "done")
+
+    def test_should_launch_the_example_and_follow_it(
+        self, configured, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange: the run is not really launched
+        launched = []
+        monkeypatch.setattr(
+            runner, "launch", lambda request, *args: launched.append(request) or Path("job")
+        )
+        app = open_page(ui.HOME)
+
+        # Act
+        next(b for b in app.button if b.label == "Run the example").click().run()
+
+        # Assert
+        assert not app.exception
+        assert [request.dataset for request in launched] == ["classT2_19"]
+        assert app.session_state[ui.SELECTED_RUN][0] == "classT2_19"
 
     def test_should_link_only_the_available_pages(self, configured):
         # Arrange
