@@ -50,6 +50,19 @@ In the example, every helix has a support of 1.0: the 60 other alignments of the
 compared (out of 79) align the seven helices in exactly the same way. 326 of the 338 columns with at least two residues have a
 support of 90 % or more. The only columns below 50 % are the first two, at the N-terminus.
 
+Above the chart of the front, Results sums this up for the whole set: in the example, the 80
+alignments share 99.6 % of their residue pairs and keep the helices of the knee almost unchanged,
+so you do not have to choose among them. When some helices have a mean support below 0.9, it
+names them, and **Knee or medoid?** compares the knee with the medoid (the alignment that agrees
+most with the others) using what does not need a reference: their objectives, their agreement
+with the rest of the front, their support in the helices and, once fetched, their consistency
+with the GPCRdb generic numbers.
+
+To build a tree or run another analysis on the reliable part only, use **FASTA without unreliable
+columns** under the alignment: it leaves out the columns with support below the threshold you
+choose (0.5 by default). On the GPCR benchmark, columns with support below 0.5 were almost never
+right according to the reference alignment.
+
 ## Step 3: pLDDT, the confidence of the structures
 
 The structural objective compares the distances between residues in the AlphaFold2 models. Where

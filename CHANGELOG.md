@@ -27,6 +27,10 @@ All notable changes to Transept are recorded here. The format follows
 - Tracks in the alignment viewer, with the residues coloured by any of them: the support of every
   column by the other alignments of the run, the AlphaFold confidence (pLDDT) of every residue,
   and the conservation and consensus of every column; their means per helix.
+- How much the alignments of the front agree, overall and in every helix, above the chart; the
+  medoid of the front (the alignment that agrees most with the others), marked in the chart and
+  compared with the knee when they differ; the alignment without its columns of low support, to
+  download.
 - GPCRdb generic numbers, fetched on request and kept: how many residues of the helices are in
   the column of their number, the x.50 position of every helix and the motifs DRY, CWxP, NPxxY
   and PIF.

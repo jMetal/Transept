@@ -26,9 +26,26 @@ guided by:
 | **Sequence** (SOPwTP) | A sum of pairs that takes the topology into account |
 | **Structure** (lDDT) | Whether aligned residues keep similar distances in the 3D structures, for example those of AlphaFold |
 
-Sequence and structure can pull in different directions, so Transept does not give you a single
-answer: it gives you **a set of alternative alignments** that trade one for the other, and you
-choose among them.
+Sequence and structure can pull in different directions, so the search ends with **a set of
+alternative alignments** that trade one for the other.
+
+### Why a set of alignments and not one?
+
+A tool such as ClustalW or MAFFT gives you one alignment, and no way of telling which parts of it
+to trust. You do not have to choose among the alignments of Transept either: **Results** recommends
+one, the knee, a balanced point of the trade-off. The set is what lets Transept tell you more:
+
+- **How much the choice matters.** Results says how much the alignments of the set agree. On the
+  GPCR benchmark they usually share 95–99 % of their residue pairs and align the helices almost
+  identically: they are one answer in the helices, with variants in the loops. When they disagree
+  more, as with long extracellular domains, Results says so and compares the knee with the
+  **medoid**, the alignment that agrees most with all the others.
+- **Which columns to trust.** The **Support** track gives, for every column, how many of the other
+  alignments keep its residues together. On the GPCR benchmark, columns with support below 0.5
+  were almost never right according to the reference alignment, while well-supported ones mostly
+  were. You can download the alignment without its unreliable columns, for a tree for instance.
+
+[Is my alignment reliable?](is-my-alignment-reliable.md) shows how to read these measures.
 
 ## Who it is for
 
