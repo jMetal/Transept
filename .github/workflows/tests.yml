@@ -28,11 +28,9 @@ jobs:
       - name: Test
         run: pytest tests/
 
-  # The same tests with the jar of Transept core built from its repository, so that the options
-  # offered by Transept are checked against the jar. It needs that repository to be readable, so
-  # it runs only once this one is public.
+  # The same tests with the jar of Transept core built from its public repository, so that the
+  # options offered by Transept are checked against the jar.
   with-core:
-    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
