@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Lint and tests on Linux and macOS. The tests that compare the options with the jar of
+  # Transept core are skipped here, because the jar is not available.
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Test
+        run: pytest tests/
+
+  # The same tests with the jar of Transept core built from its repository, so that the options
+  # offered by Transept are checked against the jar. It needs that repository to be readable, so
+  # it runs only once this one is public.
+  with-core:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: jMetal/Transept-core
+          path: transept-core
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Build the jar of Transept core
+        run: |
+          mvn -B -q -f transept-core/pom.xml package -DskipTests
+          echo "TRANSEPT_CORE_JAR=$(ls "$PWD"/transept-core/target/*-jar-with-dependencies.jar)" >> "$GITHUB_ENV"
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Test
+        run: pytest tests/
