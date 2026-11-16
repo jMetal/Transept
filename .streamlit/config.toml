@@ -5,3 +5,26 @@ address = "localhost"
 
 [browser]
 gatherUsageStats = false
+
+[client]
+# Hide the developer options (Deploy, Rerun settings) from the toolbar.
+toolbarMode = "viewer"
+
+# The look of Transept: the colours of its logo (ink, membrane and amber) and its typefaces
+# (Space Grotesk for headings, Inter for text, JetBrains Mono for sequences and commands).
+[theme]
+base = "light"
+primaryColor = "#1F7A8C"
+backgroundColor = "#F7F9FA"
+secondaryBackgroundColor = "#EDF2F4"
+textColor = "#12324A"
+linkColor = "#1F7A8C"
+borderColor = "#DCE3E8"
+showWidgetBorder = true
+baseRadius = "0.6rem"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap, sans-serif"
+headingFont = "Space Grotesk:https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap, sans-serif"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap, monospace"
+headingFontWeights = [700, 600, 600, 600, 600, 600]
+chartCategoricalColors = ["#1F7A8C", "#C77D0A", "#12324A", "#5FB3C3", "#B42318", "#8A98A4", "#6B4304", "#D7ECEF"]
+

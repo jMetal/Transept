@@ -104,18 +104,18 @@ def helix_breaking_columns(row: AlignedRow, protein: Protein | None) -> set[int]
 
 STYLE = """
 <style>
-.msa { font-family: Menlo, Consolas, monospace; font-size: 12px; line-height: 1.35;
-       overflow-x: auto; white-space: pre; }
-.msa .id { color: #444; display: inline-block; min-width: 12ch; }
-.msa .tm { background: #c6dbef; }
-.msa .gap { color: #bbb; }
-.msa .break { color: #fff; background: #d62728; }
-.msa .track { color: #1769aa; }
+.msa { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px;
+       line-height: 1.35; overflow-x: auto; white-space: pre; }
+.msa .id { color: #4A5A68; display: inline-block; min-width: 12ch; }
+.msa .tm { background: #D7ECEF; }
+.msa .gap { color: #8A98A4; }
+.msa .break { color: #fff; background: #B42318; }
+.msa .track { color: #1F7A8C; }
 .msa .changed { background: #fdd0a2; }
 .msa .same { background: #a1d99b; }
 .msa .partly { background: #fee391; }
 .msa .different { background: #fc9272; }
-.msa .ruler { color: #888; }
+.msa .ruler { color: #8A98A4; }
 </style>
 """
 

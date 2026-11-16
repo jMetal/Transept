@@ -25,6 +25,9 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["transept*"]
 
+[tool.setuptools.package-data]
+transept = ["assets/branding/*"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
