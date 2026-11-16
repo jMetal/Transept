@@ -259,6 +259,22 @@ if not internal.empty:
     seeds = pd.concat([seeds, internal], ignore_index=True)
 # The seeds are scored with SOPwTP and lDDT: compare only the objectives the run optimised.
 common = [name for name in names if name in seeds.columns]
+
+
+def seeds_in_chart() -> pd.DataFrame | None:
+    """The seeds to draw in the front chart, unless the user hides them."""
+    shown = st.toggle(
+        "Show the seed alignments",
+        value=True,
+        key=f"show_seeds:{run.key}",
+        disabled=seeds.empty,
+        help="The alignments the search started from, scored with the same objectives."
+        if not seeds.empty
+        else "There are no seed alignments to show for this run.",
+    )
+    return seeds if shown and not seeds.empty else None
+
+
 compromise = None
 metrics = None
 if reference_scores.has_reference(data_root, run.dataset):
@@ -325,9 +341,17 @@ elif len(names) == 3:
         )
     else:
         first, second = pairs[views.index(view) - 1]
+        drawn_seeds = seeds_in_chart()
         event = st.plotly_chart(
             charts.front_figure(
-                values, table, st.session_state[SELECTED_ROW], seeds, None, first, second, False
+                values,
+                table,
+                st.session_state[SELECTED_ROW],
+                drawn_seeds,
+                None,
+                first,
+                second,
+                False,
             ),
             on_select="rerun",
             selection_mode="points",
@@ -339,7 +363,7 @@ elif len(names) == 3:
         if isinstance(clicked, list):
             clicked = clicked[0]
         show(ui.new_choice(seen, f"chart {view}", None if clicked is None else int(clicked)))
-        if first == front.FIRST and second == front.SECOND and not seeds.empty:
+        if first == front.FIRST and second == front.SECOND and drawn_seeds is not None:
             st.caption(
                 "The seed alignments are only in this projection: their coverage is not computed."
             )
@@ -373,8 +397,9 @@ else:
     if right.button("Show the compromise", disabled=compromise is None):
         show(compromise)
 
+    drawn_seeds = seeds_in_chart()
     event = st.plotly_chart(
-        charts.front_figure(values, table, st.session_state[SELECTED_ROW], seeds, compromise),
+        charts.front_figure(values, table, st.session_state[SELECTED_ROW], drawn_seeds, compromise),
         on_select="rerun",
         selection_mode="points",
         key=f"chart:{run.key}",
