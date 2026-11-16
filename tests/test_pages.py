@@ -60,7 +60,7 @@ class TestHome:
 
         # Assert
         assert not app.exception
-        assert app.title[0].value.startswith("Align transmembrane proteins")
+        assert app.title[0].value.startswith("Transept: ")
         assert "jar was not found" in texts(app)
         assert next(b for b in app.button if b.label == "Run the example").disabled
 
@@ -77,12 +77,9 @@ class TestHome:
 
         # Assert
         assert not app.exception
-        shown = texts(app)
+        shown = texts(app) + "\n".join(link.proto.label for link in app.get("page_link"))
         for section in SECTIONS:
-            pages = [page for page in section.pages if not page.is_tutorials]
-            if pages:
-                assert section.name.upper() in shown
-            for page in pages:
+            for page in (page for page in section.pages if not page.is_tutorials):
                 assert page.title in shown
                 assert page.description in shown
 
@@ -93,12 +90,13 @@ class TestHome:
         # Act
         app = open_page(ui.HOME)
 
-        # Assert: one finished run, drawn as the latest result and listed as recent
+        # Assert: the state of every step, and the run listed under Analyze
         assert not app.exception
-        metrics = {metric.label: metric.value for metric in app.metric}
-        assert metrics == {"Runs": "1", "With results": "1", "Running now": "0", "Series": "0"}
-        assert "Latest result: NSGA-II on toy (done)" in texts(app)
-        assert "**NSGA-II** on toy" in texts(app)
+        shown = texts(app)
+        assert "1 dataset in 1 repository" in shown
+        assert "0 running · 1 run · 0 series" in shown
+        assert "1 with results" in shown
+        assert "**NSGA-II** on toy" in shown
 
         # Act
         next(b for b in app.button if b.key == "home_open_toy / done").click().run()
@@ -133,11 +131,10 @@ class TestHome:
 
         # Assert
         assert not app.exception
-        labels = [link.proto.label for link in app.get("page_link")]
-        links = {label for label in labels if label.startswith("Open ")}
-        assert links == {
-            f"Open {page.title}" for page in pages if page.available and not page.is_tutorials
-        }
+        labels = {link.proto.label for link in app.get("page_link")}
+        for page in pages:
+            if not page.is_tutorials:
+                assert (page.title in labels) == page.available, page.title
         assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
 
 
