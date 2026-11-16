@@ -78,8 +78,11 @@ repository _My datasets_ with the status _Ready_.
 1. Press **Optimize this dataset**. **New run** opens with your dataset selected.
 2. Keep the seed alignments `internal`, and press **Launch**. **Monitor** follows the run; it should
    take from half a minute to two minutes.
-3. When it finishes, open **Results**: every dot of the chart is an alignment. Pick one to browse it
-   helix by helix, compare it with the others and download it.
+3. When it finishes, open **Results**: every dot of the chart is an alignment, and a sentence above
+   it says how much they agree. The knee, a balanced one, is open below: browse it helix by helix,
+   compare it with the others and download it.
+4. To know which columns you can trust, read
+   [Is my alignment reliable?](is-my-alignment-reliable.md).
 
 ## If something goes wrong
 
