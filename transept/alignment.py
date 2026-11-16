@@ -116,8 +116,42 @@ STYLE = """
 .msa .partly { background: #fee391; }
 .msa .different { background: #fc9272; }
 .msa .ruler { color: #7A6E80; }
+.msa .s0 { background: #F3ECE5; } .msa .s1 { background: #F1D3C3; }
+.msa .s2 { background: #E3A98C; } .msa .s3 { color: #fff; background: #A9432A; }
+.msa .p0 { background: #FF7D45; } .msa .p1 { background: #FFDB13; }
+.msa .p2 { background: #65CBF3; } .msa .p3 { color: #fff; background: #0053D6; }
 </style>
 """
+
+
+@dataclass(slots=True, frozen=True)
+class Track:
+    """A row of coloured cells drawn above an alignment, one per column.
+
+    Attributes:
+        label: Its name, in the place of a protein name.
+        values: A value per column, or NaN where it has none.
+        scale: "fraction" for values in [0, 1] (four shades of terracotta, darker is higher), or
+            "plddt" for AlphaFold's pLDDT in [0, 100], with AlphaFold's own colours.
+    """
+
+    label: str
+    values: object
+    scale: str = "fraction"
+
+
+def shade(value: float, scale: str = "fraction") -> str:
+    """The CSS class of a value on a scale, or "" for NaN."""
+    if value != value:
+        return ""
+    if scale == "plddt":
+        return "p3" if value > 90 else "p2" if value > 70 else "p1" if value > 50 else "p0"
+    return "s3" if value >= 0.75 else "s2" if value >= 0.5 else "s1" if value >= 0.25 else "s0"
+
+
+def _track_cell(value: float, scale: str) -> str:
+    kind = shade(value, scale)
+    return f'<span class="{kind}"> </span>' if kind else " "
 
 
 def _agreement_cell(value: float) -> str:
@@ -127,6 +161,90 @@ def _agreement_cell(value: float) -> str:
     return f'<span class="{kind}"> </span>'
 
 
+def _cell(char: str, letter: str, breaking: bool, changed: bool, value_shade: str | None) -> str:
+    """One residue or gap of a row, with the class that colours it."""
+    escaped = html.escape(char)
+    if breaking:
+        css = "break"
+    elif changed:
+        css = "changed"
+    elif char == GAP:
+        css = "gap"
+    elif value_shade is not None:
+        css = value_shade
+    elif letter == TRANSMEMBRANE:
+        css = "tm"
+    else:
+        css = ""
+    return f'<span class="{css}">{escaped}</span>' if css else escaped
+
+
+def _row_line(
+    row_number: int,
+    row: AlignedRow,
+    protein: Protein | None,
+    columns: range,
+    label: str,
+    changed: set[tuple[int, int]] | None,
+    colour: tuple[object, str] | None,
+) -> str:
+    topology = topology_row(row, protein)
+    breaking = helix_breaking_columns(row, protein)
+    cells = []
+    for column in columns:
+        char = row.aligned[column] if column < len(row.aligned) else " "
+        letter = topology[column] if column < len(topology) else " "
+        value_shade = None
+        if colour is not None:
+            values, scale = colour
+            value_shade = shade(float(values[row_number][column]), scale)
+        cells.append(
+            _cell(
+                char,
+                letter,
+                column in breaking,
+                bool(changed) and (row_number, column) in changed,
+                value_shade,
+            )
+        )
+    return f'<span class="id">{label}</span>{"".join(cells)}'
+
+
+def _track_lines(
+    start: int,
+    end: int,
+    label_width: int,
+    agreement: list[float] | None,
+    tracks: list[Track] | None,
+    consensus_line: str | None,
+) -> list[str]:
+    """The optional rows above the proteins: agreement, tracks and consensus."""
+    lines = []
+    if agreement is not None:
+        cells = "".join(
+            _agreement_cell(agreement[column]) for column in range(start, min(end, len(agreement)))
+        )
+        lines.append(
+            f'<span class="id">{html.escape("Agreement".ljust(label_width))}</span>{cells}'
+        )
+    for track in tracks or []:
+        values = track.values
+        cells = "".join(
+            _track_cell(float(values[column]), track.scale)
+            for column in range(start, min(end, len(values)))
+        )
+        lines.append(
+            f'<span class="id">{html.escape(track.label.ljust(label_width))}</span>{cells}'
+        )
+    if consensus_line is not None:
+        label = html.escape("Consensus".ljust(label_width))
+        lines.append(
+            f'<span class="track"><span class="id">{label}</span>'
+            f"{html.escape(consensus_line[start:end])}</span>"
+        )
+    return lines
+
+
 def render_html(
     rows: list[AlignedRow],
     proteins: dict[str, Protein],
@@ -134,6 +252,9 @@ def render_html(
     width: int,
     agreement: list[float] | None = None,
     changed: set[tuple[int, int]] | None = None,
+    tracks: list[Track] | None = None,
+    consensus_line: str | None = None,
+    colour: tuple[object, str] | None = None,
 ) -> str:
     """Draws columns [start, start + width) of an alignment; transmembrane residues are shaded.
 
@@ -141,6 +262,10 @@ def render_html(
         agreement: Optional fraction of the residue pairs of every column found in another
             alignment; drawn as a coloured track (green >= 0.9, yellow >= 0.5, red below).
         changed: Optional (row, column) cells whose residue lost most of its partners; shaded.
+        tracks: Optional rows of coloured cells, one per column, drawn above the proteins.
+        consensus_line: Optional consensus residue of every column, drawn above the proteins.
+        colour: Optional (values per cell as an (N, L) matrix, scale): colours every residue by
+            its value instead of shading the transmembrane ones. Gaps that break a helix stay red.
     """
     end = min(start + width, max((len(row.aligned) for row in rows), default=0))
     label_width = max((len(row.id) for row in rows), default=4) + 2
@@ -155,31 +280,17 @@ def render_html(
     )
     label = html.escape("TM consensus".ljust(label_width))
     lines.append(f'<span class="track"><span class="id">{label}</span>{track}</span>')
-    if agreement is not None:
-        cells = "".join(
-            _agreement_cell(agreement[column]) for column in range(start, min(end, len(agreement)))
-        )
-        label = html.escape("Agreement".ljust(label_width))
-        lines.append(f'<span class="id">{label}</span>{cells}')
+    lines += _track_lines(start, end, label_width, agreement, tracks, consensus_line)
     for row_number, row in enumerate(rows):
-        protein = proteins.get(row.id)
-        topology = topology_row(row, protein)
-        breaking = helix_breaking_columns(row, protein)
-        cells = []
-        for column in range(start, end):
-            char = row.aligned[column] if column < len(row.aligned) else " "
-            letter = topology[column] if column < len(topology) else " "
-            escaped = html.escape(char)
-            if column in breaking:
-                cells.append(f'<span class="break">{escaped}</span>')
-            elif changed and (row_number, column) in changed:
-                cells.append(f'<span class="changed">{escaped}</span>')
-            elif char == GAP:
-                cells.append(f'<span class="gap">{escaped}</span>')
-            elif letter == TRANSMEMBRANE:
-                cells.append(f'<span class="tm">{escaped}</span>')
-            else:
-                cells.append(escaped)
-        label = html.escape(row.id.ljust(label_width))
-        lines.append(f'<span class="id">{label}</span>{"".join(cells)}')
+        lines.append(
+            _row_line(
+                row_number,
+                row,
+                proteins.get(row.id),
+                range(start, end),
+                html.escape(row.id.ljust(label_width)),
+                changed,
+                colour,
+            )
+        )
     return STYLE + '<div class="msa">' + "\n".join(lines) + "</div>"

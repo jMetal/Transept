@@ -76,7 +76,7 @@ class PlacedStructure:
         return "\n".join(lines)
 
 
-def _read_calpha(text: str) -> tuple[dict[int, np.ndarray], dict[int, str]]:
+def read_calpha(text: str) -> tuple[dict[int, np.ndarray], dict[int, str]]:
     coordinates: dict[int, np.ndarray] = {}
     letters: dict[int, str] = {}
     for line in text.splitlines():
@@ -89,7 +89,7 @@ def _read_calpha(text: str) -> tuple[dict[int, np.ndarray], dict[int, str]]:
     return coordinates, letters
 
 
-def _map_residues(sequence: str, letters: dict[int, str]) -> dict[int, int]:
+def map_residues(sequence: str, letters: dict[int, str]) -> dict[int, int]:
     """Returns the PDB number of each index of the sequence: by numbering, or else by alignment."""
     agree = sum(
         1 for number, letter in letters.items()
@@ -112,8 +112,8 @@ def _map_residues(sequence: str, letters: dict[int, str]) -> dict[int, int]:
 def read_structure(row: AlignedRow, protein: datasets.Protein, model: Path) -> Structure:
     """Relates the PDB file of a protein to its row of an alignment."""
     text = model.read_text(encoding="utf-8")
-    coordinates, letters = _read_calpha(text)
-    mapped = _map_residues(protein.residues, letters)
+    coordinates, letters = read_calpha(text)
+    mapped = map_residues(protein.residues, letters)
     columns = {}
     transmembrane = set()
     index = -1

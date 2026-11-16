@@ -3,6 +3,7 @@
 import statistics
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -22,6 +23,7 @@ from transept import (
     structure_chart,
     structure_export,
     superposition,
+    tracks,
     ui,
 )
 from transept.runs import RunState
@@ -519,10 +521,47 @@ broken = sum(alignment.helix_gap_runs(row, proteins.get(row.id)) for row in alig
 length = max((len(row.aligned) for row in aligned), default=0)
 helices = alignment.helices(alignment.consensus(aligned, proteins))
 order = [row.id for row in aligned]
+MAX_SUPPORTING = 60
+
+
+@st.cache_data(show_spinner=False, max_entries=8)
+def cached_support(results: str, chosen: int, others: tuple[int, ...]):
+    """The support of an alignment by other alignments of the run, kept between reruns."""
+    folder = Path(results)
+    rows = alignment.read_fasta(folder / f"MSASol{chosen}.fasta")
+    others_rows = [alignment.read_fasta(folder / f"MSASol{row}.fasta") for row in others]
+    found = tracks.support(rows, others_rows)
+    return None if found is None else (found.column, found.residue, found.alignments)
+
+
+@st.cache_data(show_spinner=False, max_entries=8)
+def cached_plddt(alignment_path: str, root: str, dataset: str):
+    """The AlphaFold pLDDT of every cell of an alignment, kept between reruns."""
+    rows = alignment.read_fasta(alignment_path)
+    models = {row.id: datasets.structure_model_file(root, dataset, row.id) for row in rows}
+    return tracks.plddt(rows, proteins, {k: v for k, v in models.items() if v.is_file()})
+
+
+# The other alignments of the run that support the chosen one: its distinct non-dominated
+# alignments, or its best distinct ones with a single objective; at most MAX_SUPPORTING, evenly.
+candidates_rows = list(ranked["row"]) if ranked is not None else list(table["row"])
+others = [int(row) for row in candidates_rows if int(row) != selected]
+if len(others) > MAX_SUPPORTING:
+    step = len(others) / MAX_SUPPORTING
+    others = [others[int(i * step)] for i in range(MAX_SUPPORTING)]
+with st.spinner("Measuring the support of every column..."):
+    support = cached_support(str(run.results), selected, tuple(others))
+plddt_values = cached_plddt(str(path), str(data_root), run.dataset)
+conserved = tracks.conservation(aligned)
+column_plddt = (
+    np.nanmean(np.where(np.isfinite(plddt_values), plddt_values, np.nan), axis=0)
+    if np.isfinite(plddt_values).any()
+    else None
+)
 structure_status = {s["protein"]: s.get("status", "") for s in metadata.get("structures", [])}
 
 
-def viewer(prefix: str, agreement=None, changed=None) -> None:
+def viewer(prefix: str, agreement=None, changed=None, **extra) -> None:
     """Helix navigation, column window and the alignment drawn as HTML."""
     key = f"{prefix}:{run.key}:{selected}"
 
@@ -538,7 +577,7 @@ def viewer(prefix: str, agreement=None, changed=None) -> None:
     width = st.select_slider("Columns shown", [60, 100, 150, 250], value=100, key=f"width:{key}")
     st.session_state.setdefault(key, 1)
     start = st.slider("First column", 1, max(length, 1), key=key) - 1
-    st.html(alignment.render_html(aligned, proteins, start, width, agreement, changed))
+    st.html(alignment.render_html(aligned, proteins, start, width, agreement, changed, **extra))
 
 
 st.subheader(f"Alignment MSASol{selected}")
@@ -560,8 +599,14 @@ with per_protein:
 
 with per_helix:
     if helices:
+        helix_table = analysis.helix_summary(aligned, proteins, helices)
+        if support is not None:
+            helix_table["support"] = tracks.helix_means(support[0], helices)
+        if column_plddt is not None:
+            helix_table["pLDDT"] = tracks.helix_means(column_plddt, helices)
+        helix_table["conservation"] = tracks.helix_means(conserved.score, helices)
         st.dataframe(
-            analysis.helix_summary(aligned, proteins, helices).round(3),
+            helix_table.round(3),
             hide_index=True,
             width="stretch",
         )
@@ -628,13 +673,68 @@ with comparison_tab:
         changed = {(mine_rows[aligned[r].id], c) for r, c in result.changed} if aligned else set()
         viewer("compare", list(result.column_agreement), changed)
 
+COLOURINGS = {
+    "Topology": None,
+    "Support": "support",
+    "AlphaFold confidence": "plddt",
+    "Conservation": "conservation",
+}
+
 with view:
     st.caption(
         f"{len(aligned)} sequences, {length} columns; gap runs inside transmembrane helices: "
-        f"{broken} (in red). Transmembrane residues are shaded; the first line marks the columns "
-        "where most residues are transmembrane."
+        f"{broken} (in red)."
     )
-    viewer("start")
+    shown_tracks = []
+    if support is not None:
+        shown_tracks.append(alignment.Track("Support", support[0]))
+    if column_plddt is not None:
+        shown_tracks.append(alignment.Track("pLDDT", column_plddt, "plddt"))
+    shown_tracks.append(alignment.Track("Conservation", conserved.score))
+    available = [
+        name
+        for name, kind in COLOURINGS.items()
+        if kind is None
+        or (kind == "support" and support is not None)
+        or (kind == "plddt" and column_plddt is not None)
+        or kind == "conservation"
+    ]
+    colour_by = st.segmented_control(
+        "Colour residues by",
+        available,
+        default="Topology",
+        key=f"colour_by:{run.key}",
+        help="Topology shades the transmembrane residues. Support: how often the other "
+        "alignments of the run keep each residue with the same partners. AlphaFold "
+        "confidence: the pLDDT of each residue in its model. Conservation: of its column.",
+    )
+    kind = COLOURINGS.get(colour_by or "Topology")
+    colour = None
+    if kind == "support":
+        colour = (support[1], "fraction")
+    elif kind == "plddt":
+        colour = (plddt_values, "plddt")
+    elif kind == "conservation":
+        colour = (np.tile(conserved.score, (len(aligned), 1)), "fraction")
+    viewer("start", tracks=shown_tracks, consensus_line=conserved.consensus, colour=colour)
+    st.caption(
+        "Tracks: **TM consensus** marks the columns where most residues are transmembrane. "
+        + (
+            f"**Support**: fraction of the residue pairs of each column kept by {support[2]} "
+            "other alignments of the run, from light (below 25 %) to dark terracotta (75 % or "
+            "more). "
+            if support is not None
+            else "**Support** needs other alignments in the run. "
+        )
+        + (
+            "**pLDDT**: mean AlphaFold confidence of the column, in AlphaFold's colours "
+            "(orange below 50, yellow 50–70, light blue 70–90, dark blue above 90). "
+            if column_plddt is not None
+            else ""
+        )
+        + "**Conservation**: one minus the normalised entropy of the column, times its "
+        "occupancy. **Consensus**: the residue of more than half of the proteins."
+    )
     stem = f"{run.dataset}_{run.run_id}_MSASol{selected}"
     downloads = st.columns(4)
     downloads[0].download_button("FASTA", exports.to_fasta(aligned), file_name=f"{stem}.fasta")

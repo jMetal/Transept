@@ -24,6 +24,9 @@ All notable changes to Transept are recorded here. The format follows
   against a reference alignment, per-protein and per-helix views, comparison with a seed or another
   solution, the structures superposed in 3D, the aggregate of a series, and downloads in FASTA,
   Clustal, Stockholm, Jalview features, and a package for ChimeraX and PyMOL.
+- Tracks in the alignment viewer, with the residues coloured by any of them: the support of every
+  column by the other alignments of the run, the AlphaFold confidence (pLDDT) of every residue,
+  and the conservation and consensus of every column; their means per helix.
 - Tutorials inside the interface: Overview, Add your own proteins and Choose the operators.
 - An example dataset that runs in a couple of minutes.
 - A Docker image for Intel and ARM machines (`make image`, `make image-multiarch`).
