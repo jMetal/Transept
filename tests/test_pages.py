@@ -1463,6 +1463,20 @@ class TestResultsTools:
         seeds = app.dataframe[1].value
         assert list(seeds["method"]) == ["internal:biojava-g20x2"]
 
+    def test_should_colour_the_alignment_by_what_biologists_ask(self, finished):
+        # Assert: the colourings offered, with the support of the other alignments of the run
+        colour = next(c for c in finished.get("button_group") if "Topology" in str(c.proto))
+        assert "Support" in str(colour.proto)
+        assert "Conservation" in str(colour.proto)
+
+        # Act
+        finished.session_state["colour_by:toy / done"] = "Conservation"
+        finished.run()
+
+        # Assert
+        assert not finished.exception
+        assert "**Conservation**: one minus the normalised entropy" in texts(finished)
+
     def test_should_show_or_hide_the_seeds_in_the_chart(self, finished):
         def seed_traces(app) -> int:
             return sum(
