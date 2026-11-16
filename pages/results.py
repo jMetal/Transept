@@ -15,6 +15,7 @@ from transept import (
     datasets,
     exports,
     front,
+    generic_numbers,
     reference_scores,
     runs,
     series,
@@ -559,6 +560,20 @@ column_plddt = (
     if np.isfinite(plddt_values).any()
     else None
 )
+receptors = [row.id for row in aligned]
+known_receptors = tuple(sorted(r for r in receptors if generic_numbers.cached(r) is not None))
+
+
+@st.cache_data(show_spinner=False, max_entries=8)
+def cached_numbering(alignment_path: str, known: tuple[str, ...]):
+    """The GPCRdb number of every cell, for the receptors already fetched; kept between reruns."""
+    rows = alignment.read_fasta(alignment_path)
+    residues = {receptor: generic_numbers.cached(receptor) for receptor in known}
+    return generic_numbers.numbering(rows, proteins, residues)
+
+
+numbers = cached_numbering(str(path), known_receptors) if known_receptors else None
+number_cells = generic_numbers.cells_by_number(numbers) if numbers is not None else {}
 structure_status = {s["protein"]: s.get("status", "") for s in metadata.get("structures", [])}
 
 
@@ -582,9 +597,81 @@ def viewer(prefix: str, agreement=None, changed=None, **extra) -> None:
 
 
 st.subheader(f"Alignment MSASol{selected}")
-view, per_protein, per_helix, comparison_tab, structures_tab = st.tabs(
-    ["Alignment", "Per protein", "Per helix", "Compare", "3D"]
+view, per_protein, per_helix, gpcrdb_tab, comparison_tab, structures_tab = st.tabs(
+    ["Alignment", "Per protein", "Per helix", "GPCRdb", "Compare", "3D"]
 )
+
+with gpcrdb_tab:
+    st.caption(
+        "GPCRdb gives every residue of a G protein-coupled receptor a generic number, such as "
+        "3.50x50: the helix, and the position relative to the most conserved residue of that "
+        "helix in the class (x.50). Residues with the same number play the same role in "
+        "different receptors, so a good alignment puts them in the same column. This check does "
+        "not need a reference alignment."
+    )
+    missing = [r for r in receptors if r not in known_receptors]
+    if missing:
+        st.info(
+            f"The numbering of {len(missing)} of the {len(receptors)} receptors has not been "
+            "fetched from GPCRdb yet. Transept asks GPCRdb (gpcrdb.org) only when you press the "
+            "button, sending only the names of the receptors, and keeps the answers for later."
+        )
+        if st.button("Get the GPCRdb numbering", icon=":material/download:"):
+            bar = st.progress(0.0, text="Asking GPCRdb...")
+            fetched = generic_numbers.fetch_all(
+                missing,
+                lambda done, total: bar.progress(
+                    done / total, text=f"Asking GPCRdb: {done} of {total} receptors"
+                ),
+            )
+            unknown = [entry for entry, residues in fetched.items() if not residues]
+            if unknown:
+                st.session_state[f"gpcrdb_unknown:{run.key}"] = unknown
+            st.rerun()
+    unknown = st.session_state.get(f"gpcrdb_unknown:{run.key}", [])
+    if unknown:
+        st.warning(
+            "GPCRdb did not answer for, or does not know: " + ", ".join(unknown) + ". They are "
+            "left without numbers."
+        )
+    if number_cells:
+        aligned_residues, numbered = generic_numbers.consistency(number_cells, aligned)
+        st.metric(
+            "Helix residues in the column of their generic number",
+            f"{aligned_residues / numbered:.1%}" if numbered else "–",
+            help=f"{aligned_residues} of {numbered} residues of the seven helices with a GPCRdb "
+            "number are in the column where most residues with that number are.",
+        )
+        st.markdown("**The most conserved position of every helix (x.50)**")
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "position": item.generic,
+                        "column": item.column + 1,
+                        "receptors in that column": f"{item.aligned} of {item.receptors}",
+                        "residues": item.residues,
+                    }
+                    for item in generic_numbers.reference_positions(number_cells, aligned)
+                ]
+            ),
+            hide_index=True,
+            width="stretch",
+        )
+        st.caption(
+            "Residues are listed in the order of the proteins of the alignment; - means the "
+            "receptor has no residue with that number. The x.50 columns are marked with the "
+            "number of their helix in the GPCRdb x.50 line of the alignment."
+        )
+        motifs = generic_numbers.motif_rows(number_cells, aligned)
+        if motifs:
+            st.markdown("**Positions of well-known motifs**")
+            st.dataframe(pd.DataFrame(motifs), hide_index=True, width="stretch")
+            st.caption(
+                "The motifs are named as in class A; in other classes the same positions hold "
+                "other residues, given by the consensus. A position is in one column when every "
+                "receptor with that number has its residue there."
+            )
 
 with structures_tab:
     show_structures(aligned, proteins, data_root, run, f"start:{run.key}:{selected}")
@@ -606,6 +693,9 @@ with per_helix:
         if column_plddt is not None:
             helix_table["pLDDT"] = tracks.helix_means(column_plddt, helices)
         helix_table["conservation"] = tracks.helix_means(conserved.score, helices)
+        if number_cells and len(helices) == 7:
+            by_helix = generic_numbers.helix_consistency(number_cells, aligned)
+            helix_table["GPCRdb consistency"] = [by_helix.get(n) for n in range(1, 8)]
         st.dataframe(
             helix_table.round(3),
             hide_index=True,
@@ -717,7 +807,13 @@ with view:
         colour = (plddt_values, "plddt")
     elif kind == "conservation":
         colour = (np.tile(conserved.score, (len(aligned), 1)), "fraction")
-    viewer("start", tracks=shown_tracks, consensus_line=conserved.consensus, colour=colour)
+    viewer(
+        "start",
+        tracks=shown_tracks,
+        consensus_line=conserved.consensus,
+        colour=colour,
+        x50_line=generic_numbers.x50_line(number_cells, aligned, length) if number_cells else None,
+    )
     guide = tutorials.tutorial_named(tutorials.RELIABILITY)
     if guide is not None:
         # Here and not on its own page, so that the alignment and the choices stay in view

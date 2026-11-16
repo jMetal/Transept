@@ -255,6 +255,7 @@ def render_html(
     tracks: list[Track] | None = None,
     consensus_line: str | None = None,
     colour: tuple[object, str] | None = None,
+    x50_line: str | None = None,
 ) -> str:
     """Draws columns [start, start + width) of an alignment; transmembrane residues are shaded.
 
@@ -266,6 +267,7 @@ def render_html(
         consensus_line: Optional consensus residue of every column, drawn above the proteins.
         colour: Optional (values per cell as an (N, L) matrix, scale): colours every residue by
             its value instead of shading the transmembrane ones. Gaps that break a helix stay red.
+        x50_line: Optional line with the number of every helix at its GPCRdb x.50 column.
     """
     end = min(start + width, max((len(row.aligned) for row in rows), default=0))
     label_width = max((len(row.id) for row in rows), default=4) + 2
@@ -281,6 +283,12 @@ def render_html(
     label = html.escape("TM consensus".ljust(label_width))
     lines.append(f'<span class="track"><span class="id">{label}</span>{track}</span>')
     lines += _track_lines(start, end, label_width, agreement, tracks, consensus_line)
+    if x50_line is not None:
+        label = html.escape("GPCRdb x.50".ljust(label_width))
+        lines.append(
+            f'<span class="track"><span class="id">{label}</span>'
+            f"{html.escape(x50_line[start:end])}</span>"
+        )
     for row_number, row in enumerate(rows):
         lines.append(
             _row_line(

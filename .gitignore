@@ -11,3 +11,6 @@ datasets/
 settings.json
 # The core jar (make setup)
 lib/
+
+# Answers of GPCRdb kept by Results (generic residue numbers)
+gpcrdb/
