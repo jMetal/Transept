@@ -1398,6 +1398,38 @@ class TestResultsThreeObjectives:
         assert len(app.dataframe[0].value) == 3
 
 
+class TestResultsGpcrdb:
+    def test_should_ask_before_going_to_gpcrdb(self, configured, data_root: Path):
+        write_finished_run(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+        assert not app.exception
+        assert "has not been fetched from GPCRdb yet" in texts(app)
+        assert any(button.label == "Get the GPCRdb numbering" for button in app.button)
+
+    def test_should_show_the_numbering_kept(self, configured, data_root: Path, tmp_path: Path):
+        # Arrange: the answers of GPCRdb, kept from an earlier request
+        from test_generic_numbers import ANSWERS, answer
+
+        from transept import generic_numbers
+
+        write_finished_run(settings.runs_root(), data_root)
+        topology = datasets.read_topology(datasets.topology_file(data_root, "toy"))
+        directory = generic_numbers.cache_directory()
+        directory.mkdir(parents=True)
+        for protein in topology:
+            content = answer(protein, ANSWERS[protein.id])
+            (directory / f"{protein.id}.json").write_text(json.dumps(content))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        metric = next(m for m in app.metric if m.label.startswith("Helix residues"))
+        assert metric.value == "93.3%"
+        assert "The most conserved position of every helix (x.50)" in texts(app)
+
+
 class TestResultsTools:
     @pytest.fixture
     def finished(self, configured, data_root: Path) -> AppTest:
@@ -1553,6 +1585,7 @@ class TestResultsTabs:
             "Alignment",
             "Per protein",
             "Per helix",
+            "GPCRdb",
             "Compare",
             "3D",
         ]
