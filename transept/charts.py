@@ -198,7 +198,10 @@ def front_figure(
             mode="markers+text",
             name="Extremes, knee, medoid",
             text=marked["note"],
-            textposition="top right",
+            # The medoid is often next to the knee: its label goes below, so they do not overlap.
+            textposition=[
+                "bottom right" if note == "medoid" else "top right" for note in marked["note"]
+            ],
             marker={"color": FRONT_COLOUR, "size": 12, "symbol": "diamond"},
             customdata=list(marked["row"]),
             hoverinfo="skip",
