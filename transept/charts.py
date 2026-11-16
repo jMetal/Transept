@@ -8,10 +8,10 @@ from plotly.subplots import make_subplots
 
 from transept.front import FIRST, SECOND
 
-# The colours of the logo: membrane for the front, amber for what is chosen, ink for the seeds.
-ALL_COLOUR = "#B7C3CC"
-FRONT_COLOUR = "#1F7A8C"
-SELECTED_COLOUR = "#C77D0A"
+# The colours of the logo: terracotta for the front, saffron for what is chosen, ink for the seeds.
+ALL_COLOUR = "#CFC4C9"
+FRONT_COLOUR = "#A9432A"
+SELECTED_COLOUR = "#E0A21B"
 
 
 def progress_figure(records: pd.DataFrame) -> go.Figure:
@@ -137,8 +137,8 @@ def series_front_figure(fronts: list[pd.DataFrame], aggregate: pd.DataFrame) -> 
     return figure
 
 
-SEED_COLOUR = "#12324A"
-COMPROMISE_COLOUR = "#8A5300"
+SEED_COLOUR = "#2D1E3B"
+COMPROMISE_COLOUR = "#7A5C9E"
 
 
 def front_figure(

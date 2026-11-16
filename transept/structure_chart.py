@@ -8,7 +8,7 @@ from transept.superposition import PlacedStructure
 
 PALETTE = ("#4e79a7", "#f28e2b", "#59a14f", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f")
 OTHER_COLOUR = "#c8c8c8"
-HIGHLIGHT = "#C77D0A"
+HIGHLIGHT = "#E0A21B"
 
 
 def _trace(

@@ -106,16 +106,16 @@ STYLE = """
 <style>
 .msa { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px;
        line-height: 1.35; overflow-x: auto; white-space: pre; }
-.msa .id { color: #4A5A68; display: inline-block; min-width: 12ch; }
-.msa .tm { background: #D7ECEF; }
-.msa .gap { color: #8A98A4; }
-.msa .break { color: #fff; background: #B42318; }
-.msa .track { color: #1F7A8C; }
+.msa .id { color: #5E5266; display: inline-block; min-width: 12ch; }
+.msa .tm { background: #F6E2D8; }
+.msa .gap { color: #7A6E80; }
+.msa .break { color: #fff; background: #C21F3A; }
+.msa .track { color: #A9432A; }
 .msa .changed { background: #fdd0a2; }
 .msa .same { background: #a1d99b; }
 .msa .partly { background: #fee391; }
 .msa .different { background: #fc9272; }
-.msa .ruler { color: #8A98A4; }
+.msa .ruler { color: #7A6E80; }
 </style>
 """
 
