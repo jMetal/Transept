@@ -34,6 +34,8 @@ Above the proteins there are now five lines:
 | **Conservation** | How conserved the column is | Light to dark blue, from 0 to 1 |
 | **Consensus** | The residue of more than half of the proteins, or `·` | |
 
+![The tracks above TM3 and TM4 of the knee of the example. Support is dark almost everywhere: the alignments of the front agree. pLDDT is lower in the loop between the helices, where AlphaFold is less confident](images/alignment.png)
+
 ## Step 2: support, the robustness of each column
 
 Transept does not return a single alignment: the search ends with a set of alignments that trade
@@ -57,6 +59,8 @@ names them, and **Knee or medoid?** compares the knee with the medoid (the align
 most with the others) using what does not need a reference: their objectives, their agreement
 with the rest of the front, their support in the helices and, once fetched, their consistency
 with the GPCRdb generic numbers.
+
+![A run where the choice matters (classC, receptors with long extracellular domains): the alignments of the front agree less, the summary names the helices where they differ, and Knee or medoid? compares the two candidates](images/medoid.png)
 
 To build a tree or run another analysis on the reliable part only, use **FASTA without unreliable
 columns** under the alignment: it leaves out the columns with support below the threshold you
@@ -109,6 +113,8 @@ helix is intact, broken or displaced in each protein. In the example:
 | pLDDT | 94.1 | 93.2 | 91.9 | 89.5 | 87.8 | 88.0 | 89.2 |
 | conservation | 0.59 | 0.58 | 0.58 | 0.49 | 0.49 | 0.52 | 0.57 |
 
+![The Per helix tab of the example. Two helices are broken in one receptor each (TM5 in t2r41, TM6 in ta2r1): the gap comes from the seed alignments, since the search never opens one inside a helix](images/per-helix.png)
+
 ## Step 7: GPCRdb generic numbers
 
 For G protein-coupled receptors there is an independent check, which does not need a reference
@@ -133,6 +139,8 @@ same column.
 The **GPCRdb x.50** line of the **Alignment** tab marks the x.50 column of every helix with its
 number, and **Per helix** adds the consistency of every helix. Proteins that GPCRdb does not know,
 such as your own constructs, are left without numbers.
+
+![The GPCRdb tab of the example: 98.7 % of the numbered helix residues are in the column of their generic number, and the x.50 position of every helix is in one column for the 19 receptors](images/gpcrdb.png)
 
 ## How to read them together
 
@@ -163,3 +171,5 @@ such as your own constructs, are left without numbers.
 - [Choose the operators](operators.md) explains how the search builds the alignments.
 - The **3D** tab of **Results** shows the residues of a column in space, to see whether they
   really sit together.
+
+![The 3D tab: the structures superposed according to the alignment, with the residues of one column marked in yellow](images/structures.png)

@@ -31,6 +31,8 @@ guided by:
 Sequence and structure can pull in different directions, so the search ends with **a set of
 alternative alignments** that trade one for the other.
 
+![How Transept works: seed alignments are refined by a search that never breaks a helix, guided by sequence and structure; from the set of trade-off alignments it gives a recommended alignment and a reliability map](images/workflow.svg)
+
 ## What you get that other aligners do not give you
 
 | | What it means for you |
@@ -91,6 +93,8 @@ Transept includes a small example, 19 bitter taste receptors, so you can try it 
 The home page leads to every section and shows the latest result, the runs in progress and what
 Transept has to offer.
 
+![The home page: the example in one click, the latest result and what Transept offers](images/home.png)
+
 | Section | Page | What you do there |
 | --- | --- | --- |
 | **Explore** | **Datasets** | See the datasets of your data directories and whether they are ready; add directories, such as the GPCR structural benchmark |
@@ -110,6 +114,8 @@ Above the chart, a sentence says how much the alignments agree. Click a point, o
 table, to open its alignment; a slider finds the compromise that weighs sequence and structure as
 you prefer.
 
+![The front of the example: the 80 alignments found (blue line) far above the seed alignments of six tools (squares), with the knee (star) and the sentence that says how much they agree](images/front.png)
+
 Below, the chosen alignment, in tabs:
 
 | Tab | What it shows |
@@ -120,6 +126,8 @@ Below, the chosen alignment, in tabs:
 | **GPCRdb** | For receptors, how many residues of the helices are in the column of their generic number, the x.50 position of every helix and the conserved motifs. GPCRdb is only asked when you press the button |
 | **Compare** | What changes between this alignment and a seed alignment or another alignment of the run, column by column |
 | **3D** | The structures superposed according to the alignment, with the residues of a column marked, to see whether they really sit together |
+
+![The Alignment tab: the tracks above the proteins, around the third and fourth helices of the example](images/alignment.png)
 
 And downloads: FASTA, Clustal, Stockholm with the topology, Jalview features, the FASTA without the
 columns of low support, the structures superposed for ChimeraX and PyMOL, and a zip with the

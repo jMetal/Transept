@@ -31,6 +31,8 @@ The command at the bottom of the page shows what will be run. The settings of th
 mutations below can only be changed in **Configuration of the algorithm**; elsewhere they keep their
 defaults.
 
+![Configuration of the algorithm in New run, for NSGA-II: the crossover and the mutation, with their probabilities and settings (cutCandidates, maxShift)](images/new-run.png)
+
 ## Step 2: the crossovers
 
 In the examples, each line is a protein and `-` is a gap.

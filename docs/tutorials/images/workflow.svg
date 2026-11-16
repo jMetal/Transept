@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 330" width="1000" height="330" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>How Transept works</title>
+  <desc>Seed alignments are refined by a search that never breaks a helix, guided by sequence and structure. It ends with a set of trade-off alignments, from which Transept gives a recommended alignment and a reliability map, ready for other programs.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#14213D"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="330" fill="#F7F9FC"/>
+
+  <!-- 1. Seed alignments -->
+  <g transform="translate(16 40)">
+    <rect width="180" height="250" rx="14" fill="#FFFFFF" stroke="#D9E1EC"/>
+    <text x="90" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#14213D">Seed alignments</text>
+    <g transform="translate(24 52)">
+      <rect x="0" y="0" width="40" height="10" rx="3" fill="#14213D"/><rect x="44" y="0" width="16" height="10" rx="3" fill="#DDE8F6"/><rect x="62" y="0" width="22" height="10" rx="3" fill="#034EA2"/><rect x="88" y="0" width="44" height="10" rx="3" fill="#14213D"/>
+      <rect x="0" y="16" width="30" height="10" rx="3" fill="#14213D"/><rect x="34" y="16" width="26" height="10" rx="3" fill="#DDE8F6"/><rect x="62" y="16" width="8" height="10" rx="3" fill="#034EA2"/><rect x="72" y="16" width="5" height="10" rx="2" fill="#C8102E"/><rect x="79" y="16" width="5" height="10" rx="3" fill="#034EA2"/><rect x="88" y="16" width="44" height="10" rx="3" fill="#14213D"/>
+      <rect x="0" y="32" width="40" height="10" rx="3" fill="#14213D"/><rect x="44" y="32" width="16" height="10" rx="3" fill="#DDE8F6"/><rect x="62" y="32" width="22" height="10" rx="3" fill="#034EA2"/><rect x="88" y="32" width="30" height="10" rx="3" fill="#14213D"/>
+    </g>
+    <text x="90" y="124" text-anchor="middle" font-size="13" fill="#4A5568">From MAFFT, T-Coffee,</text>
+    <text x="90" y="142" text-anchor="middle" font-size="13" fill="#4A5568">ClustalW… or computed</text>
+    <text x="90" y="160" text-anchor="middle" font-size="13" fill="#4A5568">by Transept itself</text>
+    <rect x="24" y="186" width="12" height="12" rx="2" fill="#C8102E"/>
+    <text x="42" y="196" font-size="12.5" fill="#4A5568">a gap that breaks</text>
+    <text x="42" y="213" font-size="12.5" fill="#4A5568">a helix</text>
+  </g>
+
+  <!-- 2. Search -->
+  <g transform="translate(226 40)">
+    <rect width="190" height="250" rx="14" fill="#034EA2"/>
+    <text x="95" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">Search</text>
+    <text x="95" y="62" text-anchor="middle" font-size="13" fill="#FFFFFF">Evolutionary algorithm</text>
+    <text x="95" y="80" text-anchor="middle" font-size="13" fill="#FFFFFF">(NSGA-II by default)</text>
+    <rect x="20" y="98" width="150" height="2" fill="#FFD100"/>
+    <text x="95" y="124" text-anchor="middle" font-size="13" fill="#FFFFFF">Operators that never</text>
+    <text x="95" y="142" text-anchor="middle" font-size="13" fill="#FFFFFF">break a helix</text>
+    <rect x="20" y="160" width="150" height="2" fill="#FFD100"/>
+    <text x="95" y="186" text-anchor="middle" font-size="13" fill="#FFFFFF">Guided by sequence</text>
+    <text x="95" y="204" text-anchor="middle" font-size="13" fill="#FFFFFF">(SOPwTP) and structure</text>
+    <text x="95" y="222" text-anchor="middle" font-size="13" fill="#FFFFFF">(lDDT, AlphaFold2)</text>
+  </g>
+
+  <!-- 3. Set of trade-off alignments -->
+  <g transform="translate(446 40)">
+    <rect width="200" height="250" rx="14" fill="#FFFFFF" stroke="#D9E1EC"/>
+    <text x="100" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#14213D">A set of alignments</text>
+    <line x1="28" y1="60" x2="28" y2="168" stroke="#9AA5B4"/>
+    <line x1="28" y1="168" x2="180" y2="168" stroke="#9AA5B4"/>
+    <text x="104" y="186" text-anchor="middle" font-size="11.5" fill="#6B7280">sequence →</text>
+    <text x="20" y="114" text-anchor="middle" font-size="11.5" fill="#6B7280" transform="rotate(-90 20 114)">structure →</text>
+    <polyline points="44,70 70,74 96,82 118,94 138,110 154,130 166,154" fill="none" stroke="#034EA2" stroke-width="2.5"/>
+    <g fill="#034EA2"><circle cx="44" cy="70" r="4"/><circle cx="70" cy="74" r="4"/><circle cx="96" cy="82" r="4"/><circle cx="138" cy="110" r="4"/><circle cx="154" cy="130" r="4"/><circle cx="166" cy="154" r="4"/></g>
+    <path d="M118 84 L121 91 L128 91 L122.5 95.5 L124.5 103 L118 98.5 L111.5 103 L113.5 95.5 L108 91 L115 91 Z" fill="#FFD100" stroke="#14213D" stroke-width="1"/>
+    <g fill="#14213D"><rect x="56" y="140" width="8" height="8" rx="1.5"/><rect x="80" y="152" width="8" height="8" rx="1.5"/><rect x="104" y="130" width="8" height="8" rx="1.5"/></g>
+    <text x="100" y="212" text-anchor="middle" font-size="13" fill="#4A5568">Trade-offs between sequence</text>
+    <text x="100" y="230" text-anchor="middle" font-size="13" fill="#4A5568">and structure; ■ the seeds</text>
+  </g>
+
+  <!-- 4. What you get -->
+  <g transform="translate(676 40)">
+    <rect width="150" height="118" rx="14" fill="#FFFFFF" stroke="#FFD100" stroke-width="3"/>
+    <text x="75" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#14213D">Recommended</text>
+    <text x="75" y="50" text-anchor="middle" font-size="15" font-weight="700" fill="#14213D">alignment</text>
+    <text x="75" y="78" text-anchor="middle" font-size="13" fill="#4A5568">the knee, or the</text>
+    <text x="75" y="96" text-anchor="middle" font-size="13" fill="#4A5568">medoid of the set</text>
+
+    <rect y="132" width="150" height="118" rx="14" fill="#FFFFFF" stroke="#FFD100" stroke-width="3"/>
+    <text x="75" y="162" text-anchor="middle" font-size="15" font-weight="700" fill="#14213D">Reliability map</text>
+    <g transform="translate(20 174)">
+      <rect width="110" height="8" fill="#034EA2"/><rect x="62" width="10" height="8" fill="#C9DAF0"/>
+      <rect y="12" width="110" height="8" fill="#5FC6F2"/><rect x="20" y="12" width="40" height="8" fill="#0053D6"/><rect x="80" y="12" width="20" height="8" fill="#FFDB13"/>
+      <rect y="24" width="110" height="8" fill="#EEF3FA"/><rect x="14" y="24" width="8" height="8" fill="#034EA2"/><rect x="40" y="24" width="8" height="8" fill="#7FA6D6"/><rect x="70" y="24" width="8" height="8" fill="#034EA2"/>
+    </g>
+    <text x="75" y="226" text-anchor="middle" font-size="12.5" fill="#4A5568">support, pLDDT,</text>
+    <text x="75" y="243" text-anchor="middle" font-size="12.5" fill="#4A5568">conservation, GPCRdb</text>
+  </g>
+
+  <!-- 5. Next steps -->
+  <g transform="translate(856 40)">
+    <rect width="128" height="250" rx="14" fill="#EAF0F8"/>
+    <text x="64" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#14213D">Your next</text>
+    <text x="64" y="50" text-anchor="middle" font-size="16" font-weight="700" fill="#14213D">analysis</text>
+    <text x="64" y="94" text-anchor="middle" font-size="13" fill="#14213D">Jalview</text>
+    <text x="64" y="124" text-anchor="middle" font-size="13" fill="#14213D">ChimeraX, PyMOL</text>
+    <text x="64" y="154" text-anchor="middle" font-size="13" fill="#14213D">Trees, without the</text>
+    <text x="64" y="172" text-anchor="middle" font-size="13" fill="#14213D">unreliable columns</text>
+    <text x="64" y="202" text-anchor="middle" font-size="13" fill="#14213D">Annotations,</text>
+    <text x="64" y="220" text-anchor="middle" font-size="13" fill="#14213D">mutants, motifs</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#14213D" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <line x1="198" y1="165" x2="222" y2="165"/>
+    <line x1="418" y1="165" x2="442" y2="165"/>
+    <path d="M648 150 C660 150 660 100 672 100"/>
+    <path d="M648 180 C660 180 660 230 672 230"/>
+    <line x1="828" y1="100" x2="852" y2="100"/>
+    <line x1="828" y1="230" x2="852" y2="230"/>
+  </g>
+  <text x="500" y="22" text-anchor="middle" font-size="13" fill="#6B7280">How Transept works</text>
+</svg>
