@@ -39,3 +39,20 @@ def test_should_bundle_files_in_a_zip():
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         assert sorted(archive.namelist()) == ["a.txt", "b.bin"]
         assert archive.read("a.txt") == b"x"
+
+
+def test_should_keep_only_the_columns_marked():
+    rows = [AlignedRow("p1", "AC-D"), AlignedRow("p2", "A-ED")]
+
+    kept = exports.keep_columns(rows, [True, False, False, True])
+
+    assert [row.aligned for row in kept] == ["AD", "AD"]
+    assert [row.id for row in kept] == ["p1", "p2"]
+
+
+def test_should_keep_a_protein_left_with_gaps_only():
+    rows = [AlignedRow("p1", "AC"), AlignedRow("p2", "-C")]
+
+    kept = exports.keep_columns(rows, [True, False])
+
+    assert [row.aligned for row in kept] == ["A", "-"]

@@ -3,6 +3,7 @@ import pytest
 
 from transept import ensemble
 from transept.alignment import AlignedRow
+from transept.datasets import Protein
 
 
 def alignment(*rows: str) -> list[AlignedRow]:
@@ -60,3 +61,46 @@ class TestConsensus:
 
     def test_should_return_none_without_alignments(self):
         assert ensemble.consensus(np.zeros((0, 0))) is None
+
+
+class TestFrontSummary:
+    # Two proteins with one helix of 8 residues (MMMMMMMM) between two loop residues.
+    PROTEINS = {
+        "p1": Protein("p1", "AACDEFGHIKLL", "OOMMMMMMMMOO"),
+        "p2": Protein("p2", "AACDEFGHIKLL", "OOMMMMMMMMOO"),
+    }
+
+    def test_should_report_full_support_for_helices_aligned_the_same_way(self):
+        same = alignment("AACDEFGHIKLL", "AACDEFGHIKLL")
+        # The last residue of p1 moves: only the loop changes.
+        loops_differ = [
+            AlignedRow("p1", "AACDEFGHIKL-L"),
+            AlignedRow("p2", "AACDEFGHIKLL-"),
+        ]
+
+        found = ensemble.front_summary([same, loops_differ], 0, self.PROTEINS)
+
+        assert found.alignments == 2
+        assert found.helices == [(2, 9)]
+        assert found.helix_means == [pytest.approx(1.0)]
+        assert found.agreement < 1.0
+
+    def test_should_report_a_helix_aligned_in_different_ways(self):
+        same = alignment("AACDEFGHIKLL", "AACDEFGHIKLL")
+        shifted = [AlignedRow("p1", "AACDEFGHIKLL-"), AlignedRow("p2", "-AACDEFGHIKLL")]
+
+        found = ensemble.front_summary([same, shifted], 0, self.PROTEINS)
+
+        assert found.helix_means[0] < 1.0
+
+    def test_should_find_the_medoid_and_its_support(self):
+        common = alignment("AACDEFGHIKLL", "AACDEFGHIKLL")
+        shifted = [AlignedRow("p1", "AACDEFGHIKLL-"), AlignedRow("p2", "-AACDEFGHIKLL")]
+
+        found = ensemble.front_summary([shifted, common, common], 0, self.PROTEINS)
+
+        assert found.medoid == 1
+        assert set(found.helix_support) == {0, 1}
+
+    def test_should_need_two_alignments(self):
+        assert ensemble.front_summary([alignment("AC", "AC")], 0, self.PROTEINS) is None

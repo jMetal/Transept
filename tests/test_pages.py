@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import streamlit as st
-from conftest import ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
+from conftest import ALIGNMENTS, ALIVE_PID, THREE_LINE, pdb_text, write_finished_run, write_job
 from streamlit.testing.v1 import AppTest
 
 from transept import (
@@ -1396,6 +1396,71 @@ class TestResultsThreeObjectives:
         assert not app.exception
         assert not any("scatter3d" in chart.proto.spec for chart in app.get("plotly_chart"))
         assert len(app.dataframe[0].value) == 3
+
+
+class TestResultsFrontSummary:
+    def test_should_say_how_much_the_alignments_of_the_front_agree(
+        self, configured, data_root: Path
+    ):
+        write_finished_run(settings.runs_root(), data_root)
+
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        assert not app.exception
+        assert "The 2 alignments of the front share 100.0% of their residue pairs" in texts(app)
+        assert "The knee is also the medoid" in texts(app)
+
+    def test_should_compare_the_knee_and_the_medoid_when_they_differ(
+        self, configured, data_root: Path
+    ):
+        # Arrange: three non-dominated alignments; the knee (row 2) has the alignment of row 0,
+        # and row 1 another one, so the medoid is row 0, first in the front.
+        directory = write_finished_run(settings.runs_root(), data_root)
+        (directory / "FUN.csv").write_text("30.0,0.50\n25.0,0.60\n28.0,0.58\n")
+        other = ALIGNMENTS["kalign"]
+        text = "".join(f">p{i + 1}\n{row}\n" for i, row in enumerate(other))
+        (directory / "MSASol1.fasta").write_text(text)
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        assert any(expander.label == "Knee or medoid?" for expander in app.expander)
+        compared = next(
+            frame.value for frame in app.dataframe if "agreement with the front" in frame.value
+        )
+        assert list(compared["alignment"]) == ["knee", "medoid"]
+        assert list(compared["file"]) == ["MSASol2.fasta", "MSASol0.fasta"]
+        assert any(button.label == "Show the medoid" for button in app.button)
+
+    def test_should_add_the_gpcrdb_consistency_once_fetched(self, configured, data_root: Path):
+        # Arrange: as above, with the numbering of every receptor kept
+        from test_generic_numbers import ANSWERS, answer
+
+        from transept import generic_numbers
+
+        directory = write_finished_run(settings.runs_root(), data_root)
+        (directory / "FUN.csv").write_text("30.0,0.50\n25.0,0.60\n28.0,0.58\n")
+        other = ALIGNMENTS["kalign"]
+        text = "".join(f">p{i + 1}\n{row}\n" for i, row in enumerate(other))
+        (directory / "MSASol1.fasta").write_text(text)
+        cache = generic_numbers.cache_directory()
+        cache.mkdir(parents=True)
+        for protein in datasets.read_topology(datasets.topology_file(data_root, "toy")):
+            content = answer(protein, ANSWERS[protein.id])
+            (cache / f"{protein.id}.json").write_text(json.dumps(content))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        # Assert
+        assert not app.exception
+        compared = next(
+            frame.value for frame in app.dataframe if "agreement with the front" in frame.value
+        )
+        assert "GPCRdb consistency" in compared.columns
+        assert compared["GPCRdb consistency"].between(0, 1).all()
 
 
 class TestResultsGpcrdb:
