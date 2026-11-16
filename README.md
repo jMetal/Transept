@@ -238,6 +238,11 @@ make test     # pytest
 
 Read [AGENTS.md](AGENTS.md) and [GIT_GUIDELINES.md](GIT_GUIDELINES.md) before contributing.
 
+## Citation
+
+If you use Transept, please cite it as described in [CITATION.cff](CITATION.cff); GitHub also shows
+it under "Cite this repository". The changes of every version are in [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 Transept is free software, distributed under the

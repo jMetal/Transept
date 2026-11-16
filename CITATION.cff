@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use Transept, please cite it as below."
+type: software
+title: "Transept: multiobjective, structure-guided multiple sequence alignment of transmembrane proteins"
+version: 0.1.0.dev0
+license: GPL-3.0-only
+repository-code: "https://github.com/jMetal/Transept"
+abstract: >-
+  Transept is a graphical interface for aligning transmembrane proteins with Transept core. It
+  guides the user from the datasets, including their own proteins, to runs and their analysis:
+  the trade-off alignments, the gaps that break a helix, the agreement with a reference alignment,
+  the structures superposed in 3D, and exports to Jalview, ChimeraX and PyMOL.
+keywords:
+  - multiple sequence alignment
+  - transmembrane proteins
+  - G protein-coupled receptors
+  - multiobjective optimisation
+  - AlphaFold2
+  - Streamlit
+authors:
+  - family-names: "Cedeño-Muñoz"
+    given-names: "Joel"
+    affiliation: "State Technical University of Quevedo"
+  - family-names: "Zambrano-Vega"
+    given-names: "Cristian"
+    affiliation: "State Technical University of Quevedo"
+  - family-names: "Nebro"
+    given-names: "Antonio J."
+    affiliation: "University of Málaga"
+references:
+  - type: software
+    title: "Transept core: multiobjective, structure-guided multiple sequence alignment of transmembrane proteins"
+    authors:
+      - family-names: "Cedeño-Muñoz"
+        given-names: "Joel"
+      - family-names: "Zambrano-Vega"
+        given-names: "Cristian"
+      - family-names: "Nebro"
+        given-names: "Antonio J."
+    repository-code: "https://github.com/jMetal/Transept-core"
+  - type: data
+    title: "A Curated Dataset of Human GPCR Sequences, AlphaFold-Predicted Structures, Transmembrane Topologies, and Reference Alignments for Structural Bioinformatics"
+    authors:
+      - family-names: "Zambrano-Vega"
+        given-names: "Cristian"
+      - family-names: "Cedeño-Muñoz"
+        given-names: "Joel"
+      - family-names: "Nebro"
+        given-names: "Antonio J."
+    version: "1.0.0"
+    year: 2026
+    doi: "10.5281/zenodo.23243974"
