@@ -61,3 +61,14 @@ def test_should_run_the_example_with_its_precomputed_seeds():
     assert request.run_id == "example-20261116-100000"
     assert request.algorithm == "NSGA_II"
     assert request.seeds and "internal" not in request.seeds
+
+
+def test_should_count_what_transept_offers():
+    from transept import options
+
+    facts = {fact.label: fact for fact in home_panel.project_facts(17, 2, 3)}
+    assert facts["Datasets"].value == "17"
+    assert "2 repositories" in facts["Datasets"].detail
+    assert facts["Algorithms"].value == str(len(options.ALGORITHMS))
+    assert facts["Operators"].value == str(len(options.CROSSOVERS) + len(options.MUTATIONS))
+    assert facts["Tutorials"].value == "3"

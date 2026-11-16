@@ -97,12 +97,22 @@ class TestHome:
         assert "0 running · 1 run · 0 series" in shown
         assert "1 with results" in shown
         assert "**NSGA-II** on toy" in shown
+        assert "Latest result: NSGA-II on toy (done). The knee is marked." in shown
+        assert app.get("plotly_chart")
 
         # Act
         next(b for b in app.button if b.key == "home_open_toy / done").click().run()
 
         # Assert
         assert app.session_state[ui.SELECTED_RUN] == ("toy", "done")
+
+    def test_should_show_what_transept_offers(self, configured):
+        app = open_page(ui.HOME)
+        assert not app.exception
+        facts = {metric.label: metric.value for metric in app.metric}
+        assert list(facts) == ["Datasets", "Algorithms", "Formulations", "Operators", "Tutorials"]
+        assert facts["Datasets"] == "1"
+        assert facts["Operators"] == str(len(options.CROSSOVERS) + len(options.MUTATIONS))
 
     def test_should_launch_the_example_and_follow_it(
         self, configured, monkeypatch: pytest.MonkeyPatch
@@ -1452,6 +1462,24 @@ class TestResultsTools:
         assert not app.exception
         seeds = app.dataframe[1].value
         assert list(seeds["method"]) == ["internal:biojava-g20x2"]
+
+    def test_should_show_or_hide_the_seeds_in_the_chart(self, finished):
+        def seed_traces(app) -> int:
+            return sum(
+                trace.get("name") == "Seed alignments"
+                for chart in app.get("plotly_chart")
+                for trace in json.loads(chart.proto.spec)["data"]
+            )
+
+        # Assert: shown by default
+        assert seed_traces(finished) == 1
+
+        # Act
+        finished.toggle(key="show_seeds:toy / done").set_value(False).run()
+
+        # Assert
+        assert not finished.exception
+        assert seed_traces(finished) == 0
 
     def test_should_offer_the_downloads_and_the_navigation(self, finished):
         labels = [button.label for button in finished.button]
