@@ -14,6 +14,7 @@ DIRECTORY = "docs/tutorials"
 OVERVIEW = "overview"
 ADD_YOUR_OWN_PROTEINS = "add-your-own-proteins"
 OPERATORS = "operators"
+RELIABILITY = "is-my-alignment-reliable"
 RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
 
 

@@ -24,6 +24,7 @@ from transept import (
     structure_export,
     superposition,
     tracks,
+    tutorials,
     ui,
 )
 from transept.runs import RunState
@@ -717,6 +718,11 @@ with view:
     elif kind == "conservation":
         colour = (np.tile(conserved.score, (len(aligned), 1)), "fraction")
     viewer("start", tracks=shown_tracks, consensus_line=conserved.consensus, colour=colour)
+    guide = tutorials.tutorial_named(tutorials.RELIABILITY)
+    if guide is not None:
+        # Here and not on its own page, so that the alignment and the choices stay in view
+        with st.expander("How to read the tracks", icon=":material/school:"):
+            st.markdown(guide.text)
     st.caption(
         "Tracks: **TM consensus** marks the columns where most residues are transmembrane. "
         + (
