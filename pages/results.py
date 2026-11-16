@@ -961,7 +961,7 @@ with view:
     if guide is not None:
         # Here and not on its own page, so that the alignment and the choices stay in view
         with st.expander("How to read the tracks", icon=":material/school:"):
-            st.markdown(guide.text)
+            ui.show_tutorial(guide)
     st.caption(
         "Tracks: **TM consensus** marks the columns where most residues are transmembrane. "
         + (

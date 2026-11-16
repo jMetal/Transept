@@ -30,11 +30,20 @@ LEVEL_MARKS = {
 }
 
 
+def show_tutorial(tutorial: tutorials.Tutorial) -> None:
+    """Shows a tutorial, with its figures."""
+    for part in tutorials.parts(tutorial):
+        if isinstance(part, tutorials.Figure):
+            st.image(str(part.path), caption=part.caption or None)
+        else:
+            st.markdown(part)
+
+
 def tutorial_page(tutorial: tutorials.Tutorial) -> st.Page:
     """Returns the page of a tutorial, for the menu and for links to it."""
 
     def show() -> None:
-        st.markdown(tutorial.text)
+        show_tutorial(tutorial)
 
     return st.Page(
         show, title=tutorial.title, icon=":material/school:", url_path=f"tutorial-{tutorial.name}"

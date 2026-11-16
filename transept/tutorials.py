@@ -15,7 +15,10 @@ OVERVIEW = "overview"
 ADD_YOUR_OWN_PROTEINS = "add-your-own-proteins"
 OPERATORS = "operators"
 RELIABILITY = "is-my-alignment-reliable"
-RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
+# A relative link, but not an image: images are shown from the disk (see `parts`).
+RELATIVE_LINK = re.compile(r"(?<!!)(\[[^\]]*)\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
+# An image on a line of its own: ![caption](images/file.png).
+IMAGE = re.compile(r"^!\[([^\]]*)\]\(([^)\s]+)\)[ \t]*$", re.MULTILINE)
 
 
 @dataclass(slots=True, frozen=True)
@@ -26,19 +29,45 @@ class Tutorial:
         name: The name of its file, without the extension.
         title: Its first heading.
         text: Its Markdown, with links that also work outside the repository.
+        directory: The folder of its file, where its images are.
     """
 
     name: str
     title: str
     text: str
+    directory: Path | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class Figure:
+    """An image of a tutorial, with the path of its file and its caption."""
+
+    path: Path
+    caption: str
+
+
+def parts(tutorial: Tutorial) -> list[str | Figure]:
+    """The text of a tutorial split at its images, which Streamlit's Markdown does not load from
+    the disk: text and figures, in order. An image whose file is missing stays as text."""
+    found: list[str | Figure] = []
+    start = 0
+    for match in IMAGE.finditer(tutorial.text):
+        path = (tutorial.directory or Path()) / match.group(2)
+        if tutorial.directory is None or not path.is_file():
+            continue
+        found.append(tutorial.text[start : match.start()])
+        found.append(Figure(path, match.group(1)))
+        start = match.end()
+    found.append(tutorial.text[start:])
+    return [part for part in found if not isinstance(part, str) or part.strip()]
 
 
 def absolute_links(text: str) -> str:
     """Points the relative links of a tutorial to the repository, which Transept does not serve."""
 
     def to_repository(match: re.Match) -> str:
-        target = posixpath.normpath(posixpath.join(DIRECTORY, match.group(1)))
-        return f"]({REPOSITORY_URL}/{target})"
+        target = posixpath.normpath(posixpath.join(DIRECTORY, match.group(2)))
+        return f"{match.group(1)}]({REPOSITORY_URL}/{target})"
 
     return RELATIVE_LINK.sub(to_repository, text)
 
@@ -49,7 +78,7 @@ def read_tutorial(path: Path) -> Tutorial:
     title = next(
         (line[2:].strip() for line in text.splitlines() if line.startswith("# ")), path.stem
     )
-    return Tutorial(path.stem, title, absolute_links(text))
+    return Tutorial(path.stem, title, absolute_links(text), path.parent)
 
 
 def list_tutorials(directory: Path | None = None) -> list[Tutorial]:

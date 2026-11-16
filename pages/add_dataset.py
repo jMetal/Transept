@@ -34,7 +34,7 @@ tutorial = tutorials.tutorial_named(tutorials.ADD_YOUR_OWN_PROTEINS)
 if tutorial is not None:
     # On this page, because going to another one would lose the files already uploaded
     with st.expander("Follow the tutorial", icon=":material/school:"):
-        st.markdown(tutorial.text)
+        ui.show_tutorial(tutorial)
 
 name = st.text_input(
     "Name of the dataset", help="Letters, digits, '.', '_' and '-'; for example my_receptors."
