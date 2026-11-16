@@ -10,7 +10,8 @@
 An alignment is a hypothesis: it says which residues of different proteins correspond. Before
 you build on it, to transfer an annotation, design a mutation or infer a tree, you want to know
 which parts of it you can trust. Transept answers with three measures, drawn as tracks above the
-alignment. This tutorial explains what each one means, how to read them together, and what they
+alignment, and receptors can be checked against their GPCRdb generic numbers. This tutorial
+explains what each one means, how to read them together, and what they
 cannot tell you.
 
 The numbers below come from **Run the example**: NSGA-II with its defaults and seed 1 on
@@ -95,6 +96,31 @@ helix is intact, broken or displaced in each protein. In the example:
 | pLDDT | 94.1 | 93.2 | 91.9 | 89.5 | 87.8 | 88.0 | 89.2 |
 | conservation | 0.59 | 0.58 | 0.58 | 0.49 | 0.49 | 0.52 | 0.57 |
 
+## Step 7: GPCRdb generic numbers
+
+For G protein-coupled receptors there is an independent check, which does not need a reference
+alignment. GPCRdb gives every residue a **generic number**, such as 3.50x50: the helix (3) and the
+position relative to the most conserved residue of that helix in the class (x.50). Residues with
+the same number play the same role in different receptors, so a good alignment puts them in the
+same column.
+
+1. Open the **GPCRdb** tab and press **Get the GPCRdb numbering**. Transept asks
+   [GPCRdb](https://gpcrdb.org) only then, sending only the names of the receptors, and keeps the
+   answers, so it does not ask again. It takes a few seconds per receptor.
+2. Read the **helix residues in the column of their generic number**: in the example, 98.7 % of
+   the numbered residues of the seven helices.
+3. The table of **x.50 positions** gives, for every helix, its column and how many receptors have
+   their residue there. In the example all seven are aligned in the 19 receptors, for instance
+   R2.50 in column 92 and P5.50 in column 236 (one receptor has a Q and another an F there).
+4. The table of **motifs** checks the positions of DRY (3.49–3.51), CWxP (6.47–6.50), NPxxY
+   (7.49–7.53) and PIF (3.40, 5.50, 6.44). They are named as in class A; in other classes the same
+   positions hold other residues, given by the consensus. In the example, every position of the
+   four motifs is in one column.
+
+The **GPCRdb x.50** line of the **Alignment** tab marks the x.50 column of every helix with its
+number, and **Per helix** adds the consistency of every helix. Proteins that GPCRdb does not know,
+such as your own constructs, are left without numbers.
+
 ## How to read them together
 
 | Support | pLDDT | Conservation | Reading |
@@ -116,6 +142,8 @@ helix is intact, broken or displaced in each protein. In the example:
   misaligned.
 - **Conservation depends on the proteins you chose.** Close paralogs make every column look
   conserved.
+- **Generic numbers come from GPCRdb's own alignments.** Agreeing with them is good evidence,
+  but where GPCRdb places a bulge or a kink differently, a disagreement can still be right.
 
 ## What next
 

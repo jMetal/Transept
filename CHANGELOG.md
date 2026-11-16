@@ -27,6 +27,9 @@ All notable changes to Transept are recorded here. The format follows
 - Tracks in the alignment viewer, with the residues coloured by any of them: the support of every
   column by the other alignments of the run, the AlphaFold confidence (pLDDT) of every residue,
   and the conservation and consensus of every column; their means per helix.
+- GPCRdb generic numbers, fetched on request and kept: how many residues of the helices are in
+  the column of their number, the x.50 position of every helix and the motifs DRY, CWxP, NPxxY
+  and PIF.
 - Tutorials inside the interface: Overview, Add your own proteins and Choose the operators.
 - An example dataset that runs in a couple of minutes.
 - A Docker image for Intel and ARM machines (`make image`, `make image-multiarch`).
