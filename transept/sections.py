@@ -92,8 +92,8 @@ SECTIONS = (
             Page(
                 "Monitor",
                 ":material/monitoring:",
-                "Follow a run live, with its evaluations and best values; cancel it, or find out "
-                "why it failed.",
+                "Follow runs live, with their evaluations and best values; stop one early keeping "
+                "what it found, cancel it, or find out why it failed.",
                 ui.MONITOR,
             ),
             Page(
@@ -111,8 +111,9 @@ SECTIONS = (
             Page(
                 "Results",
                 ":material/scatter_plot:",
-                "Explore the alignments of a finished run: pick one from the chart, browse it "
-                "helix by helix, compare it with the seed alignments and download it.",
+                "The trade-off alignments of a run: browse them helix by helix, check them "
+                "against a reference, see the structures in 3D, and export them to Jalview, "
+                "ChimeraX or PyMOL.",
                 ui.RESULTS,
             ),
             Page(
