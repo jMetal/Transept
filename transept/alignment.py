@@ -106,18 +106,18 @@ STYLE = """
 <style>
 .msa { font-family: "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px;
        line-height: 1.35; overflow-x: auto; white-space: pre; }
-.msa .id { color: #5E5266; display: inline-block; min-width: 12ch; }
-.msa .tm { background: #F6E2D8; }
-.msa .gap { color: #7A6E80; }
-.msa .break { color: #fff; background: #C21F3A; }
-.msa .track { color: #A9432A; }
+.msa .id { color: #4A5568; display: inline-block; min-width: 12ch; }
+.msa .tm { background: #DDE8F6; }
+.msa .gap { color: #6B7280; }
+.msa .break { color: #fff; background: #C8102E; }
+.msa .track { color: #034EA2; }
 .msa .changed { background: #fdd0a2; }
 .msa .same { background: #a1d99b; }
 .msa .partly { background: #fee391; }
 .msa .different { background: #fc9272; }
-.msa .ruler { color: #7A6E80; }
-.msa .s0 { background: #F3ECE5; } .msa .s1 { background: #F1D3C3; }
-.msa .s2 { background: #E3A98C; } .msa .s3 { color: #fff; background: #A9432A; }
+.msa .ruler { color: #6B7280; }
+.msa .s0 { background: #EEF3FA; } .msa .s1 { background: #C9DAF0; }
+.msa .s2 { background: #7FA6D6; } .msa .s3 { color: #fff; background: #034EA2; }
 .msa .p0 { background: #FF7D45; } .msa .p1 { background: #FFDB13; }
 .msa .p2 { background: #65CBF3; } .msa .p3 { color: #fff; background: #0053D6; }
 </style>
@@ -131,7 +131,7 @@ class Track:
     Attributes:
         label: Its name, in the place of a protein name.
         values: A value per column, or NaN where it has none.
-        scale: "fraction" for values in [0, 1] (four shades of terracotta, darker is higher), or
+        scale: "fraction" for values in [0, 1] (four shades of blue, darker is higher), or
             "plddt" for AlphaFold's pLDDT in [0, 100], with AlphaFold's own colours.
     """
 

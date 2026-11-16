@@ -8,10 +8,11 @@ from plotly.subplots import make_subplots
 
 from transept.front import FIRST, SECOND
 
-# The colours of the logo: terracotta for the front, saffron for what is chosen, ink for the seeds.
-ALL_COLOUR = "#CFC4C9"
-FRONT_COLOUR = "#A9432A"
-SELECTED_COLOUR = "#E0A21B"
+# The colours of the logo, those of the flag of Ecuador: blue for the front, yellow for what is
+# chosen (outlined, to stand out on white), navy for the seeds.
+ALL_COLOUR = "#C5CCD6"
+FRONT_COLOUR = "#034EA2"
+SELECTED_COLOUR = "#FFD100"
 
 
 def progress_figure(records: pd.DataFrame) -> go.Figure:
@@ -137,7 +138,7 @@ def series_front_figure(fronts: list[pd.DataFrame], aggregate: pd.DataFrame) -> 
     return figure
 
 
-SEED_COLOUR = "#2D1E3B"
+SEED_COLOUR = "#14213D"
 COMPROMISE_COLOUR = "#7A5C9E"
 
 
@@ -240,7 +241,12 @@ def front_figure(
                 y=[values.loc[selected, second]],
                 mode="markers",
                 name=f"MSASol{selected}",
-                marker={"color": SELECTED_COLOUR, "size": 16, "symbol": "star"},
+                marker={
+                    "color": SELECTED_COLOUR,
+                    "size": 16,
+                    "symbol": "star",
+                    "line": {"color": SEED_COLOUR, "width": 1},
+                },
                 customdata=[selected],
                 hoverinfo="skip",
             )
@@ -288,7 +294,7 @@ def front3d_figure(values: pd.DataFrame, front: pd.DataFrame, selected: int | No
         figure.add_trace(
             trace(
                 values.loc[[selected]], [selected], f"MSASol{selected}",
-                {"color": SELECTED_COLOUR, "size": 8},
+                {"color": SELECTED_COLOUR, "size": 8, "line": {"color": SEED_COLOUR, "width": 1}},
             )
         )  # fmt: skip
     figure.update_layout(

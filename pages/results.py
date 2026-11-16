@@ -823,7 +823,7 @@ with view:
         "Tracks: **TM consensus** marks the columns where most residues are transmembrane. "
         + (
             f"**Support**: fraction of the residue pairs of each column kept by {support[2]} "
-            "other alignments of the run, from light (below 25 %) to dark terracotta (75 % or "
+            "other alignments of the run, from light (below 25 %) to dark blue (75 % or "
             "more). "
             if support is not None
             else "**Support** needs other alignments in the run. "

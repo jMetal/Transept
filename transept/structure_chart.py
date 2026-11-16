@@ -8,7 +8,8 @@ from transept.superposition import PlacedStructure
 
 PALETTE = ("#4e79a7", "#f28e2b", "#59a14f", "#b07aa1", "#76b7b2", "#edc948", "#ff9da7", "#9c755f")
 OTHER_COLOUR = "#c8c8c8"
-HIGHLIGHT = "#E0A21B"
+HIGHLIGHT = "#FFD100"
+OUTLINE = "#14213D"
 
 
 def _trace(
@@ -74,7 +75,8 @@ def figure(
                     x=[p[0] for _, p in points], y=[p[1] for _, p in points],
                     z=[p[2] for _, p in points], mode="markers", hoverinfo="text",
                     text=[f"{item.structure.id}, column {column + 1}" for item, _ in points],
-                    marker={"color": HIGHLIGHT, "size": 6}, name=f"column {column + 1}",
+                    marker={"color": HIGHLIGHT, "size": 6, "line": {"color": OUTLINE, "width": 1}},
+                    name=f"column {column + 1}",
                 )
             )  # fmt: skip
     axis = {"visible": False}

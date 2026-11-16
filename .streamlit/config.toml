@@ -10,22 +10,22 @@ gatherUsageStats = false
 # Hide the developer options (Deploy, Rerun settings) from the toolbar.
 toolbarMode = "viewer"
 
-# The look of Transept: the warm colours of its logo (aubergine ink, terracotta and saffron, as
-# the lipids of a membrane) and its typefaces
+# The look of Transept: the colours of its logo, those of the flag of Ecuador (blue, yellow and
+# red, the last only for warnings such as a broken helix), with navy ink, and its typefaces
 # (Space Grotesk for headings, Inter for text, JetBrains Mono for sequences and commands).
 [theme]
 base = "light"
-primaryColor = "#A9432A"
-backgroundColor = "#FBF8F4"
-secondaryBackgroundColor = "#F3ECE5"
-textColor = "#2D1E3B"
-linkColor = "#A9432A"
-borderColor = "#E6DDD3"
+primaryColor = "#034EA2"
+backgroundColor = "#F7F9FC"
+secondaryBackgroundColor = "#EAF0F8"
+textColor = "#14213D"
+linkColor = "#034EA2"
+borderColor = "#D9E1EC"
 showWidgetBorder = true
 baseRadius = "0.6rem"
 font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap, sans-serif"
 headingFont = "Space Grotesk:https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap, sans-serif"
 codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap, monospace"
 headingFontWeights = [700, 600, 600, 600, 600, 600]
-chartCategoricalColors = ["#A9432A", "#E0A21B", "#2D1E3B", "#5E8C7A", "#7A5C9E", "#C9A79A", "#6B4A1A", "#F6E2D8"]
+chartCategoricalColors = ["#034EA2", "#FFD100", "#C8102E", "#14213D", "#5E8C7A", "#7A5C9E", "#8FB3E0", "#B8860B"]
 

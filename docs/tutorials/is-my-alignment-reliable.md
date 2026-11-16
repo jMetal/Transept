@@ -29,9 +29,9 @@ Above the proteins there are now five lines:
 | Line | What it tells you | Scale |
 | --- | --- | --- |
 | **TM consensus** | `M` where most residues of the column are transmembrane | |
-| **Support** | How robust the column is: how often the other alignments found by the run keep the same residues together | Light (below 25 %) to dark terracotta (75 % or more) |
+| **Support** | How robust the column is: how often the other alignments found by the run keep the same residues together | Light (below 25 %) to dark blue (75 % or more) |
 | **pLDDT** | How confident AlphaFold2 is about the structure of the residues of the column | AlphaFold's colours: orange below 50, yellow 50–70, light blue 70–90, dark blue above 90 |
-| **Conservation** | How conserved the column is | Light to dark terracotta, from 0 to 1 |
+| **Conservation** | How conserved the column is | Light to dark blue, from 0 to 1 |
 | **Consensus** | The residue of more than half of the proteins, or `·` | |
 
 ## Step 2: support, the robustness of each column
