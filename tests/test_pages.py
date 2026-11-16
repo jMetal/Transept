@@ -1476,6 +1476,7 @@ class TestResultsTools:
         # Assert
         assert not finished.exception
         assert "**Conservation**: one minus the normalised entropy" in texts(finished)
+        assert "How to read the tracks" in [item.label for item in finished.expander]
 
     def test_should_show_or_hide_the_seeds_in_the_chart(self, finished):
         def seed_traces(app) -> int:

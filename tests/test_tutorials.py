@@ -59,6 +59,11 @@ class TestListTutorials:
         assert tutorial is not None
         assert tutorial.title == "Choose the operators"
 
+    def test_should_find_the_tutorial_on_reliability(self):
+        tutorial = tutorials.tutorial_named(tutorials.RELIABILITY)
+        assert tutorial is not None
+        assert tutorial.title == "Is my alignment reliable?"
+
     def test_should_link_every_tutorial_to_files_that_exist(self):
         root = settings.REPOSITORY
         for path in (root / tutorials.DIRECTORY).glob("*.md"):
