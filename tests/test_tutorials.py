@@ -16,9 +16,48 @@ class TestAbsoluteLinks:
             f"[next]({tutorials.REPOSITORY_URL}/docs/tutorials/other.md)"
         )
 
+    def test_should_leave_images_alone(self):
+        text = "![The front](images/front.png)"
+        assert tutorials.absolute_links(text) == text
+
     def test_should_keep_absolute_links_and_anchors(self):
         text = "[a](https://example.org/x) [b](#step-1) [c](mailto:a@example.org)"
         assert tutorials.absolute_links(text) == text
+
+
+class TestParts:
+    def test_should_split_the_text_at_its_images(self, tmp_path: Path):
+        # Arrange
+        (tmp_path / "images").mkdir()
+        (tmp_path / "images" / "front.png").write_bytes(b"png")
+        (tmp_path / "guide.md").write_text(
+            "# Guide\n\nBefore.\n\n![The front](images/front.png)\n\nAfter.\n"
+        )
+        tutorial = tutorials.read_tutorial(tmp_path / "guide.md")
+
+        # Act
+        found = tutorials.parts(tutorial)
+
+        # Assert
+        assert "Before." in found[0]
+        assert found[1] == tutorials.Figure(tmp_path / "images" / "front.png", "The front")
+        assert "After." in found[2]
+
+    def test_should_keep_an_image_without_file_as_text(self, tmp_path: Path):
+        (tmp_path / "guide.md").write_text("# Guide\n\n![Missing](images/none.png)\n")
+        tutorial = tutorials.read_tutorial(tmp_path / "guide.md")
+
+        found = tutorials.parts(tutorial)
+
+        assert len(found) == 1
+        assert "![Missing](images/none.png)" in found[0]
+
+    def test_should_find_the_file_of_every_figure_of_the_tutorials(self):
+        for tutorial in tutorials.list_tutorials():
+            for match in tutorials.IMAGE.finditer(tutorial.text):
+                assert (tutorial.directory / match.group(2)).is_file(), (
+                    f"{tutorial.name}: {match.group(2)}"
+                )
 
 
 class TestListTutorials:
@@ -67,5 +106,5 @@ class TestListTutorials:
     def test_should_link_every_tutorial_to_files_that_exist(self):
         root = settings.REPOSITORY
         for path in (root / tutorials.DIRECTORY).glob("*.md"):
-            for target in tutorials.RELATIVE_LINK.findall(path.read_text(encoding="utf-8")):
+            for _, target in tutorials.RELATIVE_LINK.findall(path.read_text(encoding="utf-8")):
                 assert (path.parent / target).exists(), f"{path.name}: {target}"
