@@ -18,8 +18,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from transept import alignment, tracks
 from transept.alignment import AlignedRow
 from transept.analysis import residue_index
+from transept.datasets import Protein
 
 
 def _aligned_pairs(index: np.ndarray) -> int:
@@ -98,3 +100,75 @@ def consensus(matrix: np.ndarray) -> Consensus | None:
     mean = (matrix.sum(axis=1) - 1) / (count - 1)
     overall = float((matrix.sum() - count) / (count * (count - 1)))
     return Consensus(medoid=int(np.argmax(mean)), mean_agreement=mean, overall=overall)
+
+
+@dataclass(slots=True, frozen=True)
+class FrontSummary:
+    """How much the alignments of a front agree, said in a way a biologist can act on.
+
+    Attributes:
+        alignments: How many alignments were compared.
+        agreement: The mean agreement (pair F1) between every two of them.
+        helices: The (first, last) columns of the helices of the reference alignment of the set.
+        helix_means: For every helix, the mean support of its columns: the fraction of the
+            residue pairs of the reference alignment that the others keep there.
+        medoid: The position of the medoid in the set.
+        mean_agreement: For every alignment, its mean agreement with the others.
+        helix_support: The mean support inside the helices of the reference alignment and of the
+            medoid, by their position in the set.
+    """
+
+    alignments: int
+    agreement: float
+    helices: list[tuple[int, int]]
+    helix_means: list[float]
+    medoid: int
+    mean_agreement: np.ndarray
+    helix_support: dict[int, float]
+
+
+def _support_of(
+    alignments: list[list[AlignedRow]], position: int, proteins: dict[str, Protein]
+) -> tuple[np.ndarray, list[tuple[int, int]]]:
+    """The support of every column of one alignment of the set by the others, and its helices."""
+    chosen = alignments[position]
+    others = [rows for number, rows in enumerate(alignments) if number != position]
+    return (
+        tracks.support(chosen, others).column,
+        alignment.helices(alignment.consensus(chosen, proteins)),
+    )
+
+
+def _helix_support(column: np.ndarray, helices: list[tuple[int, int]]) -> float:
+    means = tracks.helix_means(column, helices)
+    finite = [value for value in means if np.isfinite(value)]
+    return float(np.mean(finite)) if finite else float("nan")
+
+
+def front_summary(
+    alignments: list[list[AlignedRow]], reference: int, proteins: dict[str, Protein]
+) -> FrontSummary | None:
+    """Summarises a front: how much its alignments agree, how much they keep the helices of one of
+    them (usually the knee, given by its position), and its medoid.
+
+    Returns:
+        None with fewer than two alignments.
+    """
+    if len(alignments) < 2:
+        return None
+    found = consensus(agreement_matrix(alignments))
+    column, helices = _support_of(alignments, reference, proteins)
+    helix_support = {reference: _helix_support(column, helices)}
+    if found.medoid != reference:
+        helix_support[found.medoid] = _helix_support(
+            *_support_of(alignments, found.medoid, proteins)
+        )
+    return FrontSummary(
+        alignments=len(alignments),
+        agreement=found.overall,
+        helices=helices,
+        helix_means=tracks.helix_means(column, helices),
+        medoid=found.medoid,
+        mean_agreement=found.mean_agreement,
+        helix_support=helix_support,
+    )

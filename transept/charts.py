@@ -196,7 +196,7 @@ def front_figure(
             x=marked[first],
             y=marked[second],
             mode="markers+text",
-            name="Extremes, knee",
+            name="Extremes, knee, medoid",
             text=marked["note"],
             textposition="top right",
             marker={"color": FRONT_COLOUR, "size": 12, "symbol": "diamond"},

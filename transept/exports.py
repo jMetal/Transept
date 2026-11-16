@@ -22,6 +22,15 @@ def to_fasta(rows: list[AlignedRow]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def keep_columns(rows: list[AlignedRow], keep: list[bool]) -> list[AlignedRow]:
+    """The alignment with only the columns marked to keep, e.g. to leave out the unreliable ones
+    before building a tree. Rows that are left with gaps only are kept, so no protein is lost."""
+    return [
+        AlignedRow(row.id, "".join(char for char, kept in zip(row.aligned, keep) if kept))
+        for row in rows
+    ]
+
+
 def to_clustal(rows: list[AlignedRow]) -> str:
     """Writes a Clustal file, 60 columns per block."""
     width = max((len(row.id) for row in rows), default=0) + 4

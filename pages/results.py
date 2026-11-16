@@ -13,6 +13,7 @@ from transept import (
     baselines,
     charts,
     datasets,
+    ensemble,
     exports,
     front,
     generic_numbers,
@@ -316,6 +317,123 @@ def pick_from_table(shown: pd.DataFrame, columns: list[str], caption: str) -> No
     show(ui.new_choice(seen, "table", choice))
 
 
+@st.cache_data(show_spinner=False, max_entries=8)
+def cached_front_summary(results: str, rows: tuple[int, ...], knee: int, topology: str):
+    """How much the alignments of the front agree, kept between reruns."""
+    folder = Path(results)
+    found = [alignment.read_fasta(folder / f"MSASol{row}.fasta") for row in rows]
+    by_id = {p.id: p for p in datasets.read_topology(topology)} if Path(topology).is_file() else {}
+    return ensemble.front_summary(found, rows.index(knee), by_id)
+
+
+WEAK_HELIX = 0.9
+
+
+def describe_front(summary: ensemble.FrontSummary) -> str:
+    """The agreement of the front in a sentence or two."""
+    text = (
+        f"The {summary.alignments} alignments of the front share "
+        f"{summary.agreement:.1%} of their residue pairs on average"
+    )
+    weak = [
+        f"TM{number} ({value:.2f})"
+        for number, value in enumerate(summary.helix_means, start=1)
+        if value < WEAK_HELIX
+    ]
+    if not weak:
+        return (
+            text + ", and keep the helices of the knee almost unchanged (support of 0.9 or more). "
+            "You do not have to choose among them: the knee is a balanced default, and the "
+            "**Support** track of the alignment shows where they disagree, which is where the "
+            "alignment depends on the trade-off between sequence and structure."
+        )
+    return (
+        text + ", and differ most in " + ", ".join(weak) + " (mean support of the helix). Here "
+        "the choice matters: compare the knee and the medoid, and use the **Support** track of "
+        "the alignment to see which columns depend on the trade-off between sequence and "
+        "structure."
+    )
+
+
+def gpcrdb_consistency(row: int) -> float | None:
+    """The fraction of numbered helix residues in the column of their GPCRdb number, when the
+    numbering of every receptor has been fetched; None otherwise."""
+    rows = alignment.read_fasta(runs.alignment_file(run, row))
+    residues = {r.id: generic_numbers.cached(r.id) for r in rows}
+    if any(found is None for found in residues.values()):
+        return None
+    by_id = {
+        p.id: p for p in datasets.read_topology(datasets.topology_file(data_root, run.dataset))
+    }
+    cells = generic_numbers.cells_by_number(generic_numbers.numbering(rows, by_id, residues))
+    aligned_count, total = generic_numbers.consistency(cells, rows)
+    return aligned_count / total if total else None
+
+
+def compare_knee_and_medoid(summary: ensemble.FrontSummary, rows: list[int]) -> None:
+    """The knee and the medoid side by side, with what can be judged without a reference."""
+    candidates = {"knee": knee, "medoid": rows[summary.medoid]}
+    positions = {"knee": rows.index(knee), "medoid": summary.medoid}
+    table_rows = []
+    for name, row in candidates.items():
+        position = positions[name]
+        entry = {"alignment": name, "file": f"MSASol{row}.fasta"}
+        entry.update({objective: values.loc[row, objective] for objective in names})
+        entry["agreement with the front"] = summary.mean_agreement[position]
+        entry["support in the helices"] = summary.helix_support.get(position)
+        consistency = gpcrdb_consistency(row)
+        if consistency is not None:
+            entry["GPCRdb consistency"] = consistency
+        if metrics is not None:
+            found = metrics[metrics["row"] == row]
+            if not found.empty:
+                entry[reference_scores.PAIR_F1] = found[reference_scores.PAIR_F1].iloc[0]
+        table_rows.append(entry)
+    st.dataframe(pd.DataFrame(table_rows), hide_index=True, width="stretch")
+    st.caption(
+        "Two ways of recommending one alignment: the **knee** is the balanced point of the "
+        "trade-off between the objectives; the **medoid** is the alignment that agrees most with "
+        "all the others of the front, a consensus that is still an alignment found by the search. "
+        "They usually differ only outside the helices. Neither is better in every dataset: compare "
+        "them here with what does not need a reference (GPCRdb consistency appears once the "
+        "numbering has been fetched in the GPCRdb tab)"
+        + (
+            "; the Pair F1 against the reference is only for information."
+            if metrics is not None
+            else "."
+        )
+    )
+    choose = st.columns(2)
+    if choose[0].button("Show the knee", key=f"show_knee:{run.key}"):
+        show(knee)
+    if choose[1].button("Show the medoid", key=f"show_medoid:{run.key}"):
+        show(rows[summary.medoid])
+
+
+knee = front.knee_row(table)
+front_summary = None
+if ranked is None and len(table) >= 2 and knee is not None:
+    front_rows = [int(row) for row in table["row"]]
+    with st.spinner("Comparing the alignments of the front..."):
+        front_summary = cached_front_summary(
+            str(run.results),
+            tuple(front_rows),
+            knee,
+            str(datasets.topology_file(data_root, run.dataset)),
+        )
+    if front_summary is not None:
+        st.info(describe_front(front_summary), icon=":material/join:")
+        medoid = front_rows[front_summary.medoid]
+        if medoid == knee:
+            st.caption(
+                "The knee is also the medoid: the alignment that agrees most with the others."
+            )
+        else:
+            unmarked = (table["row"] == medoid) & (table["note"] == "")
+            table.loc[unmarked, "note"] = "medoid"
+            with st.expander("Knee or medoid?", icon=":material/compare_arrows:"):
+                compare_knee_and_medoid(front_summary, front_rows)
+
 if ranked is not None:
     st.subheader(f"Convergence of {names[0]}")
     st.plotly_chart(charts.progress_figure(runs.progress(run)), width="stretch")
@@ -596,6 +714,31 @@ def viewer(prefix: str, agreement=None, changed=None, **extra) -> None:
     st.html(alignment.render_html(aligned, proteins, start, width, agreement, changed, **extra))
 
 
+def download_reliable(stem: str) -> None:
+    """The alignment without its columns of low support, for a tree or another analysis that
+    should rest only on the reliable part."""
+    left, right = st.columns([3, 2], vertical_alignment="bottom")
+    threshold = left.slider(
+        "Leave out the columns with support below",
+        0.0,
+        1.0,
+        0.5,
+        0.05,
+        key=f"trim:{run.key}:{selected}",
+        help="On the GPCR benchmark, columns with support below 0.5 were almost never right "
+        "according to the reference alignment. Columns with fewer than two residues have no "
+        "support and are kept.",
+    )
+    keep = [not (np.isfinite(value) and value < threshold) for value in support[0]]
+    removed = keep.count(False)
+    right.download_button(
+        f"FASTA without {removed} unreliable columns",
+        exports.to_fasta(exports.keep_columns(aligned, keep)),
+        file_name=f"{stem}_support{threshold:g}.fasta",
+        disabled=removed == 0,
+    )
+
+
 st.subheader(f"Alignment MSASol{selected}")
 view, per_protein, per_helix, gpcrdb_tab, comparison_tab, structures_tab = st.tabs(
     ["Alignment", "Per protein", "Per helix", "GPCRdb", "Compare", "3D"]
@@ -849,6 +992,8 @@ with view:
         exports.jalview_features(proteins),
         file_name=f"{run.dataset}_tm_features.txt",
     )
+    if support is not None:
+        download_reliable(stem)
     models = {
         row.id: model
         for row in aligned
@@ -874,6 +1019,8 @@ with view:
         highlighted["knee"] = front.knee_row(table)
     if compromise is not None:
         highlighted["compromise"] = compromise
+    if front_summary is not None:
+        highlighted["medoid"] = int(table["row"].iloc[front_summary.medoid])
     for name in names:
         match = table[table["note"] == f"best {name}"]
         if not match.empty:
@@ -896,7 +1043,8 @@ with view:
         "Download the highlighted alignments (zip)",
         exports.bundle(files),
         file_name=f"{run.dataset}_{run.run_id}_highlighted.zip",
-        help="The best alignment of each objective, the knee, the weighted compromise (when they "
+        help="The best alignment of each objective, the knee, the medoid, the weighted compromise "
+        "(when they "
         "apply) and the selected alignment, in FASTA and Stockholm, with FUN.csv, the Jalview "
         "features and a summary.",
     )
