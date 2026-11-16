@@ -5,12 +5,46 @@ comes from transept/home_panel.py."""
 import streamlit as st
 
 from transept import charts, dataset_check, front, home_panel, runner, runs, settings, tutorials, ui
-from transept.branding import MARK
+from transept.branding import BLUE, MARK, NAVY, PALE_BLUE, RED, YELLOW
 from transept.sections import SECTIONS, Page, Section
 
 STEPS = ("Explore", "Optimize", "Analyze")
 RECENT_RUNS = 4
 PICTURE_HEIGHT = 320
+# A few touches in the colours of the logo: a stripe as the flag (yellow, blue, red), the facts on
+# a blue band, and the three steps on pale blue with a yellow edge. Containers with a key get the
+# class st-key-<key>.
+STYLE = f"""
+<style>
+.transept-flag {{
+  height: 6px; border-radius: 3px; margin: 0.25rem 0 0.5rem;
+  background: linear-gradient(to right, {YELLOW} 0 50%, {BLUE} 50% 75%, {RED} 75% 100%);
+}}
+.st-key-home_facts {{
+  background: {BLUE}; border-radius: 0.9rem; padding: 1rem 1.25rem;
+}}
+.st-key-home_facts [data-testid="stMetric"] {{
+  border-left: 4px solid {YELLOW}; padding-left: 0.75rem;
+}}
+.st-key-home_facts [data-testid="stMetricLabel"],
+.st-key-home_facts [data-testid="stMetricLabel"] *,
+.st-key-home_facts [data-testid="stMetricValue"] {{ color: #FFFFFF; }}
+.st-key-home_facts svg {{ color: rgba(255, 255, 255, 0.75) !important; }}
+[class*="st-key-home_step_"] {{
+  background: {PALE_BLUE}; border-top: 5px solid {YELLOW}; border-radius: 0.9rem;
+  padding: 1rem 1rem 1.25rem;
+}}
+[class*="st-key-home_page_"] {{ background: #FFFFFF; }}
+.transept-step {{
+  display: flex; align-items: center; gap: 0.6rem; font-family: "Space Grotesk", sans-serif;
+  font-size: 1.5rem; font-weight: 600; color: {NAVY};
+}}
+.transept-step span {{
+  display: inline-flex; align-items: center; justify-content: center; width: 2.1rem;
+  height: 2.1rem; border-radius: 50%; background: {BLUE}; color: {YELLOW}; font-size: 1.1rem;
+}}
+</style>
+"""
 STATE_BADGES = {
     runs.RunState.RUNNING: ("Running", ":material/sync:", "blue"),
     runs.RunState.FINISHED: ("Finished", ":material/check_circle:", "green"),
@@ -81,9 +115,10 @@ def render_picture(summary: home_panel.Activity) -> None:
 
 def render_facts(ready: tuple[int, int]) -> None:
     facts = home_panel.project_facts(*ready, len(tutorials.list_tutorials()))
-    for column, fact in zip(st.columns(len(facts)), facts, strict=True):
-        with column.container(border=True):
-            st.metric(fact.label, fact.value, help=fact.detail)
+    st.html('<div class="transept-flag"></div>')
+    with st.container(key="home_facts"):
+        for column, fact in zip(st.columns(len(facts)), facts, strict=True):
+            column.metric(fact.label, fact.value, help=fact.detail)
 
 
 def render_hero(current: settings.Settings, problems: list[str], summary) -> None:
@@ -129,7 +164,8 @@ def render_presentation(current: settings.Settings, problems: list[str]) -> None
 
 def render_page(page: Page) -> None:
     """A page of a step: a link with what it offers, or a notice that it is coming."""
-    with st.container(border=True):
+    slug = "".join(letter if letter.isalnum() else "_" for letter in page.title.lower())
+    with st.container(border=True, key=f"home_page_{slug}"):
         if page.available:
             st.page_link(page.path, label=page.title, icon=page.icon)
         else:
@@ -181,14 +217,15 @@ def step_state(name: str, summary: home_panel.Activity, ready: tuple[int, int]) 
 def render_step(
     number: int, section: Section, summary: home_panel.Activity, ready: tuple[int, int]
 ) -> None:
-    st.subheader(f"{number} · {section.name}", anchor=False)
-    st.caption(step_state(section.name, summary, ready))
-    for page in section.pages:
-        render_page(page)
-    if section.name == "Optimize" and summary.active is not None:
-        st.info(f"Running now: {describe(summary.active)}. It is drawn at the top of the page.")
-    if section.name == "Analyze":
-        render_recent(summary)
+    with st.container(key=f"home_step_{number}"):
+        st.html(f'<div class="transept-step"><span>{number}</span>{section.name}</div>')
+        st.caption(step_state(section.name, summary, ready))
+        for page in section.pages:
+            render_page(page)
+        if section.name == "Optimize" and summary.active is not None:
+            st.info(f"Running now: {describe(summary.active)}. It is drawn at the top of the page.")
+        if section.name == "Analyze":
+            render_recent(summary)
 
 
 def render_learn_and_more() -> None:
@@ -233,9 +270,9 @@ problems = settings.problems(current)
 summary = home_panel.activity(settings.runs_root(), limit=RECENT_RUNS)
 ready = datasets_ready(current) if not problems else (0, 0)
 
+st.html(STYLE)
 render_hero(current, problems, summary)
 render_facts(ready)
-st.divider()
 sections = {section.name: section for section in SECTIONS}
 for number, (column, name) in enumerate(zip(st.columns(3, gap="large"), STEPS), start=1):
     with column:
