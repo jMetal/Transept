@@ -20,7 +20,7 @@ NOT_OFFERED: tuple[str, ...] = ()
 
 # Formulations of --objectives, their description and number of objectives.
 OBJECTIVES = {
-    "SOPWTP_LDDT": ("SOPwTP and lDDT (published)", 2),
+    "SOPWTP_LDDT": ("SOPwTP and lDDT", 2),
     "LDDT": ("lDDT only (single objective)", 1),
     "SOPWTP_LDDT_COVERAGE": ("SOPwTP, lDDT and coverage (experimental)", 3),
 }
