@@ -79,7 +79,6 @@ class TestLearningPath:
         assert [item.name for item in found] == [
             tutorials.OVERVIEW,
             tutorials.RELIABILITY,
-            tutorials.WHY_SEVERAL_OBJECTIVES,
             tutorials.WHAT_TRANSEPT_OPTIMISES,
             tutorials.CHOOSE_AN_ALGORITHM,
         ]
@@ -99,8 +98,7 @@ class TestLearningPath:
 
         assert list(found) == list(tutorials.LEVELS)
         assert [item.name for item in found["Intermediate"]] == [
-            tutorials.WHY_SEVERAL_OBJECTIVES,
-            tutorials.WHAT_TRANSEPT_OPTIMISES,
+            tutorials.WHAT_TRANSEPT_OPTIMISES
         ]
         assert found["Basic"] == []
 

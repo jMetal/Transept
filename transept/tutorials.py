@@ -31,6 +31,8 @@ SUMMARIES = {
     "conservation, and check receptors against GPCRdb.",
     "operators": "The crossovers and mutations of the search, their settings, and when each one "
     "helps.",
+    "why-several-objectives": "Why Transept optimises sequence and structure at the same time, "
+    "and what a set of alignments gives you that a single one does not. No mathematics needed.",
 }
 # Within a level, the order in which the tutorials are meant to be read; the others follow, by
 # file name.
@@ -155,22 +157,6 @@ class Planned:
 
 
 PLANNED = (
-    Planned(
-        WHY_SEVERAL_OBJECTIVES,
-        "Why several objectives?",
-        "Why Transept optimises sequence and structure at the same time, and what a set of "
-        "alignments gives you that a single one does not. No mathematics needed.",
-        (
-            "Sequence and structure often disagree: an example where improving one worsens the "
-            "other",
-            "Two ways out: weigh them in advance, or find every compromise at once",
-            "Dominance and the front, explained with the chart of Results",
-            "What to do with the front: the knee, your own weights, the medoid",
-            "The set as a source of information: how robust each column is",
-            "And with a single objective? What is lost",
-        ),
-        "Intermediate",
-    ),
     Planned(
         WHAT_TRANSEPT_OPTIMISES,
         "What Transept optimises",

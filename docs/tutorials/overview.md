@@ -63,6 +63,7 @@ one, the knee. The set is what lets Transept tell you more:
   were almost never right according to the reference alignment, while well-supported ones mostly
   were. You can download the alignment without its unreliable columns, for a tree for instance.
 
+[Why several objectives?](why-several-objectives.md) explains the idea without mathematics, and
 [Is my alignment reliable?](is-my-alignment-reliable.md) shows how to read these measures.
 
 ## Who it is for
@@ -233,8 +234,9 @@ For those who study the search itself:
 
 ## The tutorials
 
-| Tutorial | What it covers |
-| --- | --- |
-| [Add your own proteins](add-your-own-proteins.md) | The files you need, and how to add and align them |
-| [Is my alignment reliable?](is-my-alignment-reliable.md) | Support, pLDDT, conservation, the GPCRdb check, and how to read them together |
-| [Choose the operators](operators.md) | The crossovers and mutations, and when each one helps |
+| Level | Tutorial | What it covers |
+| --- | --- | --- |
+| Basic | [Add your own proteins](add-your-own-proteins.md) | Proteins from UniProt or from your files, added, aligned and read, with eight aquaporins |
+| Basic | [Is my alignment reliable?](is-my-alignment-reliable.md) | Support, pLDDT, conservation, the GPCRdb check, and how to read them together |
+| Intermediate | [Why several objectives?](why-several-objectives.md) | Why sequence and structure are optimised together, the front, and how to choose from it |
+| Advanced | [Choose the operators](operators.md) | The crossovers and mutations, and when each one helps |

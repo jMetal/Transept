@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Dominance and the front</title>
+  <desc>Every point is an alignment. K is better than S in both measures, so K dominates S. A and B are each better in one measure: neither dominates the other. The alignments that no other dominates form the front.</desc>
+  <defs>
+    <marker id="axis" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#14213D"/>
+    </marker>
+  </defs>
+  <rect width="760" height="400" fill="#F7F9FC"/>
+
+  <!-- region dominated by K -->
+  <rect x="80" y="150" width="250" height="200" fill="#DDE8F6"/>
+  <text x="96" y="338" font-size="13" fill="#4A5568">Dominated by K: worse in both</text>
+
+  <!-- axes -->
+  <line x1="80" y1="350" x2="470" y2="350" stroke="#14213D" stroke-width="2" marker-end="url(#axis)"/>
+  <line x1="80" y1="350" x2="80" y2="40" stroke="#14213D" stroke-width="2" marker-end="url(#axis)"/>
+  <text x="275" y="380" text-anchor="middle" font-size="14" fill="#14213D">Sequence (SOPwTP): better →</text>
+  <text x="38" y="195" text-anchor="middle" font-size="14" fill="#14213D" transform="rotate(-90 38 195)">Structure (lDDT): better →</text>
+
+  <!-- front -->
+  <polyline points="130,80 200,96 270,118 330,150 380,192 420,250 445,310" fill="none" stroke="#034EA2" stroke-width="3"/>
+  <g fill="#034EA2"><circle cx="130" cy="80" r="6"/><circle cx="200" cy="96" r="6"/><circle cx="270" cy="118" r="6"/><circle cx="380" cy="192" r="6"/><circle cx="420" cy="250" r="6"/><circle cx="445" cy="310" r="6"/></g>
+  <path d="M330 136 L334.5 145.5 L345 146 L337 153 L339.5 163.5 L330 158 L320.5 163.5 L323 153 L315 146 L325.5 145.5 Z" fill="#FFD100" stroke="#14213D" stroke-width="1.2"/>
+
+  <!-- labels on the front -->
+  <text x="118" y="66" font-size="14" font-weight="700" fill="#14213D">A</text>
+  <text x="352" y="150" font-size="14" font-weight="700" fill="#14213D">K</text>
+  <text x="458" y="314" font-size="14" font-weight="700" fill="#14213D">B</text>
+
+  <!-- a seed, dominated -->
+  <rect x="228" y="250" width="14" height="14" rx="2" fill="#14213D"/>
+  <text x="250" y="262" font-size="14" font-weight="700" fill="#14213D">S</text>
+
+  <!-- legend / explanation -->
+  <g transform="translate(500 60)">
+    <text x="0" y="0" font-size="15" font-weight="700" fill="#14213D">Every point is an alignment</text>
+    <circle cx="8" cy="30" r="6" fill="#034EA2"/>
+    <text x="24" y="35" font-size="13.5" fill="#14213D">The front: no other alignment</text>
+    <text x="24" y="53" font-size="13.5" fill="#14213D">is better in both measures</text>
+    <rect x="1" y="72" width="14" height="14" rx="2" fill="#14213D"/>
+    <text x="24" y="84" font-size="13.5" fill="#14213D">S, a seed: K is better in</text>
+    <text x="24" y="102" font-size="13.5" fill="#14213D">both, so K dominates S</text>
+    <text x="0" y="140" font-size="13.5" fill="#14213D"><tspan font-weight="700">A</tspan> is better in structure,</text>
+    <text x="0" y="158" font-size="13.5" fill="#14213D"><tspan font-weight="700">B</tspan> in sequence: neither</text>
+    <text x="0" y="176" font-size="13.5" fill="#14213D">dominates the other</text>
+    <path d="M8 196 L11 202.5 L18 203 L12.5 207.5 L14.5 214.5 L8 210.5 L1.5 214.5 L3.5 207.5 L-2 203 L5 202.5 Z" fill="#FFD100" stroke="#14213D" stroke-width="1"/>
+    <text x="24" y="210" font-size="13.5" fill="#14213D">K, the knee: a balanced</text>
+    <text x="24" y="228" font-size="13.5" fill="#14213D">compromise</text>
+  </g>
+</svg>
