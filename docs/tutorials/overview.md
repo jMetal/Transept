@@ -206,7 +206,8 @@ For those who study the search itself:
   with coverage as a third objective, which favours alignments with more aligned pairs.
 - **How to search.** NSGA-II (the default), SPEA2, a genetic algorithm, their asynchronous
   versions and others, with two random searches as a baseline. **Algorithms** lists them with
-  their parameters, and **New run** lets you set them, or paste a whole configuration.
+  their parameters, and **New run** lets you set them, or paste a whole configuration;
+  [Choose an algorithm](choose-an-algorithm.md) explains them.
 - **With what operators.** Crossovers and mutations designed so that none of them breaks a helix;
   [Choose the operators](operators.md) explains them and what we have seen them do.
 - **From where.** The seed alignments of any of the tools in the dataset, those Transept computes
@@ -240,4 +241,5 @@ For those who study the search itself:
 | Basic | [Is my alignment reliable?](is-my-alignment-reliable.md) | Support, pLDDT, conservation, the GPCRdb check, and how to read them together |
 | Intermediate | [Why several objectives?](why-several-objectives.md) | Why sequence and structure are optimised together, the front, and how to choose from it |
 | Intermediate | [What Transept optimises](what-transept-optimises.md) | SOPwTP, lDDT and coverage in detail, how to read their values, and what none of them measures |
+| Advanced | [Choose an algorithm](choose-an-algorithm.md) | How the search works, NSGA-II and its defaults, the other algorithms and how to configure them |
 | Advanced | [Choose the operators](operators.md) | The crossovers and mutations, and when each one helps |

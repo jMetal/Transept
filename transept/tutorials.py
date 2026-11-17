@@ -35,6 +35,8 @@ SUMMARIES = {
     "and what a set of alignments gives you that a single one does not. No mathematics needed.",
     "what-transept-optimises": "The objectives in detail: what SOPwTP, lDDT and coverage "
     "measure, how to read their values, and what none of them can tell you.",
+    "choose-an-algorithm": "How the search works, NSGA-II and why its defaults are enough, and the "
+    "other algorithms for those who want to explore them.",
 }
 # Within a level, the order in which the tutorials are meant to be read; the others follow, by
 # file name.
@@ -158,23 +160,8 @@ class Planned:
     level: str = LEVELS[0]
 
 
-PLANNED = (
-    Planned(
-        CHOOSE_AN_ALGORITHM,
-        "Choose an algorithm",
-        "NSGA-II, the reference multiobjective algorithm and the default of Transept, and the "
-        "other algorithms for those who want to explore. The defaults are a good choice.",
-        (
-            "NSGA-II in a few steps, and why it is the default",
-            "Why the default configuration is enough for most users",
-            "The other algorithms, in one line each, and when to try them",
-            "Highly configurable: NSGA-II, SPEA2 and the genetic algorithm, through their "
-            "parameter spaces",
-            "How to compare algorithms on your proteins: independent runs",
-        ),
-        "Advanced",
-    ),
-)
+# Tutorials still to be written, shown in Learn as coming soon until their file exists.
+PLANNED: tuple[Planned, ...] = ()
 
 
 def learning_path(directory: Path | None = None) -> list[Tutorial | Planned]:

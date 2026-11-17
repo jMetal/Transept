@@ -148,6 +148,7 @@ numbers. [Is my alignment reliable?](is-my-alignment-reliable.md) explains both.
 
 - [Is my alignment reliable?](is-my-alignment-reliable.md) reads support, AlphaFold confidence and
   conservation, column by column.
-- **Choose an algorithm** (coming soon) explains how NSGA-II and the other algorithms search.
+- [Choose an algorithm](choose-an-algorithm.md) explains how NSGA-II and the other algorithms
+  search.
 - The [problem formulation tutorial of Transept core](https://github.com/jMetal/Transept-core/blob/main/docs/tutorials/T2-problem-formulation.md)
   gives every detail, for developers.

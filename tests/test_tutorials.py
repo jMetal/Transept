@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from transept import settings, tutorials
 
 
@@ -60,6 +62,18 @@ class TestParts:
                 )
 
 
+FUTURE = tutorials.Planned(
+    "future", "A future tutorial", "What it is for.", ("One thing", "Another"), "Intermediate"
+)
+
+
+@pytest.fixture
+def planned(monkeypatch: pytest.MonkeyPatch) -> tutorials.Planned:
+    """A tutorial still to be written, as if it were in PLANNED."""
+    monkeypatch.setattr(tutorials, "PLANNED", (FUTURE,))
+    return FUTURE
+
+
 class TestLearningPath:
     def test_should_follow_the_reading_order_and_then_the_file_names(self, tmp_path: Path):
         for name in ("zeta", tutorials.OPERATORS, tutorials.OVERVIEW, tutorials.RELIABILITY):
@@ -69,19 +83,15 @@ class TestLearningPath:
 
         assert found == [tutorials.OVERVIEW, tutorials.RELIABILITY, tutorials.OPERATORS, "zeta"]
 
-    def test_should_show_the_planned_tutorials_in_their_place(self, tmp_path: Path):
+    def test_should_show_the_planned_tutorials_in_their_place(self, tmp_path: Path, planned):
         (tmp_path / f"{tutorials.OVERVIEW}.md").write_text("# Overview\n")
-        (tmp_path / f"{tutorials.RELIABILITY}.md").write_text("# Reliable\n")
+        (tmp_path / "advanced.md").write_text("# Advanced\n\n| **Level** | Advanced |\n")
 
         found = tutorials.learning_path(tmp_path)
 
-        # Assert: by level (both written ones are Basic), then in reading order
-        assert [item.name for item in found] == [
-            tutorials.OVERVIEW,
-            tutorials.RELIABILITY,
-            tutorials.CHOOSE_AN_ALGORITHM,
-        ]
-        assert isinstance(found[2], tutorials.Planned)
+        # Assert: by level: Basic, then the planned one (Intermediate), then Advanced
+        assert [item.name for item in found] == [tutorials.OVERVIEW, "future", "advanced"]
+        assert found[1] is planned
 
     def test_should_read_the_level_from_the_table_of_the_tutorial(self, tmp_path: Path):
         (tmp_path / "a.md").write_text("# A\n\n| | |\n| --- | --- |\n| **Level** | Advanced |\n")
@@ -92,32 +102,37 @@ class TestLearningPath:
 
         assert levels == {"a": "Advanced", "b": "Basic", "c": "Basic"}
 
-    def test_should_group_by_level_in_reading_order(self, tmp_path: Path):
+    def test_should_group_by_level_in_reading_order(self, tmp_path: Path, planned):
+        (tmp_path / f"{tutorials.OVERVIEW}.md").write_text("# Overview\n")
+
         found = tutorials.by_level(tutorials.learning_path(tmp_path))
 
         assert list(found) == list(tutorials.LEVELS)
-        assert found["Intermediate"] == []
-        assert [item.name for item in found["Advanced"]] == [tutorials.CHOOSE_AN_ALGORITHM]
-        assert found["Basic"] == []
+        assert [item.name for item in found["Basic"]] == [tutorials.OVERVIEW]
+        assert found["Intermediate"] == [planned]
+        assert found["Advanced"] == []
+
+    def test_should_drop_a_planned_tutorial_once_it_is_written(self, tmp_path: Path, planned):
+        (tmp_path / "future.md").write_text("# Future\n")
+
+        found = tutorials.learning_path(tmp_path)
+
+        assert len(found) == 1
+        assert isinstance(found[0], tutorials.Tutorial)
 
     def test_should_give_every_written_tutorial_a_level_and_a_summary(self):
         for tutorial in tutorials.list_tutorials():
             assert tutorial.level in tutorials.LEVELS
             assert tutorial.summary, tutorial.name
 
-    def test_should_drop_a_planned_tutorial_once_it_is_written(self, tmp_path: Path):
-        (tmp_path / f"{tutorials.CHOOSE_AN_ALGORITHM}.md").write_text("# Choose\n")
+    def test_should_place_the_written_tutorials_in_their_levels(self):
+        found = tutorials.by_level(tutorials.learning_path())
 
-        found = tutorials.learning_path(tmp_path)
-
-        chosen = [item for item in found if item.name == tutorials.CHOOSE_AN_ALGORITHM]
-        assert len(chosen) == 1
-        assert isinstance(chosen[0], tutorials.Tutorial)
-
-    def test_should_give_every_planned_tutorial_a_place_in_the_reading_order(self):
-        for planned in tutorials.PLANNED:
-            assert planned.name in tutorials.READING_ORDER
-            assert planned.contents
+        assert {level: [item.name for item in items] for level, items in found.items()} == {
+            "Basic": [tutorials.OVERVIEW, tutorials.ADD_YOUR_OWN_PROTEINS, tutorials.RELIABILITY],
+            "Intermediate": [tutorials.WHY_SEVERAL_OBJECTIVES, tutorials.WHAT_TRANSEPT_OPTIMISES],
+            "Advanced": [tutorials.CHOOSE_AN_ALGORITHM, tutorials.OPERATORS],
+        }
 
 
 class TestListTutorials:

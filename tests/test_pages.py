@@ -609,8 +609,20 @@ class TestTutorials:
         assert "New here? Read the overview" in labels
         for tutorial in tutorials.list_tutorials():
             assert tutorial.title in labels
-        for planned in tutorials.PLANNED:
-            assert planned.title in labels
+
+    def test_should_mark_a_planned_tutorial_as_coming_soon(self, configured, monkeypatch):
+        # Arrange
+        future = tutorials.Planned(
+            "future", "A future tutorial", "For later.", ("One",), "Advanced"
+        )
+        monkeypatch.setattr(tutorials, "PLANNED", (future,))
+
+        # Act
+        app = open_page(ui.HOME)
+
+        # Assert
+        assert not app.exception
+        assert "A future tutorial" in [link.proto.label for link in app.get("page_link")]
         assert ":gray-badge[Coming soon]" in texts(app)
 
     def test_should_show_what_a_planned_tutorial_will_cover(self):
@@ -619,7 +631,8 @@ class TestTutorials:
 
             from transept import tutorials, ui
 
-            st.navigation([ui.planned_page(tutorials.PLANNED[0])]).run()
+            future = tutorials.Planned("future", "A future tutorial", "For later.", ("One",))
+            st.navigation([ui.planned_page(future)]).run()
 
         # Act
         app = AppTest.from_function(script, default_timeout=30).run()

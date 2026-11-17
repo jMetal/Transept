@@ -149,5 +149,5 @@ front is a surface, drawn in 3D and in three projections.
   conservation together.
 - [What Transept optimises](what-transept-optimises.md) defines SOPwTP, lDDT and coverage in
   detail.
-- **Choose an algorithm** (coming soon) explains NSGA-II, which builds the front, and the other
-  algorithms.
+- [Choose an algorithm](choose-an-algorithm.md) explains NSGA-II, which builds the front, and the
+  other algorithms.
