@@ -230,8 +230,8 @@ if parameters is not None:
     with st.expander("Configuration of the algorithm"):
         st.caption(
             "The parameter space of the algorithm in the tool, starting from its default "
-            "(published) configuration; ✏️ marks what you changed. Set the population size "
-            "first: changing it resets this form."
+            "configuration; ✏️ marks what you changed. Set the population size first: changing "
+            "it resets this form."
         )
         if st.button("Reset to the default configuration"):
             st.session_state["configuration_version"] = version + 1
