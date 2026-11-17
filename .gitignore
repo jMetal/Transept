@@ -14,3 +14,6 @@ lib/
 
 # Answers of GPCRdb kept by Results (generic residue numbers)
 gpcrdb/
+
+# Proteins downloaded from UniProt and AlphaFold DB by Add dataset
+downloads/
