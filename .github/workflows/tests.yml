@@ -7,14 +7,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Lint and tests on Linux and macOS. The tests that compare the options with the jar of
-  # Transept core are skipped here, because the jar is not available.
+  # Lint and tests on Linux. The tests that compare the options with the jar of Transept core
+  # are skipped here, because the jar is not available. macOS is left out: its hosted runners
+  # were often not available.
   tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
