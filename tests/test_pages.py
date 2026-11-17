@@ -145,7 +145,9 @@ class TestHome:
         for page in pages:
             if not page.is_tutorials:
                 assert (page.title in labels) == page.available, page.title
-        assert texts(app).count("Coming soon") == sum(not page.available for page in pages)
+        # Every page that is not available yet, and every tutorial still to be written
+        coming = sum(not page.available for page in pages) + len(tutorials.PLANNED)
+        assert texts(app).count("Coming soon") == coming
 
 
 class TestResultsAgainstTheReference:
