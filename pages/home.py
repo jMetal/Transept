@@ -234,13 +234,18 @@ def render_learn_and_more() -> None:
     """The tutorials, and what is coming in the other sections."""
     with st.container(border=True):
         st.markdown("**Learn**")
-        found = tutorials.list_tutorials()
+        found = tutorials.learning_path()
         if not found:
             st.caption("No tutorials found.")
-        for column, tutorial in zip(st.columns(max(len(found), 1)), found):
-            column.page_link(
-                ui.tutorial_page(tutorial), label=tutorial.title, icon=":material/school:"
-            )
+        per_row = 3
+        for start in range(0, len(found), per_row):
+            for column, item in zip(st.columns(per_row), found[start : start + per_row]):
+                coming = isinstance(item, tutorials.Planned)
+                column.page_link(
+                    ui.learning_page(item),
+                    label=f"{item.title} :gray-badge[Coming soon]" if coming else item.title,
+                    icon=":material/schedule:" if coming else ":material/school:",
+                )
     coming = [
         page
         for section in SECTIONS

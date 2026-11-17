@@ -50,9 +50,33 @@ def tutorial_page(tutorial: tutorials.Tutorial) -> st.Page:
     )
 
 
+def planned_page(planned: tutorials.Planned) -> st.Page:
+    """Returns the page of a tutorial still to be written: what it will cover."""
+
+    def show() -> None:
+        st.title(planned.title)
+        st.markdown(":gray-badge[:material/schedule: Coming soon]")
+        st.markdown(planned.summary)
+        st.markdown("**What it will cover**")
+        st.markdown("\n".join(f"- {item}" for item in planned.contents))
+
+    return st.Page(
+        show,
+        title=f"{planned.title} (coming soon)",
+        icon=":material/schedule:",
+        url_path=f"tutorial-{planned.name}",
+    )
+
+
+def learning_page(item: tutorials.Tutorial | tutorials.Planned) -> st.Page:
+    """The page of a tutorial of Learn, written or coming."""
+    return planned_page(item) if isinstance(item, tutorials.Planned) else tutorial_page(item)
+
+
 def tutorial_pages() -> list[st.Page]:
-    """Returns one page per tutorial: a new file in docs/tutorials is enough to add one."""
-    return [tutorial_page(tutorial) for tutorial in tutorials.list_tutorials()]
+    """Returns one page per tutorial of Learn, in reading order: a new file in docs/tutorials is
+    enough to add one, and the planned ones are shown as coming soon."""
+    return [learning_page(item) for item in tutorials.learning_path()]
 
 
 def render_checks(report: dataset_check.DatasetReport) -> None:
