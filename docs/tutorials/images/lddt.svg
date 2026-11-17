@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="900" height="420" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>How lDDT judges an aligned residue</title>
+  <desc>A residue of protein A and the residue aligned with it in protein B are compared through their neighbours: the distances from the anchor to its neighbours within 15 angstroms in A are compared with the distances between the residues aligned with them in B. Similar distances score 1, very different ones 0.</desc>
+  <rect width="900" height="420" fill="#F7F9FC"/>
+
+  <!-- Protein A -->
+  <g transform="translate(40 40)">
+    <text x="150" y="0" text-anchor="middle" font-size="15" font-weight="700" fill="#14213D">Protein A</text>
+    <circle cx="150" cy="170" r="130" fill="#DDE8F6" stroke="#034EA2" stroke-dasharray="6 5"/>
+    <text x="150" y="325" text-anchor="middle" font-size="12.5" fill="#4A5568">neighbours within 15 Å</text>
+    <g stroke="#14213D" stroke-width="1.6">
+      <line x1="150" y1="170" x2="105" y2="120"/>
+      <line x1="150" y1="170" x2="235" y2="135"/>
+      <line x1="150" y1="170" x2="175" y2="275"/>
+    </g>
+    <g font-size="13" fill="#14213D" font-weight="600">
+      <text x="104" y="155">6.1</text>
+      <text x="196" y="143">9.8</text>
+      <text x="168" y="232">13.0</text>
+    </g>
+    <g fill="#034EA2"><circle cx="105" cy="120" r="10"/><circle cx="235" cy="135" r="10"/><circle cx="175" cy="275" r="10"/></g>
+    <g font-size="12" fill="#FFFFFF" font-weight="700" text-anchor="middle"><text x="105" y="124">1</text><text x="235" y="139">2</text><text x="175" y="279">3</text></g>
+    <circle cx="150" cy="170" r="12" fill="#FFD100" stroke="#14213D" stroke-width="1.5"/>
+    <text x="134" y="197" text-anchor="end" font-size="12.5" fill="#14213D">anchor</text>
+  </g>
+
+  <!-- Protein B -->
+  <g transform="translate(330 40)">
+    <text x="150" y="0" text-anchor="middle" font-size="15" font-weight="700" fill="#14213D">Protein B</text>
+    <g stroke="#14213D" stroke-width="1.6">
+      <line x1="150" y1="170" x2="104" y2="122"/>
+      <line x1="150" y1="170" x2="233" y2="140"/>
+      <line x1="150" y1="170" x2="215" y2="300"/>
+    </g>
+    <g font-size="13" fill="#14213D" font-weight="600">
+      <text x="104" y="157">6.3</text>
+      <text x="196" y="146">9.7</text>
+      <text x="193" y="245">16.5</text>
+    </g>
+    <g fill="#034EA2"><circle cx="104" cy="122" r="10"/><circle cx="233" cy="140" r="10"/><circle cx="215" cy="300" r="10"/></g>
+    <g font-size="12" fill="#FFFFFF" font-weight="700" text-anchor="middle"><text x="104" y="126">1</text><text x="233" y="144">2</text><text x="215" y="304">3</text></g>
+    <circle cx="150" cy="170" r="12" fill="#FFD100" stroke="#14213D" stroke-width="1.5"/>
+    <text x="134" y="197" text-anchor="end" font-size="12.5" fill="#14213D">aligned with</text>
+    <text x="134" y="212" text-anchor="end" font-size="12.5" fill="#14213D">the anchor</text>
+    <text x="150" y="345" text-anchor="middle" font-size="12.5" fill="#4A5568">the residues aligned with 1, 2 and 3</text>
+  </g>
+
+  <!-- Scoring -->
+  <g transform="translate(640 40)">
+    <text x="0" y="0" font-size="15" font-weight="700" fill="#14213D">Compare the distances (Å)</text>
+    <g font-size="13.5" fill="#14213D">
+      <text x="0" y="36"><tspan font-weight="700">1</tspan>   6.1 vs 6.3: differ by 0.2</text>
+      <text x="0" y="62"><tspan font-weight="700">2</tspan>   9.8 vs 9.7: differ by 0.1</text>
+      <text x="0" y="88"><tspan font-weight="700">3</tspan>   13.0 vs 16.5: differ by 3.5</text>
+    </g>
+    <g font-size="13.5" fill="#14213D">
+      <text x="0" y="130" font-weight="700">Score of each neighbour</text>
+      <text x="0" y="156">below 0.5 Å: 1</text>
+      <text x="0" y="178">below 1 Å: 0.75</text>
+      <text x="0" y="200">below 2 Å: 0.5</text>
+      <text x="0" y="222">below 4 Å: 0.25</text>
+      <text x="0" y="244">otherwise: 0</text>
+    </g>
+    <rect x="0" y="266" width="240" height="64" rx="10" fill="#FFFFFF" stroke="#FFD100" stroke-width="2.5"/>
+    <text x="14" y="290" font-size="13.5" fill="#14213D">Neighbours 1 and 2 score 1,</text>
+    <text x="14" y="312" font-size="13.5" fill="#14213D">neighbour 3 scores 0.25</text>
+    <text x="0" y="360" font-size="12.5" fill="#4A5568">Closer neighbours weigh more; lDDT is</text>
+    <text x="0" y="378" font-size="12.5" fill="#4A5568">the mean over every aligned residue.</text>
+  </g>
+</svg>

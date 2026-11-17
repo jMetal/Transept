@@ -239,4 +239,5 @@ For those who study the search itself:
 | Basic | [Add your own proteins](add-your-own-proteins.md) | Proteins from UniProt or from your files, added, aligned and read, with eight aquaporins |
 | Basic | [Is my alignment reliable?](is-my-alignment-reliable.md) | Support, pLDDT, conservation, the GPCRdb check, and how to read them together |
 | Intermediate | [Why several objectives?](why-several-objectives.md) | Why sequence and structure are optimised together, the front, and how to choose from it |
+| Intermediate | [What Transept optimises](what-transept-optimises.md) | SOPwTP, lDDT and coverage in detail, how to read their values, and what none of them measures |
 | Advanced | [Choose the operators](operators.md) | The crossovers and mutations, and when each one helps |

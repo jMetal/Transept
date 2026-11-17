@@ -33,6 +33,8 @@ SUMMARIES = {
     "helps.",
     "why-several-objectives": "Why Transept optimises sequence and structure at the same time, "
     "and what a set of alignments gives you that a single one does not. No mathematics needed.",
+    "what-transept-optimises": "The objectives in detail: what SOPwTP, lDDT and coverage "
+    "measure, how to read their values, and what none of them can tell you.",
 }
 # Within a level, the order in which the tutorials are meant to be read; the others follow, by
 # file name.
@@ -157,22 +159,6 @@ class Planned:
 
 
 PLANNED = (
-    Planned(
-        WHAT_TRANSEPT_OPTIMISES,
-        "What Transept optimises",
-        "The objectives in detail: what SOPwTP, lDDT and coverage measure, how to read their "
-        "values, and what none of them can tell you.",
-        (
-            "The topology: transmembrane residues and transmembrane gaps",
-            "SOPwTP, the topology-aware sum of pairs, with a worked example",
-            "lDDT, consistency with the structures, without superposition or reference",
-            "The limits of lDDT: helices out of register, and fewer aligned residues",
-            "Coverage, the third objective, and why it exists",
-            "The three formulations, and when to use each one",
-            "What no objective measures: correctness against a reference",
-        ),
-        "Intermediate",
-    ),
     Planned(
         CHOOSE_AN_ALGORITHM,
         "Choose an algorithm",

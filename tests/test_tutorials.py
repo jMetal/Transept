@@ -79,7 +79,6 @@ class TestLearningPath:
         assert [item.name for item in found] == [
             tutorials.OVERVIEW,
             tutorials.RELIABILITY,
-            tutorials.WHAT_TRANSEPT_OPTIMISES,
             tutorials.CHOOSE_AN_ALGORITHM,
         ]
         assert isinstance(found[2], tutorials.Planned)
@@ -97,9 +96,8 @@ class TestLearningPath:
         found = tutorials.by_level(tutorials.learning_path(tmp_path))
 
         assert list(found) == list(tutorials.LEVELS)
-        assert [item.name for item in found["Intermediate"]] == [
-            tutorials.WHAT_TRANSEPT_OPTIMISES
-        ]
+        assert found["Intermediate"] == []
+        assert [item.name for item in found["Advanced"]] == [tutorials.CHOOSE_AN_ALGORITHM]
         assert found["Basic"] == []
 
     def test_should_give_every_written_tutorial_a_level_and_a_summary(self):

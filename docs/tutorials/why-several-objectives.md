@@ -25,7 +25,8 @@ A good alignment of transmembrane proteins should agree with two kinds of eviden
 | **lDDT** (structure) | Do the aligned residues sit in the same place in the AlphaFold2 structures, judged by their distances to their neighbours? | Yes, from 0 to 1 |
 
 Both are computed without any reference alignment: they only use the sequences, the topology and
-the structures of your proteins.
+the structures of your proteins. [What Transept optimises](what-transept-optimises.md) defines them
+in detail.
 
 ## Step 2: they do not agree
 
@@ -146,6 +147,7 @@ front is a surface, drawn in 3D and in three projections.
 
 - [Is my alignment reliable?](is-my-alignment-reliable.md) reads support, AlphaFold confidence and
   conservation together.
-- **What Transept optimises** (coming soon) defines SOPwTP, lDDT and coverage in detail.
+- [What Transept optimises](what-transept-optimises.md) defines SOPwTP, lDDT and coverage in
+  detail.
 - **Choose an algorithm** (coming soon) explains NSGA-II, which builds the front, and the other
   algorithms.
