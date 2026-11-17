@@ -45,7 +45,7 @@ alternative alignments** that trade one for the other.
 | **An independent check for GPCRs** | The alignment checked against the GPCRdb generic numbers of the receptors: the x.50 position of every helix and the motifs DRY, CWxP, NPxxY and PIF |
 | **Ready for the next step** | Downloads for Jalview (with the helices marked), ChimeraX and PyMOL (structures superposed), and a FASTA without the unreliable columns, for a tree |
 | **No programming, reproducible** | Everything from the browser; every run records its options, so the same seed repeats it exactly; New run shows the equivalent command line, to run it elsewhere |
-| **Your data stay with you** | Transept runs on your computer: nothing is sent anywhere, there are no queues and no size limits |
+| **Your data stay with you** | Transept runs on your computer: there are no queues and no size limits, and nothing is sent anywhere except the identifiers you choose to look up |
 
 ### Why a set of alignments and not one?
 
@@ -81,12 +81,13 @@ criterion would then have little to work with, or if your proteins are not trans
 
 | | |
 | --- | --- |
-| **Sequences and topology** | Which residues of each protein are transmembrane, in a three-line file |
-| **Structures** | One PDB file per protein, for example the AlphaFold2 model |
+| **Sequences and topology** | Which residues of each protein are transmembrane. For proteins in UniProt, Transept gets them from their accessions; otherwise, a three-line file |
+| **Structures** | One PDB file per protein. For proteins in UniProt, Transept downloads their AlphaFold2 models |
 | **Seed alignments** | Optional: Transept computes its own |
 | **Reference alignment** | Optional: only needed to evaluate the results against it |
 
-Transept includes a small example, 19 bitter taste receptors, so you can try it right away.
+Transept includes a small example, 19 bitter taste receptors, so you can try it right away; the
+tutorial on your own proteins adds eight aquaporins from their UniProt accessions.
 
 ## The sections of Transept
 
@@ -98,7 +99,7 @@ Transept has to offer.
 | Section | Page | What you do there |
 | --- | --- | --- |
 | **Explore** | **Datasets** | See the datasets of your data directories and whether they are ready; add directories, such as the GPCR structural benchmark |
-| | **Add dataset** | Add your own proteins, guided by a checklist |
+| | **Add dataset** | Add your own proteins, from their UniProt accessions or from your files, guided by a checklist |
 | | **Algorithms** | See the algorithms, objectives and operators, and the parameters of each configurable algorithm |
 | **Optimize** | **New run** | Choose a dataset, seed alignments, objectives, an algorithm and its settings, and launch the search, once or several times |
 | | **Monitor** | Follow runs live; stop one early keeping what it found, or cancel it |
@@ -156,7 +157,9 @@ algorithm and its settings.
 
 ## Workflow 2: your own proteins
 
-1. In **Add dataset**, give a name, your sequences with their topology, and your PDB files.
+1. In **Add dataset**, give a name and the UniProt accessions of your proteins, and press **Get
+   them**: Transept downloads their sequences, their topology and their AlphaFold2 models. If they
+   are not in UniProt, give your sequences with their topology and your PDB files instead.
 2. Press **Check the files**: a checklist says what is ready and what is missing. Transept computes
    the distances from the structures.
 3. Press **Add to My datasets**, and then **Optimize this dataset**.
@@ -224,8 +227,9 @@ For those who study the search itself:
   stay until you delete them. The same seed and options reproduce a run exactly, except when it stops
   by time or uses an asynchronous algorithm with several threads.
 - **Transept runs on your computer.** Your data stay there, and it cannot be reached from the network.
-  The only exception is the GPCRdb numbering, which is asked for only when you press its button,
-  sending only the names of the receptors.
+  It only goes online when you press a button to do so: to get proteins from UniProt and AlphaFold
+  DB in **Add dataset**, sending their identifiers, and to get the GPCRdb numbering in **Results**,
+  sending the names of the receptors.
 
 ## The tutorials
 

@@ -64,10 +64,10 @@ def from_uniprot() -> tuple[Source | None, tuple[Source, ...], tuple]:
                     {
                         "protein": entry.name,
                         "accession": entry.accession,
-                        "description": entry.description,
                         "length": len(entry.sequence),
                         "membrane segments": entry.helices,
                         "AlphaFold model": entry.name in imported.models,
+                        "description": entry.description,
                     }
                     for entry in imported.entries
                 ]

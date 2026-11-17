@@ -66,8 +66,8 @@ SECTIONS = (
             Page(
                 "Add dataset",
                 ":material/add_circle:",
-                "Add your own proteins: a checklist guides you through the files needed (sequences "
-                "and topology, structures, seed and reference alignments).",
+                "Add your own proteins from their UniProt accessions, with their AlphaFold "
+                "models, or from your files, guided by a checklist.",
                 ui.ADD_DATASET,
             ),
             Page(

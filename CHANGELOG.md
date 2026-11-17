@@ -10,8 +10,10 @@ All notable changes to Transept are recorded here. The format follows
 
 - Sections by use case: Explore, Optimize, Analyze and Learn, with a home page that leads to them.
 - **Datasets**: several repositories of datasets, with a check of what each dataset has.
-- **Add dataset**: your own proteins from a three-line topology file and PDB files, with a
-  checklist; the distances are computed from the structures and seed alignments are optional.
+- **Add dataset**: your own proteins from their UniProt accessions (sequences and topology from
+  UniProt, structure models from AlphaFold DB, fetched on request and kept) or from a three-line
+  topology file and PDB files, with a checklist; the distances are computed from the structures and
+  seed alignments are optional.
 - **Algorithms**: the algorithms, objectives and operators of the core jar, with their parameter
   spaces.
 - **New run**: every algorithm and formulation, the operators with their settings, the

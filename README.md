@@ -23,7 +23,7 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | --- | --- | --- |
 | | **Home** | What Transept offers; checks that Java, the core jar and the data are available, and edits the path of the jar |
 | **Explore** | **Datasets** | The datasets of your repositories, and whether each one is ready to use (its checklist, proteins and seed alignments); add other data directories, and go straight to optimising a dataset |
-| | **Add dataset** | Add your own proteins: give their files, check them against a checklist, and Transept computes the distances from the structures |
+| | **Add dataset** | Add your own proteins: from their UniProt accessions (Transept downloads their sequences, topology and AlphaFold models) or from your files; check them against a checklist, and Transept computes the distances from the structures |
 | | **Algorithms** | What you can optimise with: every algorithm with its objectives and parameter space, read from the core jar, and the objectives and operators; go straight to using an algorithm |
 | **Optimize** | **New run** | Choose a dataset, the seed alignments, the objectives and the algorithm with its configuration, and launch one or several independent runs; shows the equivalent command line |
 | | **Monitor** | Follows runs live: the runs in progress in blue and the finished ones in grey; stops them early keeping the results found so far (to analyse a long run without waiting), cancels them, or shows why one failed |

@@ -769,7 +769,7 @@ class TestAddDataset:
         app = open_page(ui.ADD_DATASET)
         assert not app.exception
         assert app.expander[0].label == "Follow the tutorial"
-        assert "Step 3: check the files" in texts(app)
+        assert "Step 2: check them" in texts(app)
 
     def test_should_not_check_without_a_name_and_a_topology(self, configured):
         app = open_page(ui.ADD_DATASET)
