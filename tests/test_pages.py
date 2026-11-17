@@ -607,6 +607,25 @@ class TestTutorials:
         assert "New here? Read the overview" in labels
         for tutorial in tutorials.list_tutorials():
             assert tutorial.title in labels
+        for planned in tutorials.PLANNED:
+            assert f"{planned.title} :gray-badge[Coming soon]" in labels
+
+    def test_should_show_what_a_planned_tutorial_will_cover(self):
+        def script() -> None:
+            import streamlit as st
+
+            from transept import tutorials, ui
+
+            st.navigation([ui.planned_page(tutorials.PLANNED[0])]).run()
+
+        # Act
+        app = AppTest.from_function(script, default_timeout=30).run()
+
+        # Assert
+        assert not app.exception
+        shown = "\n".join(element.value for element in app.markdown)
+        assert "Coming soon" in shown
+        assert "What it will cover" in shown
 
     def test_should_show_a_tutorial_as_a_page_of_the_menu(self):
         def script() -> None:

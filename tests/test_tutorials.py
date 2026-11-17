@@ -60,6 +60,45 @@ class TestParts:
                 )
 
 
+class TestLearningPath:
+    def test_should_follow_the_reading_order_and_then_the_file_names(self, tmp_path: Path):
+        for name in ("zeta", tutorials.OPERATORS, tutorials.OVERVIEW, tutorials.RELIABILITY):
+            (tmp_path / f"{name}.md").write_text(f"# {name}\n")
+
+        found = [item.name for item in tutorials.list_tutorials(tmp_path)]
+
+        assert found == [tutorials.OVERVIEW, tutorials.RELIABILITY, tutorials.OPERATORS, "zeta"]
+
+    def test_should_show_the_planned_tutorials_in_their_place(self, tmp_path: Path):
+        (tmp_path / f"{tutorials.OVERVIEW}.md").write_text("# Overview\n")
+        (tmp_path / f"{tutorials.RELIABILITY}.md").write_text("# Reliable\n")
+
+        found = tutorials.learning_path(tmp_path)
+
+        assert [item.name for item in found] == [
+            tutorials.OVERVIEW,
+            tutorials.WHY_SEVERAL_OBJECTIVES,
+            tutorials.WHAT_TRANSEPT_OPTIMISES,
+            tutorials.RELIABILITY,
+            tutorials.CHOOSE_AN_ALGORITHM,
+        ]
+        assert isinstance(found[1], tutorials.Planned)
+
+    def test_should_drop_a_planned_tutorial_once_it_is_written(self, tmp_path: Path):
+        (tmp_path / f"{tutorials.CHOOSE_AN_ALGORITHM}.md").write_text("# Choose\n")
+
+        found = tutorials.learning_path(tmp_path)
+
+        chosen = [item for item in found if item.name == tutorials.CHOOSE_AN_ALGORITHM]
+        assert len(chosen) == 1
+        assert isinstance(chosen[0], tutorials.Tutorial)
+
+    def test_should_give_every_planned_tutorial_a_place_in_the_reading_order(self):
+        for planned in tutorials.PLANNED:
+            assert planned.name in tutorials.READING_ORDER
+            assert planned.contents
+
+
 class TestListTutorials:
     def test_should_read_the_title_and_order_by_file(self, tmp_path: Path):
         # Arrange
