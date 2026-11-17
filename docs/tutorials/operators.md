@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Level** | Intermediate |
+| **Level** | Advanced |
 | **Time** | About 15 minutes to read |
 | **Prerequisites** | A first run, as in the [Overview](overview.md) |
 | **You will use** | The **New run** page |

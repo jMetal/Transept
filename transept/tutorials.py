@@ -18,7 +18,22 @@ RELIABILITY = "is-my-alignment-reliable"
 WHY_SEVERAL_OBJECTIVES = "why-several-objectives"
 WHAT_TRANSEPT_OPTIMISES = "what-transept-optimises"
 CHOOSE_AN_ALGORITHM = "choose-an-algorithm"
-# The order in which the tutorials are meant to be read; the others follow, by file name.
+# The levels of the tutorials, as the table at the top of each one gives it ("| **Level** | ... |");
+# a tutorial without it is Basic. Learn groups them by level.
+LEVELS = ("Basic", "Intermediate", "Advanced")
+LEVEL = re.compile(r"^\|\s*\*\*Level\*\*\s*\|\s*([^|]+?)\s*\|", re.MULTILINE)
+# What every written tutorial is for, for its card in Learn.
+SUMMARIES = {
+    "overview": "What Transept is for, what it gives you, and the usual ways of working with it.",
+    "add-your-own-proteins": "Add proteins from UniProt or from your files, align them and read "
+    "the result, with eight aquaporins.",
+    "is-my-alignment-reliable": "Read the tracks of support, AlphaFold confidence and "
+    "conservation, and check receptors against GPCRdb.",
+    "operators": "The crossovers and mutations of the search, their settings, and when each one "
+    "helps.",
+}
+# Within a level, the order in which the tutorials are meant to be read; the others follow, by
+# file name.
 READING_ORDER = (
     OVERVIEW,
     ADD_YOUR_OWN_PROTEINS,
@@ -43,12 +58,16 @@ class Tutorial:
         title: Its first heading.
         text: Its Markdown, with links that also work outside the repository.
         directory: The folder of its file, where its images are.
+        level: One of LEVELS.
+        summary: What it is for, for its card in Learn; empty if unknown.
     """
 
     name: str
     title: str
     text: str
     directory: Path | None = None
+    level: str = LEVELS[0]
+    summary: str = ""
 
 
 @dataclass(slots=True, frozen=True)
@@ -91,20 +110,29 @@ def read_tutorial(path: Path) -> Tutorial:
     title = next(
         (line[2:].strip() for line in text.splitlines() if line.startswith("# ")), path.stem
     )
-    return Tutorial(path.stem, title, absolute_links(text), path.parent)
+    found = LEVEL.search(text)
+    level = found.group(1).strip() if found else LEVELS[0]
+    return Tutorial(
+        path.stem,
+        title,
+        absolute_links(text),
+        path.parent,
+        level if level in LEVELS else LEVELS[0],
+        SUMMARIES.get(path.stem, ""),
+    )
 
 
-def reading_position(name: str) -> tuple[int, str]:
-    """Where a tutorial goes in Learn: by READING_ORDER, and then by name."""
+def reading_position(name: str, level: str = LEVELS[0]) -> tuple[int, int, str]:
+    """Where a tutorial goes in Learn: by level, then by READING_ORDER, and then by name."""
     order = READING_ORDER.index(name) if name in READING_ORDER else len(READING_ORDER)
-    return order, name
+    return LEVELS.index(level) if level in LEVELS else 0, order, name
 
 
 def list_tutorials(directory: Path | None = None) -> list[Tutorial]:
     """Returns the tutorials that are written, in the order in which they are meant to be read."""
     folder = directory or settings.REPOSITORY / DIRECTORY
-    paths = sorted(folder.glob("*.md"), key=lambda path: reading_position(path.stem))
-    return [read_tutorial(path) for path in paths]
+    found = [read_tutorial(path) for path in folder.glob("*.md")]
+    return sorted(found, key=lambda item: reading_position(item.name, item.level))
 
 
 @dataclass(slots=True, frozen=True)
@@ -116,12 +144,14 @@ class Planned:
         title: Its title.
         summary: What it is for, in a sentence or two.
         contents: What it will cover, one item each.
+        level: One of LEVELS.
     """
 
     name: str
     title: str
     summary: str
     contents: tuple[str, ...]
+    level: str = LEVELS[0]
 
 
 PLANNED = (
@@ -139,6 +169,7 @@ PLANNED = (
             "The set as a source of information: how robust each column is",
             "And with a single objective? What is lost",
         ),
+        "Intermediate",
     ),
     Planned(
         WHAT_TRANSEPT_OPTIMISES,
@@ -154,6 +185,7 @@ PLANNED = (
             "The three formulations, and when to use each one",
             "What no objective measures: correctness against a reference",
         ),
+        "Intermediate",
     ),
     Planned(
         CHOOSE_AN_ALGORITHM,
@@ -168,6 +200,7 @@ PLANNED = (
             "parameter spaces",
             "How to compare algorithms on your proteins: independent runs",
         ),
+        "Advanced",
     ),
 )
 
@@ -177,7 +210,12 @@ def learning_path(directory: Path | None = None) -> list[Tutorial | Planned]:
     written = list_tutorials(directory)
     names = {item.name for item in written}
     coming = [item for item in PLANNED if item.name not in names]
-    return sorted([*written, *coming], key=lambda item: reading_position(item.name))
+    return sorted([*written, *coming], key=lambda item: reading_position(item.name, item.level))
+
+
+def by_level(items: list[Tutorial | Planned]) -> dict[str, list[Tutorial | Planned]]:
+    """The tutorials of Learn grouped by level, every level present, in reading order."""
+    return {level: [item for item in items if item.level == level] for level in LEVELS}
 
 
 def tutorial_named(name: str, directory: Path | None = None) -> Tutorial | None:

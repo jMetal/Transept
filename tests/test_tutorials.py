@@ -75,14 +75,39 @@ class TestLearningPath:
 
         found = tutorials.learning_path(tmp_path)
 
+        # Assert: by level (both written ones are Basic), then in reading order
         assert [item.name for item in found] == [
             tutorials.OVERVIEW,
+            tutorials.RELIABILITY,
             tutorials.WHY_SEVERAL_OBJECTIVES,
             tutorials.WHAT_TRANSEPT_OPTIMISES,
-            tutorials.RELIABILITY,
             tutorials.CHOOSE_AN_ALGORITHM,
         ]
-        assert isinstance(found[1], tutorials.Planned)
+        assert isinstance(found[2], tutorials.Planned)
+
+    def test_should_read_the_level_from_the_table_of_the_tutorial(self, tmp_path: Path):
+        (tmp_path / "a.md").write_text("# A\n\n| | |\n| --- | --- |\n| **Level** | Advanced |\n")
+        (tmp_path / "b.md").write_text("# B\n")
+        (tmp_path / "c.md").write_text("# C\n\n| **Level** | Expert |\n")
+
+        levels = {item.name: item.level for item in tutorials.list_tutorials(tmp_path)}
+
+        assert levels == {"a": "Advanced", "b": "Basic", "c": "Basic"}
+
+    def test_should_group_by_level_in_reading_order(self, tmp_path: Path):
+        found = tutorials.by_level(tutorials.learning_path(tmp_path))
+
+        assert list(found) == list(tutorials.LEVELS)
+        assert [item.name for item in found["Intermediate"]] == [
+            tutorials.WHY_SEVERAL_OBJECTIVES,
+            tutorials.WHAT_TRANSEPT_OPTIMISES,
+        ]
+        assert found["Basic"] == []
+
+    def test_should_give_every_written_tutorial_a_level_and_a_summary(self):
+        for tutorial in tutorials.list_tutorials():
+            assert tutorial.level in tutorials.LEVELS
+            assert tutorial.summary, tutorial.name
 
     def test_should_drop_a_planned_tutorial_once_it_is_written(self, tmp_path: Path):
         (tmp_path / f"{tutorials.CHOOSE_AN_ALGORITHM}.md").write_text("# Choose\n")

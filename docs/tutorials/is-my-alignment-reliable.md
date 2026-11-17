@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Level** | Beginner |
+| **Level** | Basic |
 | **Time** | About 10 minutes |
 | **Prerequisites** | A finished run. **Run the example** on the home page makes one in a minute or two |
 | **You will use** | The **Alignment** and **Per helix** tabs of **Results** |

@@ -32,7 +32,7 @@ STYLE = f"""
 .st-key-home_facts [data-testid="stTooltipIcon"] svg {{
   stroke: rgba(255, 255, 255, 0.85) !important;
 }}
-[class*="st-key-home_step_"] {{
+[class*="st-key-home_step_"], [class*="st-key-home_learn_"] {{
   background: {PALE_BLUE}; border-top: 5px solid {YELLOW}; border-radius: 0.9rem;
   padding: 1rem 1rem 1.25rem;
 }}
@@ -230,22 +230,36 @@ def render_step(
             render_recent(summary)
 
 
+def render_tutorial(item: tutorials.Tutorial | tutorials.Planned) -> None:
+    """A tutorial of Learn: a link with what it is for, marked if it is still coming."""
+    coming = isinstance(item, tutorials.Planned)
+    slug = "".join(letter if letter.isalnum() else "_" for letter in item.name)
+    with st.container(border=True, key=f"home_page_tutorial_{slug}"):
+        st.page_link(
+            ui.learning_page(item),
+            label=item.title,
+            icon=":material/schedule:" if coming else ":material/school:",
+        )
+        if coming:
+            st.markdown(":gray-badge[Coming soon]")
+        if item.summary:
+            st.caption(item.summary)
+
+
 def render_learn_and_more() -> None:
-    """The tutorials, and what is coming in the other sections."""
-    with st.container(border=True):
-        st.markdown("**Learn**")
-        found = tutorials.learning_path()
-        if not found:
-            st.caption("No tutorials found.")
-        per_row = 3
-        for start in range(0, len(found), per_row):
-            for column, item in zip(st.columns(per_row), found[start : start + per_row]):
-                coming = isinstance(item, tutorials.Planned)
-                column.page_link(
-                    ui.learning_page(item),
-                    label=f"{item.title} :gray-badge[Coming soon]" if coming else item.title,
-                    icon=":material/schedule:" if coming else ":material/school:",
-                )
+    """The tutorials by level, as the three steps, and what is coming in the other sections."""
+    st.subheader("Learn", anchor=False)
+    found = tutorials.learning_path()
+    if not found:
+        st.caption("No tutorials found.")
+    groups = tutorials.by_level(found)
+    for number, (column, (level, items)) in enumerate(
+        zip(st.columns(len(groups), gap="large"), groups.items()), start=1
+    ):
+        with column, st.container(key=f"home_learn_{number}"):
+            st.html(f'<div class="transept-step"><span>{number}</span>{level}</div>')
+            for item in items:
+                render_tutorial(item)
     coming = [
         page
         for section in SECTIONS

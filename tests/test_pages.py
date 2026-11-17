@@ -608,7 +608,8 @@ class TestTutorials:
         for tutorial in tutorials.list_tutorials():
             assert tutorial.title in labels
         for planned in tutorials.PLANNED:
-            assert f"{planned.title} :gray-badge[Coming soon]" in labels
+            assert planned.title in labels
+        assert ":gray-badge[Coming soon]" in texts(app)
 
     def test_should_show_what_a_planned_tutorial_will_cover(self):
         def script() -> None:

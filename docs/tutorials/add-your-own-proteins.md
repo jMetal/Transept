@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Level** | Beginner |
+| **Level** | Basic |
 | **Time** | About 10 minutes |
 | **Prerequisites** | Transept installed (the [README](../../README.md) explains how) and an internet connection |
 | **You will use** | Eight human aquaporins, downloaded from UniProt and AlphaFold DB |
