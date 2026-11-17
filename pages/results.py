@@ -181,7 +181,7 @@ if runs.stopped_by_user(run):
         "exactly."
     )
 names = list(runs.objective_names(run))
-published = runs.has_default_objectives(run)
+default_formulation = runs.has_default_objectives(run)
 values = runs.objective_values(run)
 table = front.summarize(values)
 ranked = front.ranking(values) if len(names) == 1 else None
@@ -195,7 +195,7 @@ if ranked is not None:
     columns[3].metric(f"Best {names[0]}", ui.format_objective(names[0], best_value))
 else:
     columns[3].metric("Non-dominated (distinct)", f"{len(table)} of {len(values)}")
-if not published:
+if not default_formulation:
     st.caption("Objectives of this run: " + ", ".join(names) + ".")
 if metadata.get("configuration"):
     with st.expander("Configuration of the algorithm"):
@@ -496,7 +496,7 @@ elif len(names) == 3:
         "they are better in the third objective. The knee is closest to the ideal point once every "
         "objective is scaled to [0, 1]. Click a row to see its alignment.",
     )
-elif not published:
+elif not default_formulation:
     st.subheader("Non-dominated alignments")
     pick_from_table(
         table,

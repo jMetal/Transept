@@ -71,7 +71,7 @@ PARAMETER_HELP = {
 }
 
 DESCRIPTIONS = {
-    "NSGA_II": "NSGA-II, the published configuration",
+    "NSGA_II": "NSGA-II, the default algorithm",
     "ASYNC_NSGA_II": "NSGA-II, asynchronous (keeps all threads busy)",
     "SPEA2": "SPEA2 (strength ranking, nearest-neighbour density)",
     "GENETIC_ALGORITHM": "Genetic algorithm, generational",

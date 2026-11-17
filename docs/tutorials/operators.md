@@ -12,9 +12,9 @@ The search builds new alignments from the ones it has with two kinds of **operat
 alignment a little. You can choose which ones a run uses and adjust their settings. This tutorial
 explains what each one does, where to choose it, and what we have seen it do on GPCR datasets.
 
-The defaults are those of the published configuration, and they are a good place to start. **No
-operator ever separates two transmembrane residues that were together**: a gap inside a helix can
-only come from a seed alignment that already had it.
+The defaults are a good place to start. **No operator ever separates two transmembrane residues
+that were together**: a gap inside a helix can only come from a seed alignment that already had
+it.
 
 ## Step 1: where to choose them
 

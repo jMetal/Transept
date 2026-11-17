@@ -35,8 +35,8 @@ NSGA-II keeps the best alignments with two simple ideas:
   front are preferred, so the final front covers the whole range of trade-offs, from the best in
   sequence to the best in structure, instead of crowding in one place.
 
-It is the default of Transept because it is robust and well known, and because its default
-configuration is the one of the published method.
+It is the default of Transept because it is robust and well known, and its default configuration
+is a good starting point.
 
 ## Step 3: the defaults are enough
 
