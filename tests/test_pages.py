@@ -724,7 +724,46 @@ class TestAddDataset:
     @staticmethod
     def fill(app: AppTest) -> None:
         app.text_input[0].set_value("mine").run()
+        app.button_group[0].set_value("From my files").run()
         next(button for button in app.button if button.label == "Check the files").click().run()
+
+    def test_should_build_a_dataset_from_uniprot(self, configured, monkeypatch, tmp_path):
+        # Arrange: what UniProt and AlphaFold DB would give for two proteins of the toy dataset
+        from transept import uniprot_import
+
+        models = {}
+        for number, residues in ((1, 3), (2, 4)):
+            path = tmp_path / f"p{number}.pdb"
+            path.write_text(pdb_text(residues))
+            models[f"p{number}"] = path
+        entries = (
+            uniprot_import.Entry("Q00001", "p1", "One", "ACD", "MMM", 1),
+            uniprot_import.Entry("Q00002", "p2", "Two", "ACDE", "OMMO", 1),
+        )
+        asked = []
+
+        def fetch(identifiers, progress=None, workers=4):
+            asked.append(identifiers)
+            return uniprot_import.Imported(entries, models, ("Q00003: not found in UniProt",))
+
+        monkeypatch.setattr(uniprot_import, "fetch", fetch)
+        app = open_page(ui.ADD_DATASET)
+        app.text_input[0].set_value("mine").run()
+
+        # Act: nothing is asked before the button
+        app.text_area[0].set_value("Q00001 Q00002 Q00003").run()
+        assert asked == []
+        next(b for b in app.button if b.label == "Get them").click().run()
+        next(b for b in app.button if b.label == "Check the files").click().run()
+
+        # Assert
+        assert not app.exception
+        assert asked == [["Q00001", "Q00002", "Q00003"]]
+        assert "Q00003: not found in UniProt" in texts(app)
+        table = next(frame.value for frame in app.dataframe if "accession" in frame.value)
+        assert list(table["protein"]) == ["p1", "p2"]
+        assert "Distances computed from the PDB files of 2 protein(s)" in texts(app)
+        assert not next(b for b in app.button if b.label == "Add to My datasets").disabled
 
     def test_should_offer_the_tutorial_on_the_same_page(self, configured):
         app = open_page(ui.ADD_DATASET)
