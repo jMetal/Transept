@@ -92,7 +92,32 @@ trade-off; where they disagree, it does. This is the **Support** track of the al
 [Is my alignment reliable?](is-my-alignment-reliable.md) explains how to read it. A single
 alignment, from Transept or from any other tool, cannot tell you that.
 
-## Step 7: and with a single objective?
+## Step 7: what several objectives add to a classical aligner
+
+MUSCLE, MAFFT, ClustalW or T-Coffee are fast, well tested and often excellent. Transept does not
+replace them: it starts from their alignments. What looking at several objectives adds is not a
+guarantee of a more correct alignment, but things that a single score cannot give you:
+
+| | A classical aligner | Transept |
+| --- | --- | --- |
+| **What it balances** | One score, with weights and gap penalties fixed by its authors | Sequence and structure, with the trade-off in view: you can see what each alignment gains in one and loses in the other |
+| **Structure** | Not used by sequence aligners; structural aligners rely mainly on the structures; a few, such as 3D-Coffee, mix both into one score | Both, kept apart: the AlphaFold2 models and the sequences, each with its own measure |
+| **Topology** | Ignored by general aligners, so gaps can fall inside a helix; a few, such as PRALINE-TM or TM-Aligner, use it | The search never opens a gap inside a helix |
+| **Several tools at once** | Each gives its own answer, and you choose without a common measure | Their alignments are the starting points, scored with the same two measures: the chart shows where each tool stands, and what the search found beyond them |
+| **Choosing for your purpose** | One alignment, whatever you will do with it | An alignment closer to the structures for mapping residues onto them, or closer to the sequence for evolutionary analyses, from the same run |
+| **Which columns to trust** | Not said; other programs (GUIDANCE, the TCS of T-Coffee) estimate it by running more alignments | The **Support** track, from the alignments of the run itself |
+
+What it does **not** add, and what it costs:
+
+- **It is not more correct by construction.** Both measures are computed without a reference; a
+  reference alignment, when there is one, is the only test of correctness (**Results** shows the
+  Pair F1 against it).
+- **It needs structures.** Without them the structural measure has nothing to work with; AlphaFold2
+  models usually exist for the proteins of UniProt.
+- **It takes longer.** Minutes rather than seconds for a few dozen proteins, as it evaluates
+  thousands of alignments.
+
+## Step 8: and with a single objective?
 
 **New run** also offers **lDDT only**, with the genetic algorithms, which maximise one number. It
 is useful to study the structural measure on its own, but you lose three things:
@@ -115,6 +140,7 @@ front is a surface, drawn in 3D and in three projections.
 | What you get | One alignment | A set of trade-offs, with a recommended one (the knee) |
 | The weights of sequence and structure | Chosen before the search | Chosen after it, if you want to |
 | How robust each column is | Unknown | The **Support** track |
+| Where the alignments of other tools stand | Not measured | In the same chart, as seeds |
 
 ## What next
 
