@@ -133,7 +133,7 @@ def render_hero(current: settings.Settings, problems: list[str], summary) -> Non
 
 def render_presentation(current: settings.Settings, problems: list[str]) -> None:
     st.title("Transept: topology-aware alignment of transmembrane proteins")
-    st.markdown("#### Alignments that keep every helix whole")
+    st.markdown("#### Alignments guided by membrane topology and AlphaFold structures")
     st.markdown(
         "Transept searches alignments that agree with the topology and the AlphaFold2 structures "
         "of your proteins, and lets you compare the trade-offs it finds."

@@ -65,7 +65,7 @@ PARAMETER_HELP = {
     "that keeps the best solutions found during the whole run.",
     "archiveType": "With an external archive: bounded by crowding distance, or unbounded.",
     "populationSizeWithArchive": "Population size when an external archive is used.",
-    "mutation": "Mutation operator; every one keeps the transmembrane helices whole.",
+    "mutation": "Mutation operator; none of them opens a gap inside a transmembrane helix.",
     "crossover": "Crossover operator; neither cuts a transmembrane helix.",
     "selection": "How the parents are chosen.",
 }

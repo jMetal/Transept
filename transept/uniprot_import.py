@@ -7,7 +7,8 @@ and the answers are kept under TRANSEPT_HOME, so nothing is asked twice.
 
 The topology comes from the features of the UniProt entry: `Transmembrane` and `Intramembrane`
 (re-entrant half-helices, such as those of aquaporins) are marked as transmembrane (M), so the
-search never breaks them; `Topological domain` gives the cytoplasmic (I) and the other (O) sides.
+search never opens a gap inside them; `Topological domain` gives the cytoplasmic (I) and the other
+(O) sides.
 """
 
 from __future__ import annotations

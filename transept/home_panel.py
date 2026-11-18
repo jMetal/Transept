@@ -183,8 +183,8 @@ def project_facts(datasets: int, repositories: int, tutorials: int) -> list[Fact
         Fact(
             "Operators",
             str(len(options.CROSSOVERS) + len(options.MUTATIONS)),
-            f"{len(options.CROSSOVERS)} crossovers and {len(options.MUTATIONS)} mutations, none "
-            "of them breaks a helix",
+            f"{len(options.CROSSOVERS)} crossovers and {len(options.MUTATIONS)} mutations; none "
+            "of them opens a gap inside a helix",
         ),
         Fact("Tutorials", str(tutorials), "Guides inside Transept, in Learn"),
     ]

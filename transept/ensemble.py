@@ -5,7 +5,8 @@ structural one. Instead of asking the user to choose among them, the set can be 
 of plausible alignments: where they agree, the alignment does not depend on the trade-off; where
 they disagree, it does. This module measures how much they agree, and finds the **medoid**: the
 alignment of the set that agrees most with all the others, a consensus that is still one of the
-alignments found by the search (so its objectives are known and it keeps the helices whole).
+alignments found by the search (so its objectives are known, and it has no gap inside a helix
+that its seed alignments did not already have).
 
 Agreement between two alignments of the same proteins is their pair F1: twice the residue pairs
 aligned in both, over the pairs aligned in either. It is symmetric, and 1 only for alignments

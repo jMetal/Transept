@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 330" width="1000" height="330" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
   <title>How Transept works</title>
-  <desc>Seed alignments are refined by a search that never breaks a helix, guided by sequence and structure. It ends with a set of trade-off alignments, from which Transept gives a recommended alignment and a reliability map, ready for other programs.</desc>
+  <desc>Seed alignments are refined by a search that never opens a gap inside a helix, guided by sequence and structure. It ends with a set of trade-off alignments, from which Transept gives a recommended alignment and a reliability map, ready for other programs.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0 L10 5 L0 10 z" fill="#14213D"/>
@@ -32,8 +32,8 @@
     <text x="95" y="62" text-anchor="middle" font-size="13" fill="#FFFFFF">Evolutionary algorithm</text>
     <text x="95" y="80" text-anchor="middle" font-size="13" fill="#FFFFFF">(NSGA-II by default)</text>
     <rect x="20" y="98" width="150" height="2" fill="#FFD100"/>
-    <text x="95" y="124" text-anchor="middle" font-size="13" fill="#FFFFFF">Operators that never</text>
-    <text x="95" y="142" text-anchor="middle" font-size="13" fill="#FFFFFF">break a helix</text>
+    <text x="95" y="124" text-anchor="middle" font-size="13" fill="#FFFFFF">Never opens a gap</text>
+    <text x="95" y="142" text-anchor="middle" font-size="13" fill="#FFFFFF">inside a helix</text>
     <rect x="20" y="160" width="150" height="2" fill="#FFD100"/>
     <text x="95" y="186" text-anchor="middle" font-size="13" fill="#FFFFFF">Guided by sequence</text>
     <text x="95" y="204" text-anchor="middle" font-size="13" fill="#FFFFFF">(SOPwTP) and structure</text>

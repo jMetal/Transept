@@ -6,6 +6,13 @@ All notable changes to Transept are recorded here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- What the interface and the tutorials say about helices: the search never opens a gap inside a
+  transmembrane helix, but keeps those that the seed alignments already have (**Repair the seeds**
+  in **New run** moves them out first). The subtitle of the home page no longer promises whole
+  helices.
+
 ### Added
 
 - Sections by use case: Explore, Optimize, Analyze and Learn, with a home page that leads to them.

@@ -103,7 +103,7 @@ guarantee of a more correct alignment, but things that a single score cannot giv
 | --- | --- | --- |
 | **What it balances** | One score, with weights and gap penalties fixed by its authors | Sequence and structure, with the trade-off in view: you can see what each alignment gains in one and loses in the other |
 | **Structure** | Not used by sequence aligners; structural aligners rely mainly on the structures; a few, such as 3D-Coffee, mix both into one score | Both, kept apart: the AlphaFold2 models and the sequences, each with its own measure |
-| **Topology** | Ignored by general aligners, so gaps can fall inside a helix; a few, such as PRALINE-TM or TM-Aligner, use it | The search never opens a gap inside a helix |
+| **Topology** | Ignored by general aligners, so gaps can fall inside a helix; a few, such as PRALINE-TM or TM-Aligner, use it | The search never opens a gap inside a helix; those of the seed alignments are kept, unless you repair the seeds |
 | **Several tools at once** | Each gives its own answer, and you choose without a common measure | Their alignments are the starting points, scored with the same two measures: the chart shows where each tool stands, and what the search found beyond them |
 | **Choosing for your purpose** | One alignment, whatever you will do with it | An alignment closer to the structures for mapping residues onto them, or closer to the sequence for evolutionary analyses, from the same run |
 | **Which columns to trust** | Not said; other programs (GUIDANCE, the TCS of T-Coffee) estimate it by running more alignments | The **Support** track, from the alignments of the run itself |

@@ -24,20 +24,20 @@ guided by:
 
 | Criterion | What it means |
 | --- | --- |
-| **Topology** | Its operators never open a gap inside a transmembrane helix |
+| **Topology** | Its operators never open a gap inside a transmembrane helix (gaps that the seed alignments already have there are kept) |
 | **Sequence** (SOPwTP) | A sum of pairs that takes the topology into account |
 | **Structure** (lDDT) | Whether aligned residues keep similar distances in the 3D structures, for example those of AlphaFold |
 
 Sequence and structure can pull in different directions, so the search ends with **a set of
 alternative alignments** that trade one for the other.
 
-![How Transept works: seed alignments are refined by a search that never breaks a helix, guided by sequence and structure; from the set of trade-off alignments it gives a recommended alignment and a reliability map](images/workflow.svg)
+![How Transept works: seed alignments are refined by a search that never opens a gap inside a helix, guided by sequence and structure; from the set of trade-off alignments it gives a recommended alignment and a reliability map](images/workflow.svg)
 
 ## What you get that other aligners do not give you
 
 | | What it means for you |
 | --- | --- |
-| **Helices kept whole** | The search never opens a gap inside a transmembrane helix. Seed alignments often have such gaps, and Results shows them in red |
+| **No new gaps inside helices** | The search never opens a gap inside a transmembrane helix. Gaps that the seed alignments already have there are kept: Results shows them in red, and **Repair the seeds** in **New run** moves them out of the seeds before the search |
 | **Structure taken into account** | The AlphaFold2 (or experimental) structures guide the search, and you can see the structures superposed according to the alignment |
 | **Better than its starting point** | The search starts from the alignments of other tools and keeps improving them; Results draws those seed alignments beside the result, so you see what was gained |
 | **A recommended alignment** | You do not have to choose among the alignments found: the **knee**, a balanced point of the trade-off, is a good default |
@@ -208,7 +208,8 @@ For those who study the search itself:
   versions and others, with two random searches as a baseline. **Algorithms** lists them with
   their parameters, and **New run** lets you set them, or paste a whole configuration;
   [Choose an algorithm](choose-an-algorithm.md) explains them.
-- **With what operators.** Crossovers and mutations designed so that none of them breaks a helix;
+- **With what operators.** Crossovers and mutations designed so that none of them opens a gap inside a
+  helix;
   [Choose the operators](operators.md) explains them and what we have seen them do.
 - **From where.** The seed alignments of any of the tools in the dataset, those Transept computes
   itself, or both.
