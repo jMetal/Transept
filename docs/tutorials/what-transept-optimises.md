@@ -12,6 +12,8 @@ lDDT for the structures, and, if you choose, coverage as a third. This tutorial 
 one measures, how to read its values, and what none of them can tell you. Neither uses a reference
 alignment: they only need the sequences, the topology and the structures of your proteins.
 
+![The three objectives on the examples of this tutorial. (a) SOPwTP scores every pair of residues of a column with PHAT when both are transmembrane and with BLOSUM62 otherwise, and penalises gaps more inside a helix than elsewhere. (b) lDDT compares the distances from an aligned residue to its neighbours in protein A with those between the residues aligned with them in protein B. (c) Coverage counts the columns where both proteins have a residue, relative to the shorter one](images/objectives.svg)
+
 ## Step 1: the topology
 
 Every residue is either **transmembrane** (`M` in the topology) or not. For the objectives, a **gap
