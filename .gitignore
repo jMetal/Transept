@@ -17,3 +17,6 @@ gpcrdb/
 
 # Proteins downloaded from UniProt and AlphaFold DB by Add dataset
 downloads/
+
+# Personal settings of Claude Code
+.claude/settings.local.json
