@@ -413,6 +413,125 @@ class TestSeries:
         solutions = next(f.value for f in app.dataframe if "file" in f.value.columns)
         assert reference_scores.PAIR_F1 in solutions.columns
 
+    @staticmethod
+    def knee_differs_from_medoid(root: Path) -> None:
+        """Seed 1 gets three non-dominated alignments: the knee (row 2) and the medoid (row 0)
+        differ, as in the test of a single run; seed 2 adds nothing to the aggregate."""
+        directory = runner.run_directory(root, "toy", "s_seed_1")
+        (directory / "FUN.csv").write_text("30.0,0.50\n25.0,0.60\n28.0,0.58\n")
+        text = "".join(f">p{i + 1}\n{row}\n" for i, row in enumerate(ALIGNMENTS["kalign"]))
+        (directory / "MSASol1.fasta").write_text(text)
+
+    def test_should_describe_the_agreement_of_the_aggregate(self, configured, data_root: Path):
+        self.finished_series(settings.runs_root(), data_root)
+
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        assert not app.exception
+        assert "alignments of the aggregate front (from 1 of the 2 runs) share" in texts(app)
+
+    def test_should_compare_the_knee_and_the_medoid_of_the_aggregate(
+        self, configured, data_root: Path
+    ):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        self.knee_differs_from_medoid(root)
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        assert any(expander.label == "Knee or medoid?" for expander in app.expander)
+        compared = next(
+            frame.value for frame in app.dataframe if "agreement with the front" in frame.value
+        )
+        assert list(compared["alignment"]) == ["knee", "medoid"]
+        assert list(compared["file"]) == ["MSASol2.fasta", "MSASol0.fasta"]
+        assert list(compared["seed"]) == [1, 1]
+
+    def test_should_open_the_medoid_of_the_aggregate_in_its_run(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        self.knee_differs_from_medoid(root)
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Act
+        next(b for b in app.button if b.label == "Show the medoid").click().run()
+
+        # Assert
+        assert not app.exception
+        assert next(box for box in app.selectbox if box.label == "Show").value == "seed 1"
+        assert "Alignment MSASol0" in [element.value for element in app.subheader]
+
+    def test_should_add_the_gpcrdb_consistency_to_the_aggregate_once_fetched(
+        self, configured, data_root: Path
+    ):
+        # Arrange: the numbering of every receptor kept
+        from test_generic_numbers import ANSWERS, answer
+
+        from transept import generic_numbers
+
+        self.finished_series(settings.runs_root(), data_root)
+        cache = generic_numbers.cache_directory()
+        cache.mkdir(parents=True)
+        for protein in datasets.read_topology(datasets.topology_file(data_root, "toy")):
+            content = answer(protein, ANSWERS[protein.id])
+            (cache / f"{protein.id}.json").write_text(json.dumps(content))
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert
+        assert not app.exception
+        table = next(f.value for f in app.dataframe if "seed" in f.value.columns)
+        assert table["GPCRdb consistency"].between(0, 1).all()
+
+    def test_should_not_add_the_gpcrdb_consistency_before_fetching(
+        self, configured, data_root: Path
+    ):
+        self.finished_series(settings.runs_root(), data_root)
+
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        table = next(f.value for f in app.dataframe if "seed" in f.value.columns)
+        assert "GPCRdb consistency" not in table.columns
+
+    def test_should_measure_the_support_with_the_other_runs_by_default(
+        self, configured, data_root: Path
+    ):
+        self.finished_series(settings.runs_root(), data_root)
+
+        app = open_page(ui.RESULTS, selected_run=("toy", "s_seed_2"))
+
+        assert not app.exception
+        assert app.session_state["support_from:toy / s_seed_2"] == "The other runs of the series"
+        assert "alignments of the other 1 runs of the series" in texts(app)
+
+    def test_should_measure_the_support_with_the_run_when_asked(self, configured, data_root: Path):
+        # Arrange
+        self.finished_series(settings.runs_root(), data_root)
+        app = open_page(ui.RESULTS, selected_run=("toy", "s_seed_2"))
+
+        # Act
+        app.session_state["support_from:toy / s_seed_2"] = "This run"
+        app.run()
+
+        # Assert
+        assert not app.exception
+        assert "alignments of the run, from light" in texts(app)
+
+    def test_should_not_offer_the_other_runs_for_a_single_run(self, configured, data_root: Path):
+        write_finished_run(settings.runs_root(), data_root, "alone")
+
+        app = open_page(ui.RESULTS, selected_run=("toy", "alone"))
+
+        assert not app.exception
+        assert "support_from:toy / alone" not in app.session_state
+        assert "alignments of the run, from light" in texts(app)
+
     def test_should_filter_history_by_series(self, configured, data_root: Path):
         # Arrange
         root = settings.runs_root()

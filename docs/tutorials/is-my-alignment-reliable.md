@@ -67,6 +67,24 @@ columns** under the alignment: it leaves out the columns with support below the 
 choose (0.5 by default). On the GPCR benchmark, columns with support below 0.5 were almost never
 right according to the reference alignment.
 
+### Support from independent runs
+
+When the run is one of several **independent runs** (Workflow 3 of the overview), **Support from**
+above the alignment offers a second source: **The other runs of the series**, the default. The
+alignments then come from the fronts of the other runs, the same number from each, up to 60. They
+are independent searches, so they do not share the choices that the alignments of one run make
+together, and their disagreement is more telling. On the GPCR benchmark (20 runs per dataset), this
+support told the right columns from the wrong ones better than the support by the run itself in all
+14 datasets (median AUC 0.81 against 0.72). It is also stricter: about 7 % of the columns fall
+below 0.5, instead of under 1 %, and about 7 % of those are right; of the columns of 0.9 or more,
+about 60 %. **This run** goes back to the alignments of the run alone.
+
+In the aggregate of the runs, Results sums up the agreement in the same way, for the alignments of
+the aggregate front, which come from the runs that reached it. Its **Knee or medoid?** compares the
+knee of the aggregate with its medoid, a consensus of the runs; **Show the knee** and **Show the
+medoid** open them in their runs. Once the GPCRdb numbering has been fetched, the table of the
+aggregate also shows the GPCRdb consistency of every alignment.
+
 ## Step 3: pLDDT, the confidence of the structures
 
 The structural objective compares the distances between residues in the AlphaFold2 models. Where
@@ -154,7 +172,8 @@ such as your own constructs, are left without numbers.
 ## What these measures cannot tell you
 
 - **Support measures agreement, not correctness.** If every alignment of the run made the same
-  mistake, it would still be supported. A reference alignment, when there is one, is the only
+  mistake, it would still be supported; support from independent runs makes this less likely, but
+  not impossible. A reference alignment, when there is one, is the only
   test of correctness: **Results** shows the pair F1 against it.
 - **With few alignments, support says little.** A genetic algorithm ends with many copies of its
   best alignment; Transept then compares with its best distinct ones, which are fewer and more

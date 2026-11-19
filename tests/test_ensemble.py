@@ -104,3 +104,26 @@ class TestFrontSummary:
 
     def test_should_need_two_alignments(self):
         assert ensemble.front_summary([alignment("AC", "AC")], 0, self.PROTEINS) is None
+
+
+class TestDescribe:
+    PROTEINS = TestFrontSummary.PROTEINS
+
+    def test_should_say_that_the_helices_are_kept_when_they_are(self):
+        same = alignment("AACDEFGHIKLL", "AACDEFGHIKLL")
+        summary = ensemble.front_summary([same, same], 0, self.PROTEINS)
+
+        text = ensemble.describe(summary)
+
+        assert text.startswith("The 2 alignments of the front share 100.0% of their residue pairs")
+        assert "keep the helices of the knee almost unchanged" in text
+
+    def test_should_name_the_helices_that_differ_and_the_subject(self):
+        same = alignment("AACDEFGHIKLL", "AACDEFGHIKLL")
+        shifted = [AlignedRow("p1", "AACDEFGHIKLL-"), AlignedRow("p2", "-AACDEFGHIKLL")]
+        summary = ensemble.front_summary([same, shifted], 0, self.PROTEINS)
+
+        text = ensemble.describe(summary, "the aggregate front")
+
+        assert text.startswith("The 2 alignments of the aggregate front share")
+        assert "differ most in TM1" in text

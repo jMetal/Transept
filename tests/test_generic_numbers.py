@@ -102,3 +102,21 @@ class TestFetch:
         # Assert
         assert found == {"known_human": [{"sequence_number": 1}], "other_human": None}
         assert not (directory / "other_human.json").exists()
+
+
+class TestAlignmentConsistency:
+    def test_should_match_the_consistency_of_the_cells(self, cells, proteins):
+        # Arrange
+        residues = {name: generic_numbers.cached(name) for name in ANSWERS}
+        aligned, total = generic_numbers.consistency(cells, ROWS)
+
+        # Act
+        found = generic_numbers.alignment_consistency(
+            ROWS, generic_numbers.residue_numbers(proteins, residues)
+        )
+
+        # Assert
+        assert found == pytest.approx(aligned / total)
+
+    def test_should_be_none_without_numbers(self):
+        assert generic_numbers.alignment_consistency(ROWS, {}) is None

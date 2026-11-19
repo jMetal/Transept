@@ -177,7 +177,9 @@ how stable the results are, and together the runs can find better alignments tha
    computer.
 2. **Monitor** draws the runs in progress in blue and the finished ones in grey.
 3. **Results** shows the front of each run in grey and their **aggregate** in blue: the best
-   alignments of all the runs together, with their knee. Select an alignment to open it in its run.
+   alignments of all the runs together, with their knee and medoid and how much they agree. Select
+   an alignment to open it in its run, where the **Support** track can come from the other runs:
+   independent searches, a better guide to which columns are right than the run alone.
 
 ## Workflow 4: evaluate against a reference
 

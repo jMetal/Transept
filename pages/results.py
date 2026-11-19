@@ -20,6 +20,7 @@ from transept import (
     reference_scores,
     runs,
     series,
+    series_analysis,
     series_view,
     settings,
     structure_chart,
@@ -163,10 +164,12 @@ chosen = ui.choose_run_or_series(
 if chosen is None:
     st.info("There are no finished runs yet.")
     st.stop()
+series_runs: list[series_analysis.FinishedRun] = []
 if isinstance(chosen, series.Series):
     run = series_view.choose_view(chosen, opened_run)
     if run is None:
         st.stop()
+    series_runs = series_analysis.finished_runs(chosen)
 else:
     run = chosen
 
@@ -326,48 +329,14 @@ def cached_front_summary(results: str, rows: tuple[int, ...], knee: int, topolog
     return ensemble.front_summary(found, rows.index(knee), by_id)
 
 
-WEAK_HELIX = 0.9
-
-
-def describe_front(summary: ensemble.FrontSummary) -> str:
-    """The agreement of the front in a sentence or two."""
-    text = (
-        f"The {summary.alignments} alignments of the front share "
-        f"{summary.agreement:.1%} of their residue pairs on average"
-    )
-    weak = [
-        f"TM{number} ({value:.2f})"
-        for number, value in enumerate(summary.helix_means, start=1)
-        if value < WEAK_HELIX
-    ]
-    if not weak:
-        return (
-            text + ", and keep the helices of the knee almost unchanged (support of 0.9 or more). "
-            "You do not have to choose among them: the knee is a balanced default, and the "
-            "**Support** track of the alignment shows where they disagree, which is where the "
-            "alignment depends on the trade-off between sequence and structure."
-        )
-    return (
-        text + ", and differ most in " + ", ".join(weak) + " (mean support of the helix). Here "
-        "the choice matters: compare the knee and the medoid, and use the **Support** track of "
-        "the alignment to see which columns depend on the trade-off between sequence and "
-        "structure."
-    )
-
-
 def gpcrdb_consistency(row: int) -> float | None:
     """The fraction of numbered helix residues in the column of their GPCRdb number, when the
     numbering of every receptor has been fetched; None otherwise."""
-    rows = alignment.read_fasta(runs.alignment_file(run, row))
-    residues = {r.id: generic_numbers.cached(r.id) for r in rows}
-    if any(found is None for found in residues.values()):
-        return None
     by_id = {
         p.id: p for p in datasets.read_topology(datasets.topology_file(data_root, run.dataset))
     }
-    cells = generic_numbers.cells_by_number(generic_numbers.numbering(rows, by_id, residues))
-    aligned_count, total = generic_numbers.consistency(cells, rows)
-    return aligned_count / total if total else None
+    found = series_analysis.gpcrdb_consistency([runs.alignment_file(run, row)], by_id)
+    return None if found is None else found[0]
 
 
 def compare_knee_and_medoid(summary: ensemble.FrontSummary, rows: list[int]) -> None:
@@ -422,7 +391,7 @@ if ranked is None and len(table) >= 2 and knee is not None:
             str(datasets.topology_file(data_root, run.dataset)),
         )
     if front_summary is not None:
-        st.info(describe_front(front_summary), icon=":material/join:")
+        st.info(ensemble.describe(front_summary), icon=":material/join:")
         medoid = front_rows[front_summary.medoid]
         if medoid == knee:
             st.caption(
@@ -645,11 +614,10 @@ MAX_SUPPORTING = 60
 
 
 @st.cache_data(show_spinner=False, max_entries=8)
-def cached_support(results: str, chosen: int, others: tuple[int, ...]):
-    """The support of an alignment by other alignments of the run, kept between reruns."""
-    folder = Path(results)
-    rows = alignment.read_fasta(folder / f"MSASol{chosen}.fasta")
-    others_rows = [alignment.read_fasta(folder / f"MSASol{row}.fasta") for row in others]
+def cached_support(chosen: str, others: tuple[str, ...]):
+    """The support of an alignment (its file) by other alignments, kept between reruns."""
+    rows = alignment.read_fasta(chosen)
+    others_rows = [alignment.read_fasta(other) for other in others]
     found = tracks.support(rows, others_rows)
     return None if found is None else (found.column, found.residue, found.alignments)
 
@@ -662,15 +630,41 @@ def cached_plddt(alignment_path: str, root: str, dataset: str):
     return tracks.plddt(rows, proteins, {k: v for k, v in models.items() if v.is_file()})
 
 
-# The other alignments of the run that support the chosen one: its distinct non-dominated
-# alignments, or its best distinct ones with a single objective; at most MAX_SUPPORTING, evenly.
-candidates_rows = list(ranked["row"]) if ranked is not None else list(table["row"])
-others = [int(row) for row in candidates_rows if int(row) != selected]
-if len(others) > MAX_SUPPORTING:
-    step = len(others) / MAX_SUPPORTING
-    others = [others[int(i * step)] for i in range(MAX_SUPPORTING)]
+FROM_OTHER_RUNS = "The other runs of the series"
+FROM_THIS_RUN = "This run"
+own_seed = next((item.seed for item in series_runs if item.run.key == run.key), None)
+from_other_runs = False
+if own_seed is not None and len(series_runs) >= 2:
+    from_other_runs = (
+        st.segmented_control(
+            "Support from",
+            [FROM_OTHER_RUNS, FROM_THIS_RUN],
+            default=FROM_OTHER_RUNS,
+            key=f"support_from:{run.key}",
+            help="The support of a column is how often other alignments keep its residue pairs. "
+            "Those of the other runs of the series are independent searches: on the GPCR "
+            "benchmark, their support told the right columns from the wrong ones better than "
+            "that of the alignments of the same run, which tend to agree with each other.",
+        )
+        != FROM_THIS_RUN
+    )
+if from_other_runs:
+    # The same number of alignments from the front of every other run
+    support_paths = series_analysis.other_runs_sample(series_runs, own_seed, MAX_SUPPORTING)
+    support_origin = f"the other {len(series_runs) - 1} runs of the series"
+else:
+    # The other alignments of the run: its distinct non-dominated alignments, or its best
+    # distinct ones with a single objective; at most MAX_SUPPORTING, evenly spread.
+    candidates_rows = list(ranked["row"]) if ranked is not None else list(table["row"])
+    support_paths = [
+        runs.alignment_file(run, row)
+        for row in series_analysis.spread(
+            [int(row) for row in candidates_rows if int(row) != selected], MAX_SUPPORTING
+        )
+    ]
+    support_origin = "the run"
 with st.spinner("Measuring the support of every column..."):
-    support = cached_support(str(run.results), selected, tuple(others))
+    support = cached_support(str(path), tuple(str(other) for other in support_paths))
 plddt_values = cached_plddt(str(path), str(data_root), run.dataset)
 conserved = tracks.conservation(aligned)
 column_plddt = (
@@ -725,9 +719,15 @@ def download_reliable(stem: str) -> None:
         0.5,
         0.05,
         key=f"trim:{run.key}:{selected}",
-        help="On the GPCR benchmark, columns with support below 0.5 were almost never right "
-        "according to the reference alignment. Columns with fewer than two residues have no "
-        "support and are kept.",
+        help=(
+            "On the GPCR benchmark, with support from the other runs, columns below 0.5 were "
+            "right in about 7 % of cases according to the reference alignment, and columns of "
+            "0.9 or more in about 60 %. "
+            if from_other_runs
+            else "On the GPCR benchmark, columns with support below 0.5 were almost never right "
+            "according to the reference alignment. "
+        )
+        + "Columns with fewer than two residues have no support and are kept.",
     )
     keep = [not (np.isfinite(value) and value < threshold) for value in support[0]]
     removed = keep.count(False)
@@ -938,8 +938,8 @@ with view:
         available,
         default="Topology",
         key=f"colour_by:{run.key}",
-        help="Topology shades the transmembrane residues. Support: how often the other "
-        "alignments of the run keep each residue with the same partners. AlphaFold "
+        help="Topology shades the transmembrane residues. Support: how often the alignments "
+        f"of {support_origin} keep each residue with the same partners. AlphaFold "
         "confidence: the pLDDT of each residue in its model. Conservation: of its column.",
     )
     kind = COLOURINGS.get(colour_by or "Topology")
@@ -966,7 +966,7 @@ with view:
         "Tracks: **TM consensus** marks the columns where most residues are transmembrane. "
         + (
             f"**Support**: fraction of the residue pairs of each column kept by {support[2]} "
-            "other alignments of the run, from light (below 25 %) to dark blue (75 % or "
+            f"alignments of {support_origin}, from light (below 25 %) to dark blue (75 % or "
             "more). "
             if support is not None
             else "**Support** needs other alignments in the run. "

@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 import streamlit as st
 
 from transept import (
     charts,
     datasets,
+    ensemble,
     exports,
     front,
+    generic_numbers,
     reference_scores,
     runs,
     series,
@@ -20,6 +24,7 @@ from transept import (
 from transept.series_analysis import FinishedRun
 
 AGGREGATE = "All runs (aggregate)"
+GPCRDB = "GPCRdb consistency"
 
 
 def _seed_label(seed: int) -> str:
@@ -144,6 +149,110 @@ def _reference_metrics(
     return scores
 
 
+@st.cache_data(show_spinner=False, max_entries=4)
+def _cached_summary(paths: tuple[str, ...], knee: int, topology: str):
+    """How much the alignments of the aggregate front agree, kept between reruns."""
+    return series_analysis.aggregate_summary(
+        [Path(path) for path in paths], knee, _proteins(topology)
+    )
+
+
+@st.cache_data(show_spinner=False, max_entries=4)
+def _cached_consistency(paths: tuple[str, ...], topology: str, known: tuple[str, ...]):
+    """The GPCRdb consistency of the alignments, kept while the receptors fetched do not change."""
+    return series_analysis.gpcrdb_consistency([Path(path) for path in paths], _proteins(topology))
+
+
+def _proteins(topology: str) -> dict[str, datasets.Protein]:
+    path = Path(topology)
+    return {p.id: p for p in datasets.read_topology(path)} if path.is_file() else {}
+
+
+def _gpcrdb_consistency(paths: list[Path], topology: Path) -> list[float | None] | None:
+    """The GPCRdb consistency of every alignment, once the numbering of every receptor is kept."""
+    receptors = list(_proteins(str(topology)))
+    known = tuple(sorted(r for r in receptors if generic_numbers.cached(r) is not None))
+    if not receptors or len(known) < len(receptors):
+        return None
+    return _cached_consistency(tuple(str(path) for path in paths), str(topology), known)
+
+
+def _compare_knee_and_medoid(
+    chosen: series.Series,
+    aggregate: pd.DataFrame,
+    summary: ensemble.FrontSummary,
+    knee: int,
+    finished: list[FinishedRun],
+) -> None:
+    """The knee and the medoid of the aggregate side by side; a button opens each in its run."""
+    names = [c for c in (front.FIRST, front.SECOND) if c in aggregate.columns]
+    extra = [c for c in (GPCRDB, reference_scores.PAIR_F1) if c in aggregate.columns]
+    rows = []
+    for label, position in (("knee", knee), ("medoid", summary.medoid)):
+        entry = aggregate.iloc[position]
+        rows.append(
+            {
+                "alignment": label,
+                "seed": int(entry["seed"]),
+                "file": f"MSASol{int(entry['row'])}.fasta",
+                **{name: entry[name] for name in names},
+                "agreement with the front": summary.mean_agreement[position],
+                "support in the helices": summary.helix_support.get(position),
+                **{name: entry[name] for name in extra},
+            }
+        )
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    st.caption(
+        "The **knee** of the aggregate is the balanced point of the trade-off over all the runs; "
+        "the **medoid** is the alignment that agrees most with all the others of the aggregate "
+        "front, a consensus of the runs that is still an alignment found by the search. Compare "
+        "them with what does not need a reference (GPCRdb consistency appears once the numbering "
+        "has been fetched in the GPCRdb tab of any alignment)"
+        + (
+            "; the Pair F1 against the reference is only for information."
+            if reference_scores.PAIR_F1 in extra
+            else "."
+        )
+    )
+    buttons = st.columns(2)
+    for column, (label, position) in zip(buttons, (("knee", knee), ("medoid", summary.medoid))):
+        if column.button(f"Show the {label}", key=f"series_{label}:{chosen.key}"):
+            entry = aggregate.iloc[position]
+            _open_alignment(chosen, int(entry["seed"]), int(entry["row"]), finished)
+
+
+def _show_agreement(
+    chosen: series.Series, aggregate: pd.DataFrame, finished: list[FinishedRun], topology: Path
+) -> pd.DataFrame:
+    """How much the aggregate front agrees, and its knee and medoid; returns the aggregate with
+    the medoid marked."""
+    knee = series_analysis.knee_position(aggregate, [front.FIRST, front.SECOND])
+    if knee is None or len(aggregate) < 2:
+        return aggregate
+    paths = series_analysis.alignment_paths(finished, aggregate)
+    with st.spinner(f"Comparing the {len(aggregate)} alignments of the aggregate front..."):
+        summary = _cached_summary(tuple(str(path) for path in paths), knee, str(topology))
+    if summary is None:
+        return aggregate
+    contributing = aggregate["seed"].nunique()
+    st.info(
+        ensemble.describe(
+            summary,
+            f"the aggregate front (from {contributing} of the {len(finished)} runs)",
+        ),
+        icon=":material/join:",
+    )
+    if summary.medoid == knee:
+        st.caption("The knee is also the medoid: the alignment that agrees most with the others.")
+        return aggregate
+    aggregate = aggregate.copy()
+    if aggregate.iloc[summary.medoid]["note"] == "":
+        aggregate.iloc[summary.medoid, aggregate.columns.get_loc("note")] = "medoid"
+    with st.expander("Knee or medoid?", icon=":material/compare_arrows:"):
+        _compare_knee_and_medoid(chosen, aggregate, summary, knee, finished)
+    return aggregate
+
+
 def _show_overview(
     names: list[str], aggregate: pd.DataFrame, finished: list[FinishedRun], key: str
 ) -> tuple | None:
@@ -177,11 +286,20 @@ def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> None:
         aggregate = aggregate.merge(scores, on=["seed", "row"], how="left")
         summary = series_analysis.summary_with_scores(summary, scores)
 
+    topology = datasets.topology_file(data_root, chosen.dataset)
+    consistency = _gpcrdb_consistency(
+        series_analysis.alignment_paths(finished, aggregate), topology
+    )
+    if consistency is not None:
+        aggregate = aggregate.assign(**{GPCRDB: consistency})
+
     seen = st.session_state.setdefault(f"series_seen:{chosen.key}", {})
     point = _show_overview(names, aggregate, finished, chosen.key)
     point_key = None if point is None else f"{point[0]}:{point[1]}"
     if ui.new_choice(seen, "chart", point_key) is not None:
         _open_alignment(chosen, point[0], point[1], finished)
+    if tuple(names) == (front.FIRST, front.SECOND):
+        aggregate = _show_agreement(chosen, aggregate, finished, topology)
 
     if len(names) == 1:
         st.subheader("Best alignment of all the runs")

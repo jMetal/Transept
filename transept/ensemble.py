@@ -173,3 +173,37 @@ def front_summary(
         mean_agreement=found.mean_agreement,
         helix_support=helix_support,
     )
+
+
+# Below this mean support, a helix is said to differ among the alignments of a front.
+WEAK_HELIX = 0.9
+
+
+def describe(summary: FrontSummary, subject: str = "the front") -> str:
+    """The agreement of a front in a sentence or two, for the user.
+
+    Args:
+        subject: What the alignments are, e.g. "the aggregate front of 20 runs".
+    """
+    text = (
+        f"The {summary.alignments} alignments of {subject} share "
+        f"{summary.agreement:.1%} of their residue pairs on average"
+    )
+    weak = [
+        f"TM{number} ({value:.2f})"
+        for number, value in enumerate(summary.helix_means, start=1)
+        if value < WEAK_HELIX
+    ]
+    if not weak:
+        return (
+            text + ", and keep the helices of the knee almost unchanged (support of 0.9 or more). "
+            "You do not have to choose among them: the knee is a balanced default, and the "
+            "**Support** track of the alignment shows where they disagree, which is where the "
+            "alignment depends on the trade-off between sequence and structure."
+        )
+    return (
+        text + ", and differ most in " + ", ".join(weak) + " (mean support of the helix). Here "
+        "the choice matters: compare the knee and the medoid, and use the **Support** track of "
+        "the alignment to see which columns depend on the trade-off between sequence and "
+        "structure."
+    )

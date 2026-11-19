@@ -95,19 +95,18 @@ def scheme_label(generic: str) -> str:
     return generic.split("x", 1)[0]
 
 
-def numbering(
-    rows: list[AlignedRow], proteins: dict[str, Protein], residues: dict[str, list[dict]]
-) -> np.ndarray:
-    """The generic number of every cell (protein, column), or "" where there is none.
+def residue_numbers(
+    proteins: dict[str, Protein], residues: dict[str, list[dict]]
+) -> dict[str, dict[int, str]]:
+    """The generic number of the residues of every receptor, by their position in its sequence.
 
     A residue of the sequence is matched to GPCRdb by its position when the amino acids agree,
-    and else by a sequence alignment, as the structures of the 3D view.
+    and else by a sequence alignment, as the structures of the 3D view. It does not depend on any
+    alignment, so it can be done once for many alignments of the same proteins.
     """
-    index = residue_index(rows)
-    numbers = np.full(index.shape, "", dtype=object)
-    for number, row in enumerate(rows):
-        protein = proteins.get(row.id)
-        known = residues.get(row.id)
+    found = {}
+    for entry, known in residues.items():
+        protein = proteins.get(entry)
         if protein is None or not known:
             continue
         letters = {int(r["sequence_number"]): r["amino_acid"] for r in known}
@@ -117,11 +116,33 @@ def numbering(
             if r.get("display_generic_number")
         }
         mapped = superposition.map_residues(protein.residues, letters)
+        found[entry] = {
+            residue: generic[number] for residue, number in mapped.items() if number in generic
+        }
+    return found
+
+
+def numbers_of(rows: list[AlignedRow], by_residue: dict[str, dict[int, str]]) -> np.ndarray:
+    """The generic number of every cell (protein, column), or "" where there is none, from the
+    numbers of the residues (`residue_numbers`)."""
+    index = residue_index(rows)
+    numbers = np.full(index.shape, "", dtype=object)
+    for number, row in enumerate(rows):
+        known = by_residue.get(row.id)
+        if not known:
+            continue
         for column in np.nonzero(index[number] >= 0)[0]:
-            position = mapped.get(int(index[number, column]))
-            if position in generic:
-                numbers[number, column] = generic[position]
+            generic = known.get(int(index[number, column]))
+            if generic:
+                numbers[number, column] = generic
     return numbers
+
+
+def numbering(
+    rows: list[AlignedRow], proteins: dict[str, Protein], residues: dict[str, list[dict]]
+) -> np.ndarray:
+    """The generic number of every cell (protein, column), or "" where there is none."""
+    return numbers_of(rows, residue_numbers(proteins, residues))
 
 
 def cells_by_number(numbers: np.ndarray) -> dict[str, list[tuple[int, int]]]:
@@ -199,6 +220,15 @@ def consistency(cells: dict[str, list[tuple[int, int]]], rows: list[AlignedRow])
             aligned += located.aligned
             total += located.receptors
     return aligned, total
+
+
+def alignment_consistency(
+    rows: list[AlignedRow], by_residue: dict[str, dict[int, str]]
+) -> float | None:
+    """The fraction of the helix residues with a generic number that are in the column of most
+    residues with that number; None if no helix residue has a number."""
+    aligned, total = consistency(cells_by_number(numbers_of(rows, by_residue)), rows)
+    return aligned / total if total else None
 
 
 def helix_consistency(

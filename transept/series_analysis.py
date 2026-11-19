@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import pandas as pd
 
-from transept import alignment, datasets, exports, front, reference_scores, runs, series
+from transept import (
+    alignment,
+    datasets,
+    ensemble,
+    exports,
+    front,
+    generic_numbers,
+    reference_scores,
+    runs,
+    series,
+)
 
 MEDIAN = "median"
 IQR = "IQR"
@@ -66,6 +77,81 @@ def aggregate_front(finished: list[FinishedRun]) -> pd.DataFrame:
         row=pool["origin"].to_numpy()[summary["row"].to_numpy()],
     )
     return summary[["seed", "row", *names, "note"]]
+
+
+def alignment_paths(finished: list[FinishedRun], table: pd.DataFrame) -> list[Path]:
+    """The file of every alignment of a table with the columns `seed` and `row`, such as the
+    aggregate front."""
+    by_seed = {item.seed: item.run for item in finished}
+    return [
+        runs.alignment_file(by_seed[int(seed)], int(row))
+        for seed, row in zip(table["seed"], table["row"])
+    ]
+
+
+def knee_position(aggregate: pd.DataFrame, names: list[str]) -> int | None:
+    """The position of the knee in the aggregate front (its objectives `names`), if it is not
+    empty; as in a run, also when its note says that it is the best in an objective."""
+    if aggregate.empty:
+        return None
+    return front.knee_row(front.summarize(aggregate[names].reset_index(drop=True)))
+
+
+def aggregate_summary(
+    paths: list[Path], knee: int, proteins: dict[str, datasets.Protein]
+) -> ensemble.FrontSummary | None:
+    """How much the alignments of the aggregate front agree, and its medoid.
+
+    Args:
+        paths: The files of its alignments, in its order.
+        knee: The position of its knee.
+    """
+    return ensemble.front_summary([alignment.read_fasta(path) for path in paths], knee, proteins)
+
+
+def gpcrdb_consistency(
+    paths: list[Path], proteins: dict[str, datasets.Protein]
+) -> list[float | None] | None:
+    """The GPCRdb consistency of every alignment (`generic_numbers.alignment_consistency`), or None
+    unless the numbering of every receptor has been fetched. It never goes to GPCRdb."""
+    if not paths:
+        return None
+    receptors = [row.id for row in alignment.read_fasta(paths[0])]
+    residues = {receptor: generic_numbers.cached(receptor) for receptor in receptors}
+    if any(found is None for found in residues.values()):
+        return None
+    by_residue = generic_numbers.residue_numbers(proteins, residues)
+    return [
+        generic_numbers.alignment_consistency(alignment.read_fasta(path), by_residue)
+        for path in paths
+    ]
+
+
+def spread(items: list, limit: int) -> list:
+    """At most `limit` items, evenly spread over the list and in its order."""
+    if len(items) <= limit:
+        return list(items)
+    step = len(items) / limit
+    return [items[int(i * step)] for i in range(limit)]
+
+
+def other_runs_sample(finished: list[FinishedRun], seed: int, limit: int) -> list[Path]:
+    """Alignments of the fronts of the other runs, the same number from each, at most `limit`.
+
+    They measure the support of an alignment of the run with that seed by independent runs. On
+    the GPCR benchmark, this support told the right columns from the wrong ones better than the
+    support by the alignments of the same run (AUC 0.81 against 0.72, median over 14 datasets).
+    """
+    others = [item for item in finished if item.seed != seed]
+    if not others:
+        return []
+    each = max(1, limit // len(others))
+    found = [
+        runs.alignment_file(item.run, int(row))
+        for item in others
+        for row in spread(list(item.front["row"]), each)
+    ]
+    return spread(found, limit)
 
 
 def run_summary(finished: list[FinishedRun]) -> pd.DataFrame:
