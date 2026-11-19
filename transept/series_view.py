@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -25,6 +26,32 @@ from transept.series_analysis import FinishedRun
 
 AGGREGATE = "All runs (aggregate)"
 GPCRDB = "GPCRdb consistency"
+
+
+@dataclass(slots=True, frozen=True)
+class View:
+    """What Results shows of a series.
+
+    Attributes:
+        run: The run to show.
+        seed: Its random seed.
+        row: In the aggregate, the alignment of the run to analyse; None to show the whole run.
+    """
+
+    run: runs.Run
+    seed: int
+    row: int | None = None
+
+
+def _pick_key(chosen: series.Series) -> str:
+    return f"aggregate_pick:{chosen.key}"
+
+
+def _pick(chosen: series.Series, seed: int, row: int) -> None:
+    """Chooses an alignment of the aggregate to analyse below it."""
+    if st.session_state.get(_pick_key(chosen)) != (seed, row):
+        st.session_state[_pick_key(chosen)] = (seed, row)
+        st.rerun()
 
 
 def _seed_label(seed: int) -> str:
@@ -218,7 +245,7 @@ def _compare_knee_and_medoid(
     for column, (label, position) in zip(buttons, (("knee", knee), ("medoid", summary.medoid))):
         if column.button(f"Show the {label}", key=f"series_{label}:{chosen.key}"):
             entry = aggregate.iloc[position]
-            _open_alignment(chosen, int(entry["seed"]), int(entry["row"]), finished)
+            _pick(chosen, int(entry["seed"]), int(entry["row"]))
 
 
 def _show_agreement(
@@ -275,7 +302,9 @@ def _show_overview(
     return None
 
 
-def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> None:
+def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> View | None:
+    """Shows the aggregate and returns the alignment of it to analyse: the one picked, else its
+    knee (or its best, with one objective); None if it is empty."""
     current = settings.load_settings()
     names = list(finished[0].values.columns)
     data_root = settings.data_root_of_run(current, chosen.data_root, chosen.dataset)
@@ -297,7 +326,7 @@ def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> None:
     point = _show_overview(names, aggregate, finished, chosen.key)
     point_key = None if point is None else f"{point[0]}:{point[1]}"
     if ui.new_choice(seen, "chart", point_key) is not None:
-        _open_alignment(chosen, point[0], point[1], finished)
+        _pick(chosen, point[0], point[1])
     if tuple(names) == (front.FIRST, front.SECOND):
         aggregate = _show_agreement(chosen, aggregate, finished, topology)
 
@@ -305,11 +334,11 @@ def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> None:
         st.subheader("Best alignment of all the runs")
     else:
         st.subheader(f"Aggregate front ({len(aggregate)} alignments)")
-    st.caption("Select a row or a point to see that alignment in its run.")
+    st.caption("Select a row or a point to analyse that alignment below the summary of the runs.")
     row = _pick_from_table(aggregate.round(4), chosen.key)
     row_key = None if row is None else f"{row[0]}:{row[1]}"
     if ui.new_choice(seen, "table", row_key) is not None:
-        _open_alignment(chosen, row[0], row[1], finished)
+        _pick(chosen, row[0], row[1])
 
     with st.expander(f"Summary of the runs ({len(finished)})"):
         st.dataframe(
@@ -320,9 +349,36 @@ def _show_aggregate(chosen: series.Series, finished: list[FinishedRun]) -> None:
     elif not reference_scores.has_reference(data_root, chosen.dataset):
         st.caption("This dataset has no reference alignment, so the runs cannot be evaluated.")
     _show_downloads(chosen, data_root, finished, aggregate, summary)
+    return _analysed(chosen, aggregate, names, finished)
 
 
-def choose_view(chosen: series.Series, remembered: runs.Run | None) -> runs.Run | None:
+def _analysed(
+    chosen: series.Series, aggregate: pd.DataFrame, names: list[str], finished: list[FinishedRun]
+) -> View | None:
+    """The alignment of the aggregate to analyse, with a way to open it in its run."""
+    if aggregate.empty:
+        return None
+    pairs = list(zip(aggregate["seed"].astype(int), aggregate["row"].astype(int)))
+    picked = st.session_state.get(_pick_key(chosen))
+    if picked not in pairs:
+        knee = series_analysis.knee_position(aggregate, names) if len(names) > 1 else 0
+        picked = pairs[knee if knee is not None else 0]
+    seed, row = picked
+    st.divider()
+    left, right = st.columns([3, 1], vertical_alignment="bottom")
+    note = aggregate.iloc[pairs.index(picked)]["note"]
+    left.markdown(
+        f"**Analysing MSASol{row} of seed {seed}**"
+        + (f" ({note} of the aggregate)" if note else "")
+        + ": choose another one in the chart or the table above."
+    )
+    if right.button("Open it in its run", key=f"open_in_run:{chosen.key}"):
+        _open_alignment(chosen, seed, row, finished)
+    run = next(item.run for item in finished if item.seed == seed)
+    return View(run, seed, row)
+
+
+def choose_view(chosen: series.Series, remembered: runs.Run | None) -> View | None:
     """Shows what to see of a series, and the aggregate if that is the choice.
 
     Args:
@@ -330,7 +386,8 @@ def choose_view(chosen: series.Series, remembered: runs.Run | None) -> runs.Run 
         remembered: A run of the series to open at once, if any.
 
     Returns:
-        The run to show in detail; None if the aggregate was shown.
+        The run to show; in the aggregate, with the alignment of it to analyse. None if there is
+        nothing to show.
     """
     finished = series_analysis.finished_runs(chosen)
     if len(finished) < len(chosen.requests):
@@ -351,6 +408,6 @@ def choose_view(chosen: series.Series, remembered: runs.Run | None) -> runs.Run 
         st.session_state[widget] = AGGREGATE
     selected = st.selectbox("Show", labels, key=widget)
     if selected == AGGREGATE:
-        _show_aggregate(chosen, finished)
-        return None
-    return finished[labels.index(selected) - 1].run
+        return _show_aggregate(chosen, finished)
+    item = finished[labels.index(selected) - 1]
+    return View(item.run, item.seed)

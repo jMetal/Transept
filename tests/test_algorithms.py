@@ -58,7 +58,6 @@ class TestAlgorithm:
     def test_should_only_say_it_is_configurable_otherwise(self):
         assert algorithm().notes == ["Every parameter below can be set in **New run**."]
 
-
     def test_should_present_a_random_search_as_a_sanity_check(self):
         random_search = algorithm(name="RANDOM_SEARCH", parameterSpace=None, usesCrossover=False)
         assert "sanity check" in random_search.notes[0]

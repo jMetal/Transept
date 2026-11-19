@@ -26,6 +26,7 @@ from transept import (
 )
 from transept.algorithms import Algorithm
 from transept.sections import SECTIONS
+from transept.series_view import AGGREGATE
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
 
@@ -375,14 +376,15 @@ class TestSeries:
         # Arrange
         self.finished_series(settings.runs_root(), data_root)
         app = open_page(ui.RESULTS, selected_series="toy / s")
-        assert not app.get("download_button")
+        label = "Download the aggregate front (zip)"
+        assert label not in [button.proto.label for button in app.get("download_button")]
 
         # Act
         next(b for b in app.button if b.label.startswith("Prepare the")).click().run()
 
         # Assert
         assert not app.exception
-        assert app.get("download_button")
+        assert label in [button.proto.label for button in app.get("download_button")]
 
     def test_should_show_the_metrics_of_a_series_against_the_reference(
         self, configured, data_root: Path, monkeypatch
@@ -451,7 +453,27 @@ class TestSeries:
         assert list(compared["file"]) == ["MSASol2.fasta", "MSASol0.fasta"]
         assert list(compared["seed"]) == [1, 1]
 
-    def test_should_open_the_medoid_of_the_aggregate_in_its_run(self, configured, data_root: Path):
+    def test_should_analyse_the_knee_of_the_aggregate_below_it(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        self.knee_differs_from_medoid(root)
+
+        # Act
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Assert: the detailed analysis of the knee, without leaving the aggregate
+        assert not app.exception
+        assert next(box for box in app.selectbox if box.label == "Show").value == AGGREGATE
+        titles = [element.value for element in app.subheader]
+        assert "Alignment MSASol2 of seed 1" in titles
+        assert [tab.label for tab in app.tabs][:3] == ["Alignment", "Per protein", "Per helix"]
+        assert "Non-dominated alignments" not in titles
+        assert app.session_state["support_from:toy / s_seed_1"] == "The other runs of the series"
+
+    def test_should_analyse_the_medoid_of_the_aggregate_when_asked(
+        self, configured, data_root: Path
+    ):
         # Arrange
         root = settings.runs_root()
         self.finished_series(root, data_root)
@@ -463,8 +485,25 @@ class TestSeries:
 
         # Assert
         assert not app.exception
+        assert next(box for box in app.selectbox if box.label == "Show").value == AGGREGATE
+        assert "Alignment MSASol0 of seed 1" in [element.value for element in app.subheader]
+
+    def test_should_open_the_alignment_analysed_in_its_run(self, configured, data_root: Path):
+        # Arrange
+        root = settings.runs_root()
+        self.finished_series(root, data_root)
+        self.knee_differs_from_medoid(root)
+        app = open_page(ui.RESULTS, selected_series="toy / s")
+
+        # Act
+        next(b for b in app.button if b.label == "Open it in its run").click().run()
+
+        # Assert: the view of the run, on the same alignment
+        assert not app.exception
         assert next(box for box in app.selectbox if box.label == "Show").value == "seed 1"
-        assert "Alignment MSASol0" in [element.value for element in app.subheader]
+        titles = [element.value for element in app.subheader]
+        assert "Non-dominated alignments" in titles
+        assert "Alignment MSASol2" in titles
 
     def test_should_add_the_gpcrdb_consistency_to_the_aggregate_once_fetched(
         self, configured, data_root: Path

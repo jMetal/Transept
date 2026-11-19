@@ -165,13 +165,19 @@ if chosen is None:
     st.info("There are no finished runs yet.")
     st.stop()
 series_runs: list[series_analysis.FinishedRun] = []
+# In the aggregate of a series: the alignment to analyse, below the aggregate
+aggregate_view: series_view.View | None = None
 if isinstance(chosen, series.Series):
-    run = series_view.choose_view(chosen, opened_run)
-    if run is None:
+    view = series_view.choose_view(chosen, opened_run)
+    if view is None:
         st.stop()
+    run = view.run
+    if view.row is not None:
+        aggregate_view = view
     series_runs = series_analysis.finished_runs(chosen)
 else:
     run = chosen
+in_aggregate = aggregate_view is not None
 
 config = runs.config(run)
 metadata = runs.metadata(run) or {}
@@ -189,37 +195,38 @@ values = runs.objective_values(run)
 table = front.summarize(values)
 ranked = front.ranking(values) if len(names) == 1 else None
 
-columns = st.columns(4)
-columns[0].metric("Algorithm", config.get("algorithmType", "?"))
-columns[1].metric("Evaluations", metadata.get("evaluations", "?"))
-columns[2].metric("Runtime", f"{metadata.get('runtimeMs', 0) / 1000:.0f} s")
-if ranked is not None:
-    best_value = ranked[names[0]].iloc[0] if not ranked.empty else float("nan")
-    columns[3].metric(f"Best {names[0]}", ui.format_objective(names[0], best_value))
-else:
-    columns[3].metric("Non-dominated (distinct)", f"{len(table)} of {len(values)}")
-if not default_formulation:
-    st.caption("Objectives of this run: " + ", ".join(names) + ".")
-if metadata.get("configuration"):
-    with st.expander("Configuration of the algorithm"):
-        st.code(metadata["configuration"], language=None, wrap_lines=True)
-        st.caption("Repeat the run with `--configuration` and this string, and the same seed.")
-if config.get("maxTimeSeconds"):
-    st.caption(
-        f"Stopped after {config['maxTimeSeconds']:g} s: the number of evaluations depends on the "
-        "machine, so the run does not repeat exactly."
-    )
+if not in_aggregate:
+    columns = st.columns(4)
+    columns[0].metric("Algorithm", config.get("algorithmType", "?"))
+    columns[1].metric("Evaluations", metadata.get("evaluations", "?"))
+    columns[2].metric("Runtime", f"{metadata.get('runtimeMs', 0) / 1000:.0f} s")
+    if ranked is not None:
+        best_value = ranked[names[0]].iloc[0] if not ranked.empty else float("nan")
+        columns[3].metric(f"Best {names[0]}", ui.format_objective(names[0], best_value))
+    else:
+        columns[3].metric("Non-dominated (distinct)", f"{len(table)} of {len(values)}")
+    if not default_formulation:
+        st.caption("Objectives of this run: " + ", ".join(names) + ".")
+    if metadata.get("configuration"):
+        with st.expander("Configuration of the algorithm"):
+            st.code(metadata["configuration"], language=None, wrap_lines=True)
+            st.caption("Repeat the run with `--configuration` and this string, and the same seed.")
+    if config.get("maxTimeSeconds"):
+        st.caption(
+            f"Stopped after {config['maxTimeSeconds']:g} s: the number of evaluations depends on "
+            "the machine, so the run does not repeat exactly."
+        )
 
-missing = metadata.get("proteinsWithoutStructure") or []
-if missing:
-    st.warning("Proteins without structure (ignored by the lDDT): " + ", ".join(missing))
-unusual = [
-    s["protein"] + f" ({s['status']})"
-    for s in metadata.get("structures", [])
-    if s.get("status") not in ("NUMBERED", "ALIGNED")
-]
-if unusual:
-    st.info("Structures not checked or not used: " + ", ".join(unusual))
+    missing = metadata.get("proteinsWithoutStructure") or []
+    if missing:
+        st.warning("Proteins without structure (ignored by the lDDT): " + ", ".join(missing))
+    unusual = [
+        s["protein"] + f" ({s['status']})"
+        for s in metadata.get("structures", [])
+        if s.get("status") not in ("NUMBERED", "ALIGNED")
+    ]
+    if unusual:
+        st.info("Structures not checked or not used: " + ", ".join(unusual))
 
 SELECTED_ROW = f"row:{run.key}"
 SEEN = f"seen:{run.key}"
@@ -229,6 +236,8 @@ if SELECTED_ROW not in st.session_state:
         int(ranked["row"].iloc[0]) if ranked is not None and not ranked.empty
         else front.knee_row(table)
     )  # fmt: skip
+if in_aggregate:
+    st.session_state[SELECTED_ROW] = aggregate_view.row
 seen = st.session_state.setdefault(SEEN, {})
 
 
@@ -379,145 +388,149 @@ def compare_knee_and_medoid(summary: ensemble.FrontSummary, rows: list[int]) -> 
         show(rows[summary.medoid])
 
 
-knee = front.knee_row(table)
 front_summary = None
-if ranked is None and len(table) >= 2 and knee is not None:
-    front_rows = [int(row) for row in table["row"]]
-    with st.spinner("Comparing the alignments of the front..."):
-        front_summary = cached_front_summary(
-            str(run.results),
-            tuple(front_rows),
-            knee,
-            str(datasets.topology_file(data_root, run.dataset)),
+knee = front.knee_row(table)
+if not in_aggregate:
+    if ranked is None and len(table) >= 2 and knee is not None:
+        front_rows = [int(row) for row in table["row"]]
+        with st.spinner("Comparing the alignments of the front..."):
+            front_summary = cached_front_summary(
+                str(run.results),
+                tuple(front_rows),
+                knee,
+                str(datasets.topology_file(data_root, run.dataset)),
+            )
+        if front_summary is not None:
+            st.info(ensemble.describe(front_summary), icon=":material/join:")
+            medoid = front_rows[front_summary.medoid]
+            if medoid == knee:
+                st.caption(
+                    "The knee is also the medoid: the alignment that agrees most with the others."
+                )
+            else:
+                unmarked = (table["row"] == medoid) & (table["note"] == "")
+                table.loc[unmarked, "note"] = "medoid"
+                with st.expander("Knee or medoid?", icon=":material/compare_arrows:"):
+                    compare_knee_and_medoid(front_summary, front_rows)
+
+    if ranked is not None:
+        st.subheader(f"Convergence of {names[0]}")
+        st.plotly_chart(charts.progress_figure(runs.progress(run)), width="stretch")
+        st.subheader("Best distinct alignments")
+        pick_from_table(
+            ranked,
+            [names[0], "copies"],
+            "The best alignment is shown first; copies counts the members of the final population "
+            "with the same value. Click a row to see its alignment.",
         )
-    if front_summary is not None:
-        st.info(ensemble.describe(front_summary), icon=":material/join:")
-        medoid = front_rows[front_summary.medoid]
-        if medoid == knee:
-            st.caption(
-                "The knee is also the medoid: the alignment that agrees most with the others."
+    elif len(names) == 3:
+        st.subheader("Non-dominated alignments")
+        pairs = [(names[0], names[1]), (names[0], names[2]), (names[1], names[2])]
+        views = ["3D", *(f"{a} – {b}" for a, b in pairs)]
+        view = st.radio(
+            "View",
+            views,
+            horizontal=True,
+            key=f"front_view:{run.key}",
+            help="The 3D view can be rotated; in a projection, click a point to see its alignment.",
+        )
+        if view == "3D":
+            st.plotly_chart(
+                charts.front3d_figure(values, table, st.session_state[SELECTED_ROW]),
+                key=f"chart3d:{run.key}",
+                width="stretch",
             )
         else:
-            unmarked = (table["row"] == medoid) & (table["note"] == "")
-            table.loc[unmarked, "note"] = "medoid"
-            with st.expander("Knee or medoid?", icon=":material/compare_arrows:"):
-                compare_knee_and_medoid(front_summary, front_rows)
-
-if ranked is not None:
-    st.subheader(f"Convergence of {names[0]}")
-    st.plotly_chart(charts.progress_figure(runs.progress(run)), width="stretch")
-    st.subheader("Best distinct alignments")
-    pick_from_table(
-        ranked,
-        [names[0], "copies"],
-        "The best alignment is shown first; copies counts the members of the final population "
-        "with the same value. Click a row to see its alignment.",
-    )
-elif len(names) == 3:
-    st.subheader("Non-dominated alignments")
-    pairs = [(names[0], names[1]), (names[0], names[2]), (names[1], names[2])]
-    views = ["3D", *(f"{a} – {b}" for a, b in pairs)]
-    view = st.radio(
-        "View",
-        views,
-        horizontal=True,
-        key=f"front_view:{run.key}",
-        help="The 3D view can be rotated; in a projection, click a point to see its alignment.",
-    )
-    if view == "3D":
-        st.plotly_chart(
-            charts.front3d_figure(values, table, st.session_state[SELECTED_ROW]),
-            key=f"chart3d:{run.key}",
-            width="stretch",
+            first, second = pairs[views.index(view) - 1]
+            drawn_seeds = seeds_in_chart()
+            event = st.plotly_chart(
+                charts.front_figure(
+                    values,
+                    table,
+                    st.session_state[SELECTED_ROW],
+                    drawn_seeds,
+                    None,
+                    first,
+                    second,
+                    False,
+                ),
+                on_select="rerun",
+                selection_mode="points",
+                key=f"chart:{run.key}:{first}:{second}",
+                width="stretch",
+            )
+            points = event.selection.points if event and event.selection else []
+            clicked = points[0].get("customdata") if points else None
+            if isinstance(clicked, list):
+                clicked = clicked[0]
+            show(ui.new_choice(seen, f"chart {view}", None if clicked is None else int(clicked)))
+            if first == front.FIRST and second == front.SECOND and drawn_seeds is not None:
+                st.caption(
+                    "The seed alignments are only in this projection: their coverage is not "
+                    "computed."
+                )
+        pick_from_table(
+            table,
+            [*names, "note"],
+            "Non-dominated in the three objectives. In a projection, some of them can look "
+            "dominated: they are better in the third objective. The knee is closest to the ideal "
+            "point once every objective is scaled to [0, 1]. Click a row to see its alignment.",
+        )
+    elif not default_formulation:
+        st.subheader("Non-dominated alignments")
+        pick_from_table(
+            table,
+            [*names, "note"],
+            "This formulation has no front chart yet: choose an alignment in the table (the knee "
+            "is closest to the ideal point once every objective is scaled to [0, 1]).",
         )
     else:
-        first, second = pairs[views.index(view) - 1]
+        left, right = st.columns([3, 1])
+        weight = left.slider(
+            "Weight of SOPwTP in the compromise (lDDT gets the rest)",
+            0.0,
+            1.0,
+            0.5,
+            0.05,
+            key=f"weight:{run.key}",
+            help="0.5 gives the knee; move it to prefer sequence (1) or structure (0).",
+        )
+        compromise = front.weighted_compromise(table, weight)
+        if right.button("Show the compromise", disabled=compromise is None):
+            show(compromise)
+
         drawn_seeds = seeds_in_chart()
         event = st.plotly_chart(
             charts.front_figure(
-                values,
-                table,
-                st.session_state[SELECTED_ROW],
-                drawn_seeds,
-                None,
-                first,
-                second,
-                False,
+                values, table, st.session_state[SELECTED_ROW], drawn_seeds, compromise
             ),
             on_select="rerun",
             selection_mode="points",
-            key=f"chart:{run.key}:{first}:{second}",
+            key=f"chart:{run.key}",
             width="stretch",
         )
         points = event.selection.points if event and event.selection else []
         clicked = points[0].get("customdata") if points else None
         if isinstance(clicked, list):
             clicked = clicked[0]
-        show(ui.new_choice(seen, f"chart {view}", None if clicked is None else int(clicked)))
-        if first == front.FIRST and second == front.SECOND and drawn_seeds is not None:
-            st.caption(
-                "The seed alignments are only in this projection: their coverage is not computed."
-            )
-    pick_from_table(
-        table,
-        [*names, "note"],
-        "Non-dominated in the three objectives. In a projection, some of them can look dominated: "
-        "they are better in the third objective. The knee is closest to the ideal point once every "
-        "objective is scaled to [0, 1]. Click a row to see its alignment.",
-    )
-elif not default_formulation:
-    st.subheader("Non-dominated alignments")
-    pick_from_table(
-        table,
-        [*names, "note"],
-        "This formulation has no front chart yet: choose an alignment in the table (the knee is "
-        "closest to the ideal point once every objective is scaled to [0, 1]).",
-    )
-else:
-    left, right = st.columns([3, 1])
-    weight = left.slider(
-        "Weight of SOPwTP in the compromise (lDDT gets the rest)",
-        0.0,
-        1.0,
-        0.5,
-        0.05,
-        key=f"weight:{run.key}",
-        help="0.5 gives the knee; move it to prefer sequence (1) or structure (0).",
-    )
-    compromise = front.weighted_compromise(table, weight)
-    if right.button("Show the compromise", disabled=compromise is None):
-        show(compromise)
+        show(ui.new_choice(seen, "chart", None if clicked is None else int(clicked)))
 
-    drawn_seeds = seeds_in_chart()
-    event = st.plotly_chart(
-        charts.front_figure(values, table, st.session_state[SELECTED_ROW], drawn_seeds, compromise),
-        on_select="rerun",
-        selection_mode="points",
-        key=f"chart:{run.key}",
-        width="stretch",
-    )
-    points = event.selection.points if event and event.selection else []
-    clicked = points[0].get("customdata") if points else None
-    if isinstance(clicked, list):
-        clicked = clicked[0]
-    show(ui.new_choice(seen, "chart", None if clicked is None else int(clicked)))
-
-    st.subheader("Non-dominated alignments")
-    st.caption("Click a point of the chart or a row of the table to see its alignment.")
-    picked = st.dataframe(
-        with_metrics(table).assign(file=[f"MSASol{row}.fasta" for row in table["row"]])[
-            ["file", front.FIRST, front.SECOND, "note", *metric_columns]
-        ],
-        hide_index=True,
-        width="stretch",
-        height=240,
-        on_select="rerun",
-        selection_mode="single-row",
-        key=f"table:{run.key}",
-    )
-    picked_rows = picked.selection.rows if picked and picked.selection else []
-    table_choice = int(table["row"].iloc[picked_rows[0]]) if picked_rows else None
-    show(ui.new_choice(seen, "table", table_choice))
+        st.subheader("Non-dominated alignments")
+        st.caption("Click a point of the chart or a row of the table to see its alignment.")
+        picked = st.dataframe(
+            with_metrics(table).assign(file=[f"MSASol{row}.fasta" for row in table["row"]])[
+                ["file", front.FIRST, front.SECOND, "note", *metric_columns]
+            ],
+            hide_index=True,
+            width="stretch",
+            height=240,
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"table:{run.key}",
+        )
+        picked_rows = picked.selection.rows if picked and picked.selection else []
+        table_choice = int(table["row"].iloc[picked_rows[0]]) if picked_rows else None
+        show(ui.new_choice(seen, "table", table_choice))
 
 rows = list(values.index)
 st.session_state[SELECTOR] = st.session_state[SELECTED_ROW]
@@ -527,16 +540,21 @@ def follow_selector() -> None:
     st.session_state[SELECTED_ROW] = st.session_state[SELECTOR]
 
 
-selected = st.selectbox(
-    "Alignment",
-    rows,
-    key=SELECTOR,
-    on_change=follow_selector,
-    format_func=lambda row: (
-        f"MSASol{row}: "
-        + ", ".join(f"{name} {ui.format_objective(name, values.loc[row, name])}" for name in names)
-    ),
-)
+if in_aggregate:
+    selected = aggregate_view.row
+else:
+    selected = st.selectbox(
+        "Alignment",
+        rows,
+        key=SELECTOR,
+        on_change=follow_selector,
+        format_func=lambda row: (
+            f"MSASol{row}: "
+            + ", ".join(
+                f"{name} {ui.format_objective(name, values.loc[row, name])}" for name in names
+            )
+        ),
+    )
 
 if not seeds.empty and common:
     st.subheader(f"MSASol{selected} against the seed alignments")
@@ -594,7 +612,9 @@ def show_against_the_reference(row: int) -> None:
         st.caption("Seeds that could not be compared: " + ", ".join(problems["seed"]) + ".")
 
 
-if metrics is not None:
+if in_aggregate:
+    pass  # the aggregate shows the metrics of its alignments, and the best of all the runs
+elif metrics is not None:
     show_against_the_reference(selected)
 elif not reference_scores.has_reference(data_root, run.dataset):
     st.caption(
@@ -739,7 +759,11 @@ def download_reliable(stem: str) -> None:
     )
 
 
-st.subheader(f"Alignment MSASol{selected}")
+st.subheader(
+    f"Alignment MSASol{selected} of seed {aggregate_view.seed}"
+    if in_aggregate
+    else f"Alignment MSASol{selected}"
+)
 view, per_protein, per_helix, gpcrdb_tab, comparison_tab, structures_tab = st.tabs(
     ["Alignment", "Per protein", "Per helix", "GPCRdb", "Compare", "3D"]
 )
@@ -1014,37 +1038,37 @@ with view:
             "least two of these proteins."
         )
 
-    highlighted = {"selected": selected}
-    if len(names) > 1:
-        highlighted["knee"] = front.knee_row(table)
-    if compromise is not None:
-        highlighted["compromise"] = compromise
-    if front_summary is not None:
-        highlighted["medoid"] = int(table["row"].iloc[front_summary.medoid])
-    for name in names:
-        match = table[table["note"] == f"best {name}"]
-        if not match.empty:
-            highlighted[f"best_{name.lower()}"] = int(match["row"].iloc[0])
-    files: dict[str, str | bytes] = {
-        "FUN.csv": (run.results / "FUN.csv").read_bytes(),
-        "tm_features.txt": exports.jalview_features(proteins),
-    }
-    summary = ["role,file," + ",".join(names)]
-    for role, row in highlighted.items():
-        if row is None:
-            continue
-        rows_of = alignment.read_fasta(runs.alignment_file(run, row))
-        files[f"{role}_MSASol{row}.fasta"] = exports.to_fasta(rows_of)
-        files[f"{role}_MSASol{row}.sto"] = exports.to_stockholm(rows_of, proteins)
-        objective_values = ",".join(str(values.loc[row, name]) for name in names)
-        summary.append(f"{role},MSASol{row}.fasta,{objective_values}")
-    files["summary.csv"] = "\n".join(summary) + "\n"
-    st.download_button(
-        "Download the highlighted alignments (zip)",
-        exports.bundle(files),
-        file_name=f"{run.dataset}_{run.run_id}_highlighted.zip",
-        help="The best alignment of each objective, the knee, the medoid, the weighted compromise "
-        "(when they "
-        "apply) and the selected alignment, in FASTA and Stockholm, with FUN.csv, the Jalview "
-        "features and a summary.",
-    )
+    if not in_aggregate:
+        highlighted = {"selected": selected}
+        if len(names) > 1:
+            highlighted["knee"] = front.knee_row(table)
+        if compromise is not None:
+            highlighted["compromise"] = compromise
+        if front_summary is not None:
+            highlighted["medoid"] = int(table["row"].iloc[front_summary.medoid])
+        for name in names:
+            match = table[table["note"] == f"best {name}"]
+            if not match.empty:
+                highlighted[f"best_{name.lower()}"] = int(match["row"].iloc[0])
+        files: dict[str, str | bytes] = {
+            "FUN.csv": (run.results / "FUN.csv").read_bytes(),
+            "tm_features.txt": exports.jalview_features(proteins),
+        }
+        summary = ["role,file," + ",".join(names)]
+        for role, row in highlighted.items():
+            if row is None:
+                continue
+            rows_of = alignment.read_fasta(runs.alignment_file(run, row))
+            files[f"{role}_MSASol{row}.fasta"] = exports.to_fasta(rows_of)
+            files[f"{role}_MSASol{row}.sto"] = exports.to_stockholm(rows_of, proteins)
+            objective_values = ",".join(str(values.loc[row, name]) for name in names)
+            summary.append(f"{role},MSASol{row}.fasta,{objective_values}")
+        files["summary.csv"] = "\n".join(summary) + "\n"
+        st.download_button(
+            "Download the highlighted alignments (zip)",
+            exports.bundle(files),
+            file_name=f"{run.dataset}_{run.run_id}_highlighted.zip",
+            help="The best alignment of each objective, the knee, the medoid, the weighted "
+            "compromise (when they apply) and the selected alignment, in FASTA and Stockholm, with "
+            "FUN.csv, the Jalview features and a summary.",
+        )

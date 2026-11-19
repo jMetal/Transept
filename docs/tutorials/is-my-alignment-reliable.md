@@ -81,9 +81,11 @@ about 60 %. **This run** goes back to the alignments of the run alone.
 
 In the aggregate of the runs, Results sums up the agreement in the same way, for the alignments of
 the aggregate front, which come from the runs that reached it. Its **Knee or medoid?** compares the
-knee of the aggregate with its medoid, a consensus of the runs; **Show the knee** and **Show the
-medoid** open them in their runs. Once the GPCRdb numbering has been fetched, the table of the
-aggregate also shows the GPCRdb consistency of every alignment.
+knee of the aggregate with its medoid, a consensus of the runs. Below the aggregate, one of its
+alignments is analysed with all the tabs described here: the knee at first, or the one you choose
+in the chart, in the table or with **Show the knee** and **Show the medoid**. Once the GPCRdb
+numbering has been fetched, the table of the aggregate also shows the GPCRdb consistency of every
+alignment.
 
 ## Step 3: pLDDT, the confidence of the structures
 

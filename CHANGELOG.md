@@ -22,12 +22,14 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Added
 
-- **Results of independent runs**: the agreement of the aggregate front, as for a run, and **Knee
-  or medoid?** for its knee and its medoid (a consensus of the runs), each opened in its run; the
-  GPCRdb consistency of every alignment of the aggregate once the numbering has been fetched. An
-  alignment opened from a series measures its **Support** with the fronts of the other runs by
-  default (**Support from**), which on the GPCR benchmark told right from wrong columns better
-  than the run alone (median AUC 0.81 against 0.72).
+- **Results of independent runs**: the detailed analysis of an alignment of the aggregate front
+  (its knee at first, or the one chosen in the chart or the table), with all the tabs of a single
+  run, without leaving the aggregate; **Open it in its run** shows it among the rest of its run.
+  The agreement of the aggregate front, as for a run, and **Knee or medoid?** for its knee and its
+  medoid (a consensus of the runs); the GPCRdb consistency of every alignment of the aggregate
+  once the numbering has been fetched. An alignment of a series measures its **Support** with the
+  fronts of the other runs by default (**Support from**), which on the GPCR benchmark told right
+  from wrong columns better than the run alone (median AUC 0.81 against 0.72).
 - **Repair alignment** (Analyze): moves the gaps that split a transmembrane helix out of any
   alignment, without search, with the `repair` command of Transept core; shows the gaps inside
   helices before and after and, with a reference, what changed. Tutorial *Gaps inside helices, and
