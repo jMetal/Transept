@@ -18,6 +18,7 @@ RELIABILITY = "is-my-alignment-reliable"
 WHY_SEVERAL_OBJECTIVES = "why-several-objectives"
 WHAT_TRANSEPT_OPTIMISES = "what-transept-optimises"
 CHOOSE_AN_ALGORITHM = "choose-an-algorithm"
+GAPS_INSIDE_HELICES = "gaps-inside-helices"
 # The levels of the tutorials, as the table at the top of each one gives it ("| **Level** | ... |");
 # a tutorial without it is Basic. Learn groups them by level.
 LEVELS = ("Basic", "Intermediate", "Advanced")
@@ -37,6 +38,8 @@ SUMMARIES = {
     "measure, how to read their values, and what none of them can tell you.",
     "choose-an-algorithm": "How the search works, NSGA-II and why its defaults are enough, and the "
     "other algorithms for those who want to explore them.",
+    "gaps-inside-helices": "Why gaps inside helices are a problem, and how Transept repairs "
+    "them in any alignment or in the seeds of a search.",
 }
 # Within a level, the order in which the tutorials are meant to be read; the others follow, by
 # file name.
@@ -46,6 +49,7 @@ READING_ORDER = (
     WHY_SEVERAL_OBJECTIVES,
     WHAT_TRANSEPT_OPTIMISES,
     RELIABILITY,
+    GAPS_INSIDE_HELICES,
     CHOOSE_AN_ALGORITHM,
     OPERATORS,
 )

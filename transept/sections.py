@@ -117,6 +117,13 @@ SECTIONS = (
                 ui.RESULTS,
             ),
             Page(
+                "Repair alignment",
+                ":material/healing:",
+                "Move the gaps that split a transmembrane helix out of an alignment of another "
+                "tool, see what changed against the reference, and download it.",
+                ui.REPAIR,
+            ),
+            Page(
                 "Compare",
                 ":material/compare_arrows:",
                 "Compare runs, seed alignments and alignments of other tools, against a reference "

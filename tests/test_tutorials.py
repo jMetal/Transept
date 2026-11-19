@@ -129,7 +129,12 @@ class TestLearningPath:
         found = tutorials.by_level(tutorials.learning_path())
 
         assert {level: [item.name for item in items] for level, items in found.items()} == {
-            "Basic": [tutorials.OVERVIEW, tutorials.ADD_YOUR_OWN_PROTEINS, tutorials.RELIABILITY],
+            "Basic": [
+                tutorials.OVERVIEW,
+                tutorials.ADD_YOUR_OWN_PROTEINS,
+                tutorials.RELIABILITY,
+                tutorials.GAPS_INSIDE_HELICES,
+            ],
             "Intermediate": [tutorials.WHY_SEVERAL_OBJECTIVES, tutorials.WHAT_TRANSEPT_OPTIMISES],
             "Advanced": [tutorials.CHOOSE_AN_ALGORITHM, tutorials.OPERATORS],
         }

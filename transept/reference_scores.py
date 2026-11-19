@@ -52,7 +52,7 @@ def _fingerprint(jar: str, data_root: str, dataset: str) -> str:
     return hashlib.sha1(description.encode()).hexdigest()[:12]
 
 
-def _read_report(report: Path) -> pd.DataFrame:
+def read_report(report: Path) -> pd.DataFrame:
     """Reads a report: `file`, `status`, `message`, and the metrics of the alignments compared."""
     table = pd.read_csv(report, keep_default_na=False, dtype=str)
     # A folder inside the directory holds other copies: only its own alignments count.
@@ -88,7 +88,7 @@ def _scores(
             partial.unlink(missing_ok=True)
             return None
         partial.replace(report)
-    return _read_report(report)
+    return read_report(report)
 
 
 def run_scores(jar: str, data_root: str, run: runs.Run, runs_root: Path) -> pd.DataFrame | None:

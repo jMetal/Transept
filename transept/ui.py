@@ -15,6 +15,7 @@ NEW_RUN = "pages/new_run.py"
 MONITOR = "pages/monitor.py"
 RESULTS = "pages/results.py"
 HISTORY = "pages/history.py"
+REPAIR = "pages/repair.py"
 
 SELECTED_RUN = "selected_run"
 SELECTED_SERIES = "selected_series"

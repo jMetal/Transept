@@ -1765,3 +1765,68 @@ class TestOldRuns:
         # Assert
         assert not app.exception
         assert "original lDDT aggregation" in texts(app)
+
+
+class TestRepairAlignment:
+    @pytest.fixture
+    def with_core(self, transept_home: Path, data_root: Path) -> settings.Settings:
+        from transept import repair
+
+        jar = settings.default_settings().jar
+        if not Path(jar).is_file() or settings.java_version() is None:
+            pytest.skip("the Transept core jar or Java is not available")
+        if not repair.supported(str(jar)):
+            pytest.skip("the Transept core jar has no repair command")
+        chosen = settings.Settings(str(jar), [settings.Repository("Toy", str(data_root))])
+        settings.save_settings(chosen)
+        return chosen
+
+    def test_should_ask_to_update_a_core_without_the_command(self, configured):
+        if settings.java_version() is None:
+            pytest.skip("Java is not installed")
+        # Act
+        app = open_page(ui.REPAIR)
+
+        # Assert
+        assert not app.exception
+        assert "has no `repair` command" in texts(app)
+
+    def test_should_offer_only_the_alignments_of_the_proteins_of_the_dataset(self, with_core):
+        # Act
+        app = open_page(ui.REPAIR)
+
+        # Assert
+        assert not app.exception
+        assert app.selectbox[1].options == ["caretta", "kalign", "mafft"]
+
+    def test_should_repair_and_show_what_changed(self, with_core):
+        # Arrange
+        app = open_page(ui.REPAIR)
+        app.selectbox[1].select("kalign").run()
+
+        # Act
+        next(b for b in app.button if b.label == "Repair").click().run()
+
+        # Assert
+        assert not app.exception
+        values = {metric.label: metric.value for metric in app.metric}
+        assert values == {
+            "Gap runs moved": "1",
+            "Gaps inside helices before": "1",
+            "After": "0",
+        }
+        assert any(
+            button.label == "Download the repaired alignment"
+            for button in app.get("download_button")
+        )
+
+    def test_should_say_when_there_was_nothing_to_repair(self, with_core):
+        # Arrange
+        app = open_page(ui.REPAIR)
+        app.selectbox[1].select("caretta").run()
+
+        # Act
+        next(b for b in app.button if b.label == "Repair").click().run()
+
+        # Assert
+        assert "there was nothing to repair" in texts(app)
