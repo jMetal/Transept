@@ -32,6 +32,14 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 | `transept/runs.py` | State of a run and reading of its files |
 | `transept/front.py`, `charts.py`, `alignment.py` | Non-dominated solutions, figures, alignment viewer |
 | `transept/ui.py` | Page paths and the selected run |
+| `transept/analysis.py`, `ensemble.py`, `tracks.py` | An alignment per protein and per helix, the alignments of a front taken together (agreement, medoid, support), and the tracks of every column and residue |
+| `transept/generic_numbers.py` | GPCRdb generic residue numbers of the receptors, fetched only on request and cached in `gpcrdb/` |
+| `transept/uniprot_import.py` | Proteins from UniProt and AlphaFold DB for Add dataset, fetched only on request and kept in `downloads/` |
+| `transept/baselines.py`, `internal_seeds.py` | Objective values of the seeds (`baseline` command) and internal seeds (`seeds` command) |
+| `transept/repair.py` | The gaps inside helices of any alignment moved out, with the `repair` command |
+| `transept/spaces.py`, `parameter_space.py`, `parameter_form.py`, `configuration.py` | The Evolver parameter spaces read from the jar, and the form and strings of a configuration |
+| `transept/exports.py`, `superposition.py`, `structure_export.py`, `structure_chart.py` | Downloads in other formats, structures superposed by an alignment, for ChimeraX and PyMOL and in 3D |
+| `transept/home_panel.py`, `branding.py` | What the home page shows, and the logo |
 
 ## Rules
 
@@ -54,7 +62,11 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
   (`tests/test_pages.py`). Tests use the fixtures of `tests/conftest.py` (an isolated home,
   a toy data directory, runs in every state); they must not need the real jar or data.
 - `make lint` and `make test` must pass before every commit. Follow `GIT_GUIDELINES.md`.
-- Work on `develop`, not on `main`; `main` receives `develop`, and both are pushed, only on request.
+- Work on a branch started from `develop` and merge it through a pull request into `develop`; only
+  the maintainers bring `develop` into `main`. Assistants push or open pull requests only when
+  asked.
+- GPCRdb, UniProt and AlphaFold DB are contacted only when the user presses a button, never on
+  page load.
 - Code, comments and documentation in English.
 - Everything must also work in the Docker image, with no display and with only mounted folders: no
   native dialogs, and files must be reachable by upload or by a typed path. `TRANSEPT_HOME` is `/data`
