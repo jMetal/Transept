@@ -9,6 +9,8 @@ TOPOLOGY_SUFFIX = "_predicted_topologies.3line"
 
 # The six sequence aligners used as seeds in the benchmark.
 DEFAULT_SEED_TOOLS = ("clustalw", "kalign", "mafft", "muscle5", "tcoffee", "tmaligner")
+# The structural aligners of the benchmark: with the sequence ones, the recommended seeds.
+STRUCTURAL_SEED_TOOLS = ("caretta", "foldmason", "mtmalign", "mustang", "usalign")
 
 TRANSMEMBRANE = "M"
 
@@ -56,6 +58,15 @@ def default_seed_tools(available: list[str]) -> list[str]:
     return [tool for tool in DEFAULT_SEED_TOOLS if tool in available]
 
 
+def recommended_seed_tools(available: list[str]) -> list[str]:
+    """Returns the recommended seeds among the available tools: sequence and structural aligners.
+
+    Adding the structural alignments improved the recommended alignment in every dataset of the
+    benchmark where they could be used (2026-11).
+    """
+    return [tool for tool in (*DEFAULT_SEED_TOOLS, *STRUCTURAL_SEED_TOOLS) if tool in available]
+
+
 def read_topology(path: Path | str) -> list[Protein]:
     """Reads a three-line topology file: header, sequence, topology; blank lines are ignored."""
     lines = [line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines()]
@@ -76,7 +87,9 @@ def read_topology(path: Path | str) -> list[Protein]:
 # Seeds whose files are valid but whose alignments are known to be wrong for most classes.
 KNOWN_ISSUES = {
     "caretta": "Caretta's alignments are residue-level misaligned in every class except Taste 2 "
-    "(recall 0.08-0.17 against GPCRdb in classF and classA_001_19), although its lDDT is high.",
+    "(recall 0.08-0.17 against GPCRdb in classF and classA_001_19), although its lDDT is high. "
+    "Among the recommended seeds it does no harm: the search keeps only what improves the "
+    "objectives.",
 }
 
 

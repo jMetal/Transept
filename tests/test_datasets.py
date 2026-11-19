@@ -26,6 +26,19 @@ class TestListing:
     def test_should_choose_the_default_seeds_among_the_available_ones(self):
         assert datasets.default_seed_tools(["caretta", "mafft", "kalign"]) == ["kalign", "mafft"]
 
+    def test_should_recommend_the_sequence_and_structural_seeds_among_the_available_ones(self):
+        available = ["broken", "usalign", "caretta", "mafft", "kalign"]
+
+        assert datasets.recommended_seed_tools(available) == [
+            "kalign",
+            "mafft",
+            "caretta",
+            "usalign",
+        ]
+
+    def test_should_recommend_no_seeds_when_none_is_known(self):
+        assert datasets.recommended_seed_tools(["broken", "internal"]) == []
+
 
 class TestTopology:
     def test_should_read_identifiers_sequences_and_topologies(self, data_root: Path):

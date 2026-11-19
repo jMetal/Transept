@@ -132,9 +132,10 @@ def activity(runs_root: Path, limit: int = 4) -> Activity:
 
 
 def example_request(now: datetime | None = None) -> runner.RunRequest:
-    """NSGA-II with its defaults on the example dataset, seeded with its precomputed alignments.
+    """NSGA-II on the example dataset, seeded with its precomputed alignments, repaired.
 
-    The precomputed seeds let it start at once, without computing internal seeds first.
+    The precomputed seeds let it start at once, without computing internal seeds first; the budget
+    is that of a demonstration, smaller than the recommended one.
     """
     stamp = (now or datetime.now()).strftime("%Y%m%d-%H%M%S")
     tools = datasets.list_seed_tools(settings.EXAMPLES, EXAMPLE_DATASET)
@@ -144,9 +145,10 @@ def example_request(now: datetime | None = None) -> runner.RunRequest:
         run_id=f"example-{stamp}",
         seed=1,
         algorithm="NSGA_II",
-        max_evaluations=options.DEFAULT_MAX_EVALUATIONS,
+        max_evaluations=options.EXAMPLE_MAX_EVALUATIONS,
         population_size=options.DEFAULT_POPULATION_SIZE,
         threads=min(4, os.cpu_count() or 1),
+        repair_seeds=True,
     )
 
 

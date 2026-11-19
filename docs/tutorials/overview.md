@@ -37,7 +37,7 @@ alternative alignments** that trade one for the other.
 
 | | What it means for you |
 | --- | --- |
-| **No new gaps inside helices** | The search never opens a gap inside a transmembrane helix. Gaps that the seed alignments already have there are kept: Results shows them in red, and **Repair the seeds** in **New run** moves them out of the seeds before the search |
+| **No gaps inside helices** | The search never opens a gap inside a transmembrane helix, and by default **Repair the seeds** in **New run** moves those of the seed alignments out before the search. If you turn it off, the gaps of the seeds are kept, and Results shows them in red |
 | **Structure taken into account** | The AlphaFold2 (or experimental) structures guide the search, and you can see the structures superposed according to the alignment |
 | **Better than its starting point** | The search starts from the alignments of other tools and keeps improving them; Results draws those seed alignments beside the result, so you see what was gained |
 | **A recommended alignment** | You do not have to choose among the alignments found: the **knee**, a balanced point of the trade-off, is a good default |

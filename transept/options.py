@@ -93,7 +93,10 @@ DESCRIPTIONS = {
     "TM_SAFE_UNIFORM": "Uniform, between the columns where both parents agree; adds no gap",
 }
 
-DEFAULT_MAX_EVALUATIONS = 10_000
+# Recommended budget: the pilot of 2026-11 found 50,000 better than 10,000 in every dataset.
+DEFAULT_MAX_EVALUATIONS = 50_000
+# The example of the home page is a demonstration: it must finish in a minute or two.
+EXAMPLE_MAX_EVALUATIONS = 10_000
 DEFAULT_POPULATION_SIZE = 100
 DEFAULT_CROSSOVER_PROBABILITY = 0.8
 DEFAULT_MUTATION_PROBABILITY = 0.2

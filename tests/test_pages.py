@@ -1157,8 +1157,19 @@ class TestNewRun:
         # Assert
         assert not app.exception
         assert app.selectbox[0].value == "toy"
-        assert app.multiselect[0].value == ["internal"]
+        assert app.multiselect[0].value == ["kalign", "mafft", "caretta"]
         assert any("--dataset toy" in code.value for code in app.code)
+
+    def test_should_propose_the_recommended_configuration(self, configured):
+        if settings.java_version() is None:
+            pytest.skip("Java is not installed")
+        # Act
+        app = open_page(ui.NEW_RUN)
+
+        # Assert
+        command = next(code.value for code in app.code if "--dataset toy" in code.value)
+        assert "--repair-seeds" in command
+        assert "--max-evaluations 50000" in command
 
     def test_should_hide_invalid_seeds_and_warn_about_structures(self, configured):
         if settings.java_version() is None:

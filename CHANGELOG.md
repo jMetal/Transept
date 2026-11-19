@@ -6,6 +6,13 @@ All notable changes to Transept are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **New run** proposes the recommended configuration, chosen with a pilot on the GPCR benchmark:
+  50,000 evaluations (was 10,000), **Repair the seeds** on, and as seeds the precomputed alignments of
+  the sequence and structural aligners when the dataset has them (internal seeds otherwise). The
+  example of the home page keeps 10,000 evaluations, as a short demonstration, and repairs its seeds.
+
 ### Fixed
 
 - What the interface and the tutorials say about helices: the search never opens a gap inside a

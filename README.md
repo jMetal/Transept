@@ -44,6 +44,11 @@ The pages are grouped by what you want to do; the home page has a card for each 
 | **git and make** | macOS: `xcode-select --install`. Debian/Ubuntu: `sudo apt install git make` |
 | **Conda** | [Miniforge](https://github.com/conda-forge/miniforge) is recommended; Anaconda or Miniconda also work. Conda installs Python, Java and Maven for Transept, in an environment of its own: you do not need to install them yourself |
 | **Disk and network** | About 2 GB, downloaded once: the Conda environment and the libraries of Transept core |
+| **Web browser** | Any recent one: Transept opens in it |
+
+Nothing else is needed: on a fresh Ubuntu machine with only git, make and Anaconda installed, these
+steps are enough. Python, Java and Maven do not have to be installed beforehand, and versions already
+on the computer are not touched.
 
 Check that the tools are available (each command prints a version):
 
@@ -97,11 +102,12 @@ Transept-core: run `make setup JAR=/path/to/the.jar` instead.
 
 1. **Home** should say _Ready_, with the Java version and _1 dataset in 1 repository_ (the
    example). If it lists problems instead, see [Troubleshooting](#troubleshooting).
-2. Open **New run**. The dataset is `classT2_19`, the seed alignments are `internal` (computed
-   by Transept), and the algorithm is NSGA-II with its default configuration and 10 000
-   evaluations. Press **Launch**.
-3. **Monitor** follows the run: evaluations and the best values of both objectives. It takes between
-   half a minute and two minutes, depending on the computer.
+2. Open **New run**. The dataset is `classT2_19`, the seed alignments are its precomputed ones,
+   repaired, and the algorithm is NSGA-II with its recommended configuration and 50 000
+   evaluations. Press **Launch**. (The example of **Home** runs the same search with 10 000
+   evaluations, as a quick demonstration.)
+3. **Monitor** follows the run: evaluations and the best values of both objectives. It takes about
+   five to ten minutes, depending on the computer.
 4. When it finishes, open **Results**: every dot of the chart is an alignment; pick one to see
    it helix by helix, compare it with the seed alignments and download it.
 

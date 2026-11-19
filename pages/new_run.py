@@ -105,15 +105,18 @@ if invalid:
         for tool, problem in invalid.items():
             st.markdown(f"- **{tool}**: {problem}")
 
+recommended = datasets.recommended_seed_tools(tools)
 seeds = st.multiselect(
     "Seed alignments",
     [internal_seeds.NAME, *tools],
-    default=[internal_seeds.NAME],
+    default=recommended or [internal_seeds.NAME],
     format_func=lambda value: (
         "internal (computed by the tool)" if value == internal_seeds.NAME else value
     ),
     help="Alignments that start the search: up to 10 computed by the tool itself (internal), "
-    "and/or the precomputed alignments of other tools that match the sequences of the dataset.",
+    "and/or the precomputed alignments of other tools that match the sequences of the dataset. "
+    "Recommended: the precomputed ones of the sequence and structural aligners, when the "
+    "dataset has them; otherwise the internal ones.",
 )
 for tool in seeds:
     if tool in datasets.KNOWN_ISSUES:
@@ -141,7 +144,7 @@ if internal_seeds.NAME in seeds:
             st.rerun()
 repair_seeds = st.checkbox(
     "Repair the seeds",
-    value=False,
+    value=True,
     help="Move the gaps that split a transmembrane helix out of every seed before the search. "
     "The operators never create such gaps, but keep those of the seeds.",
 )

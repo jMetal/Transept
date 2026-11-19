@@ -63,6 +63,15 @@ def test_should_run_the_example_with_its_precomputed_seeds():
     assert request.seeds and "internal" not in request.seeds
 
 
+def test_should_run_the_example_as_a_short_demonstration_with_repaired_seeds():
+    from transept import options
+
+    request = home_panel.example_request(datetime(2026, 11, 16, 10, 0, 0))
+    assert request.repair_seeds
+    assert request.max_evaluations == options.EXAMPLE_MAX_EVALUATIONS
+    assert request.max_evaluations < options.DEFAULT_MAX_EVALUATIONS
+
+
 def test_should_count_what_transept_offers():
     from transept import options
 

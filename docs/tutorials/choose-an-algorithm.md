@@ -21,7 +21,7 @@ those who want to know how the search works, or to try other algorithms and sett
    [Choose the operators](operators.md) explains each of them.
 3. **Selection.** It scores the children with the objectives and keeps the best of parents and
    children for the next round.
-4. **Repeat** until the budget is spent: 10,000 alignments evaluated by default.
+4. **Repeat** until the budget is spent: 50,000 alignments evaluated by default.
 
 The algorithms differ mainly in step 3: what "the best" means when there are several objectives.
 
@@ -45,10 +45,18 @@ The default run of NSGA-II:
 | Setting | Default |
 | --- | --- |
 | Population | 100 alignments |
-| Budget | 10,000 evaluations |
+| Budget | 50,000 evaluations |
 | Crossover | Single point, probability 0.8 |
 | Mutation | Gap shift, probability 0.2 |
 | Selection | Tournament of 2 |
+| Seed alignments | The precomputed ones of sequence and structural aligners, if the dataset has them; otherwise the internal ones |
+| Repair the seeds | Yes |
+
+These defaults come from a pilot on the GPCR benchmark: 50,000 evaluations gave a better front and a
+slightly better recommended alignment than 10,000 in every dataset; repairing the seeds removed the
+gaps inside helices without changing the accuracy in most datasets; and adding the alignments of
+structural aligners to the seeds improved the recommended alignment in every dataset where they could
+be used, at the price of aligning slightly fewer residues.
 
 What is worth changing, if anything, is not the algorithm but:
 
