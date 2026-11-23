@@ -175,7 +175,7 @@ if expert:
     left, right = st.columns(2)
     settings_area = left
 else:
-    right = st.container()
+    left, right = st.columns(2)
     settings_area = st.expander("Settings of the search (optional)", icon=":material/tune:")
     settings_area.caption(
         "The search uses NSGA-II, with SOPwTP and lDDT as objectives. Its default settings are "
@@ -192,10 +192,16 @@ with settings_area:
     population_size = st.number_input(
         "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=4
     )
+with left:
     threads = 1
     if options.is_parallel(algorithm):
         threads = st.number_input(
-            "Evaluation threads", 1, os.cpu_count() or 1, min(4, os.cpu_count() or 1)
+            "Evaluation threads (cores)",
+            1,
+            os.cpu_count() or 1,
+            min(4, os.cpu_count() or 1),
+            help="Cores of this machine used to evaluate alignments. More threads make the run "
+            "faster.",
         )
     else:
         st.caption("This algorithm evaluates one solution at a time, so it uses a single thread.")
