@@ -175,7 +175,7 @@ def project_facts(datasets: int, repositories: int, tutorials: int) -> list[Fact
         Fact(
             "Algorithms",
             str(len(options.ALGORITHMS)),
-            "NSGA-II, SPEA2, a genetic algorithm and others, with two random searches as checks",
+            "NSGA-II by default; the others, in expert mode: SPEA2, a genetic algorithm and more",
         ),
         Fact(
             "Formulations",

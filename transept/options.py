@@ -15,6 +15,8 @@ ALGORITHMS = (
     "RANDOM_SEARCH",
     "RANDOM_SEEDED",
 )
+# The only algorithm offered outside expert mode.
+BASIC_ALGORITHM = "NSGA_II"
 # Algorithms of the tool that Transept does not offer.
 NOT_OFFERED: tuple[str, ...] = ()
 

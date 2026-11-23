@@ -2,6 +2,8 @@
 (explore, optimize, analyze), each with its pages and its state. What it shows besides the links
 comes from transept/home_panel.py."""
 
+from dataclasses import replace
+
 import streamlit as st
 
 from transept import charts, dataset_check, front, home_panel, runner, runs, settings, tutorials, ui
@@ -278,8 +280,9 @@ def render_settings(current: settings.Settings, problems: list[str]) -> None:
         with st.form("settings"):
             jar = st.text_input("Transept core jar (with dependencies)", current.jar)
             if st.form_submit_button("Save"):
-                settings.save_settings(settings.Settings(jar.strip(), current.repositories))
+                settings.save_settings(replace(current, jar=jar.strip()))
                 st.rerun()
+        ui.expert_mode_toggle(current)
         st.page_link(
             ui.DATASETS, label="Add data directories in Datasets", icon=":material/dataset:"
         )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import streamlit as st
 
 from transept import dataset_check, runs, series, settings, tutorials
@@ -23,12 +25,30 @@ DATASET_TO_OPTIMIZE = "dataset_to_optimize"
 DATASET_SELECTED = "datasets_selected"
 ALGORITHM_TO_USE = "algorithm_to_use"
 ALGORITHM_SELECTED = "algorithms_selected"
+EXPERT_MODE = "expert_mode"
 LEVEL_MARKS = {
     Level.OK: ":green[:material/check_circle:]",
     Level.INFO: ":blue[:material/info:]",
     Level.WARNING: ":orange[:material/warning:]",
     Level.ERROR: ":red[:material/error:]",
 }
+
+
+def expert_mode_toggle(current: settings.Settings) -> bool:
+    """Shows the switch of the expert mode, which is kept in the settings, and returns its value."""
+
+    def save() -> None:
+        chosen = replace(settings.load_settings(), expert_mode=st.session_state[EXPERT_MODE])
+        settings.save_settings(chosen)
+
+    st.session_state[EXPERT_MODE] = current.expert_mode
+    return st.toggle(
+        "Expert mode",
+        key=EXPERT_MODE,
+        on_change=save,
+        help="Offers every algorithm, formulation and operator. Without it, Transept searches with "
+        "NSGA-II and its recommended configuration, whose settings can be changed too.",
+    )
 
 
 def show_tutorial(tutorial: tutorials.Tutorial) -> None:

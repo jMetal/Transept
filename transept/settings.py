@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 import subprocess
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 HOME_VARIABLE = "TRANSEPT_HOME"
@@ -61,10 +61,13 @@ class Settings:
     Attributes:
         jar: The Transept core jar with dependencies.
         repositories: The repositories the user added; the examples are always available too.
+        expert_mode: Whether every algorithm and formulation is offered, or only the recommended
+            ones.
     """
 
     jar: str
     repositories: list[Repository] = field(default_factory=list)
+    expert_mode: bool = False
 
 
 def jar_candidates() -> list[Path]:
@@ -144,13 +147,14 @@ def add_repository(settings: Settings, path: str, name: str = "") -> Settings:
             raise ValueError(f"This directory is already the repository {existing.name}.")
         if existing.name == name:
             raise ValueError(f"There is already a repository called {name}: choose another name.")
-    return Settings(settings.jar, [*settings.repositories, Repository(name, str(directory))])
+    added = Repository(name, str(directory))
+    return replace(settings, repositories=[*settings.repositories, added])
 
 
 def remove_repository(settings: Settings, path: str) -> Settings:
     """Returns the settings without a repository; its files are not touched."""
     kept = [repository for repository in settings.repositories if repository.path != path]
-    return Settings(settings.jar, kept)
+    return replace(settings, repositories=kept)
 
 
 def _saved_repositories(saved: dict) -> list[Repository]:
@@ -171,7 +175,11 @@ def load_settings() -> Settings:
     path = settings_file()
     if path.is_file():
         saved = json.loads(path.read_text(encoding="utf-8"))
-        return Settings(saved.get("jar") or default_jar(), _saved_repositories(saved))
+        return Settings(
+            saved.get("jar") or default_jar(),
+            _saved_repositories(saved),
+            bool(saved.get("expert_mode", False)),
+        )
     return default_settings()
 
 

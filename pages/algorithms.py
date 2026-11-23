@@ -53,7 +53,7 @@ def render_configuration(jar: str, algorithm: Algorithm) -> None:
         st.code(" ".join(f"--{k} {v}" for k, v in default.items()), language=None, wrap_lines=True)
 
 
-def render_algorithm(jar: str, algorithm: Algorithm) -> None:
+def render_algorithm(jar: str, algorithm: Algorithm, expert: bool) -> None:
     """What is worth knowing about an algorithm, and how to use it."""
     st.subheader(f"{algorithm.name}: {algorithm.description}")
     if st.button(
@@ -64,7 +64,8 @@ def render_algorithm(jar: str, algorithm: Algorithm) -> None:
     ):
         st.session_state[ui.ALGORITHM_TO_USE] = algorithm.name
         st.switch_page(ui.NEW_RUN)
-    labels = [options.OBJECTIVES[name][0] for name in algorithm.formulations]
+    formulations = algorithm.formulations if expert else [options.DEFAULT_OBJECTIVES]
+    labels = [options.OBJECTIVES[name][0] for name in formulations]
     st.markdown("**Objectives:** " + "; ".join(labels) + ".")
     for note in algorithm.notes:
         st.markdown(f"- {note}")
@@ -79,6 +80,7 @@ st.write(
 )
 
 current = settings.load_settings()
+expert = ui.expert_mode_toggle(current)
 algorithms_tab, objectives_tab, operators_tab = st.tabs(["Algorithms", "Objectives", "Operators"])
 
 with algorithms_tab:
@@ -88,14 +90,23 @@ with algorithms_tab:
         st.error(f"Transept core did not give its algorithms: {error}")
         st.page_link(ui.HOME, label="Go to the settings", icon=":material/home:")
     else:
-        st.caption("Select a row to see the details of an algorithm.")
-        chosen = pick_algorithm(catalogue)
+        if expert:
+            st.caption("Select a row to see the details of an algorithm.")
+            chosen = pick_algorithm(catalogue)
+        else:
+            st.caption(
+                "Transept searches with NSGA-II. Its default settings are the recommended ones; "
+                "they can be changed in **New run**. Expert mode offers the other algorithms."
+            )
+            chosen = next((a for a in catalogue if a.name == options.BASIC_ALGORITHM), None)
         if chosen is not None:
-            render_algorithm(current.jar, chosen)
+            render_algorithm(current.jar, chosen, expert)
 
 with objectives_tab:
     st.write("What the search maximises. None of them uses a reference alignment.")
     for name, (label, count) in options.OBJECTIVES.items():
+        if not expert and name != options.DEFAULT_OBJECTIVES:
+            continue
         noun = "objective" if count == 1 else "objectives"
         st.markdown(f"**{label}** ({count} {noun})")
         st.markdown(algorithms.FORMULATION_DETAILS[name])

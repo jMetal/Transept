@@ -39,6 +39,9 @@ if settings.problems(current):
     st.stop()
 
 
+expert = ui.expert_mode_toggle(current)
+
+
 @st.cache_data(show_spinner=False)
 def inspect_dataset(data_root: str, dataset: str, stamp: float):
     """Proteins, proteins without structure, and the valid and invalid seeds of a dataset."""
@@ -152,27 +155,40 @@ repair_seeds = st.checkbox(
 OBJECTIVES_WIDGET = "new_run_objectives"
 ALGORITHM_WIDGET = "new_run_algorithm"
 wanted_algorithm = st.session_state.pop(ui.ALGORITHM_TO_USE, None)
-if wanted_algorithm in options.ALGORITHMS:
+if expert and wanted_algorithm in options.ALGORITHMS:
     st.session_state[OBJECTIVES_WIDGET] = options.formulation_for(wanted_algorithm)
     st.session_state[ALGORITHM_WIDGET] = wanted_algorithm
-objectives = st.selectbox(
-    "Objectives",
-    list(options.OBJECTIVES),
-    key=OBJECTIVES_WIDGET,
-    format_func=lambda value: options.OBJECTIVES[value][0],
-    help="What the search optimises. The algorithms offered depend on the number of objectives.",
-)
-allowed_algorithms = options.algorithms_for(objectives)
-if st.session_state.get(ALGORITHM_WIDGET) not in allowed_algorithms:
-    st.session_state.pop(ALGORITHM_WIDGET, None)
-left, right = st.columns(2)
-with left:
-    algorithm = st.selectbox(
-        "Algorithm",
-        allowed_algorithms,
-        key=ALGORITHM_WIDGET,
-        format_func=lambda value: options.DESCRIPTIONS[value],
+objectives = options.DEFAULT_OBJECTIVES
+algorithm = options.BASIC_ALGORITHM
+if expert:
+    objectives = st.selectbox(
+        "Objectives",
+        list(options.OBJECTIVES),
+        key=OBJECTIVES_WIDGET,
+        format_func=lambda value: options.OBJECTIVES[value][0],
+        help="What the search optimises. The algorithms offered depend on the number of "
+        "objectives.",
     )
+    allowed_algorithms = options.algorithms_for(objectives)
+    if st.session_state.get(ALGORITHM_WIDGET) not in allowed_algorithms:
+        st.session_state.pop(ALGORITHM_WIDGET, None)
+    left, right = st.columns(2)
+    settings_area = left
+else:
+    right = st.container()
+    settings_area = st.expander("Settings of the search (optional)", icon=":material/tune:")
+    settings_area.caption(
+        "The search uses NSGA-II, with SOPwTP and lDDT as objectives. Its default settings are "
+        "the recommended ones."
+    )
+with settings_area:
+    if expert:
+        algorithm = st.selectbox(
+            "Algorithm",
+            allowed_algorithms,
+            key=ALGORITHM_WIDGET,
+            format_func=lambda value: options.DESCRIPTIONS[value],
+        )
     population_size = st.number_input(
         "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=4
     )
@@ -201,6 +217,12 @@ with right:
             help="Runs that stop by time do not repeat exactly with the same seed: the number of "
             "evaluations depends on the machine.",
         )
+
+if not expert and population_size != options.DEFAULT_POPULATION_SIZE:
+    st.caption(
+        f"Population size changed: {int(population_size)} instead of "
+        f"{options.DEFAULT_POPULATION_SIZE}."
+    )
 
 mutation = "TM_SAFE_GAP_SHIFT"
 crossover = options.DEFAULT_CROSSOVER
@@ -290,7 +312,7 @@ else:
 
 if "random_seed" not in st.session_state:
     st.session_state["random_seed"] = random.randint(0, 999_999)
-seed = st.number_input(
+seed = (st if expert else settings_area).number_input(
     "Random seed",
     0,
     2**31 - 1,
