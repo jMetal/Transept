@@ -132,17 +132,6 @@ SECTIONS = (
         ),
     ),
     Section(
-        "Advanced",
-        (
-            Page(
-                "Automatic configuration",
-                ":material/tune:",
-                "Let Transept search for a good configuration of an algorithm on a set of "
-                "datasets.",
-            ),
-        ),
-    ),
-    Section(
         "Learn",
         (
             Page(
