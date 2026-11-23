@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -623,6 +624,10 @@ class TestSeries:
 
 
 class TestAlgorithms:
+    @pytest.fixture(autouse=True)
+    def expert(self, configured) -> None:
+        settings.save_settings(replace(configured, expert_mode=True))
+
     CATALOGUE = (
         Algorithm("NSGA_II", 2, 3, "MSANSGAII.yaml", False, False, True),
         Algorithm("GENETIC_ALGORITHM", 1, 1, "MSAGA.yaml", False, False, True),
@@ -1039,6 +1044,10 @@ class TestAddDataset:
 
 
 class TestNewRun:
+    @pytest.fixture(autouse=True)
+    def expert(self, configured) -> None:
+        settings.save_settings(replace(configured, expert_mode=True))
+
     def test_should_open_the_dataset_chosen_in_datasets(self, configured, tmp_path: Path):
         # Arrange: a dataset with the same name in another repository
         twin = tmp_path / "Twin"
@@ -1424,6 +1433,101 @@ class TestNewRun:
         app = open_page(ui.NEW_RUN)
         assert not app.exception
         assert "not ready" in texts(app)
+
+
+class TestExpertMode:
+    """The basic mode, which is the default, and the switch."""
+
+    @staticmethod
+    def labels(app: AppTest) -> list[str]:
+        return [item.label for item in [*app.selectbox, *app.number_input]]
+
+    @staticmethod
+    def command(app: AppTest) -> str:
+        return next(code.value for code in app.code if "--dataset toy" in code.value)
+
+    @staticmethod
+    def switch(app: AppTest, value: bool) -> None:
+        next(item for item in app.toggle if item.label == "Expert mode").set_value(value).run()
+
+    def test_should_offer_the_recommended_search_by_default(self, configured):
+        app = open_page(ui.NEW_RUN)
+        assert not app.exception
+        assert "Algorithm" not in self.labels(app)
+        assert "Objectives" not in self.labels(app)
+        assert "Settings of the search (optional)" in [item.label for item in app.expander]
+        command = self.command(app)
+        assert "--algorithm NSGA_II" in command
+        assert "--max-evaluations 50000" in command
+        assert "--repair-seeds" in command
+        assert "--configuration" not in command
+
+    def test_should_launch_the_optional_settings_that_changed(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+
+        # Act
+        next(b for b in app.number_input if b.label == "Population size").set_value(40).run()
+        next(b for b in app.selectbox if b.label == "selection").set_value("random").run()
+
+        # Assert
+        assert not app.exception
+        assert "Population size changed: 40" in texts(app)
+        assert "1 parameter(s) changed" in texts(app)
+        command = self.command(app)
+        assert "--population-size 40" in command
+        assert "--configuration '--selection random'" in command
+
+    def test_should_return_to_nsga_ii_when_leaving_the_expert_mode(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        self.switch(app, True)
+        next(b for b in app.selectbox if b.label == "Objectives").set_value("LDDT").run()
+        assert "--algorithm GENETIC_ALGORITHM" in self.command(app)
+
+        # Act
+        self.switch(app, False)
+
+        # Assert
+        assert not app.exception
+        assert "--algorithm NSGA_II" in self.command(app)
+        assert "--objectives LDDT" not in self.command(app)
+
+    def test_should_remember_the_mode(self, configured):
+        # Act
+        self.switch(open_page(ui.NEW_RUN), True)
+
+        # Assert: in the settings, so in another session and another page
+        assert settings.load_settings().expert_mode
+        assert "Algorithm" in self.labels(open_page(ui.NEW_RUN))
+        toggle = next(t for t in open_page(ui.HOME).toggle if t.label == "Expert mode")
+        assert toggle.value
+
+    def test_should_ignore_an_algorithm_of_the_expert_mode(self, configured):
+        app = open_page(ui.NEW_RUN, algorithm_to_use="PAES")
+        assert not app.exception
+        assert "--algorithm NSGA_II" in self.command(app)
+
+    def test_should_show_only_nsga_ii_in_algorithms(self, configured, monkeypatch):
+        monkeypatch.setattr(algorithms, "catalogue", lambda jar: TestAlgorithms.CATALOGUE)
+        app = open_page(ui.ALGORITHMS, algorithms_selected="PAES")
+        assert not app.exception
+        assert [item.value for item in app.subheader] == ["NSGA_II: NSGA-II, the default algorithm"]
+        assert "**Parameter space**" in texts(app)
+        assert algorithms.FORMULATION_DETAILS["LDDT"] not in texts(app)
+
+    def test_should_keep_the_mode_when_the_jar_changes(self, configured):
+        # Arrange
+        settings.save_settings(replace(configured, expert_mode=True))
+        app = open_page(ui.HOME)
+
+        # Act
+        next(t for t in app.text_input if t.label.startswith("Transept core jar")).set_value("/x")
+        next(button for button in app.button if button.label == "Save").click().run()
+
+        # Assert
+        assert settings.load_settings().jar == "/x"
+        assert settings.load_settings().expert_mode
 
 
 class TestMonitor:

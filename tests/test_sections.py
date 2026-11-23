@@ -27,7 +27,7 @@ class TestTutorialsEntry:
 class TestSections:
     def test_should_follow_the_use_cases_in_order(self):
         names = [section.name for section in SECTIONS]
-        assert names == ["Explore", "Optimize", "Analyze", "Advanced", "Learn"]
+        assert names == ["Explore", "Optimize", "Analyze", "Learn"]
 
     def test_should_point_to_scripts_that_exist(self):
         for page in ALL_PAGES:
@@ -46,10 +46,12 @@ class TestSections:
 
     def test_should_list_only_the_available_pages_of_a_section(self):
         optimize = next(section for section in SECTIONS if section.name == "Optimize")
-        advanced = next(section for section in SECTIONS if section.name == "Advanced")
         assert [page.path for page in optimize.available_pages] == [
             ui.NEW_RUN,
             ui.MONITOR,
             ui.HISTORY,
         ]
-        assert advanced.available_pages == ()
+
+    def test_should_leave_out_the_pages_that_are_coming(self):
+        analyze = next(section for section in SECTIONS if section.name == "Analyze")
+        assert [page.title for page in analyze.available_pages] == ["Results", "Repair alignment"]

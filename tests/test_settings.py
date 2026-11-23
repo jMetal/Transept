@@ -214,3 +214,22 @@ class TestDataRootOfRun:
     def test_should_keep_what_was_recorded_when_no_repository_has_it(self, configured):
         assert settings.data_root_of_run(configured, "/gone", "other") == "/gone"
         assert settings.data_root_of_run(configured, None, "other") == ""
+
+
+class TestExpertMode:
+    def test_should_be_off_by_default_and_in_earlier_settings(self, transept_home: Path):
+        assert not settings.default_settings().expert_mode
+        settings.settings_file().write_text(json.dumps({"jar": "/a.jar"}))
+        assert not settings.load_settings().expert_mode
+
+    def test_should_survive_the_changes_of_repositories(self, data_root: Path):
+        # Arrange
+        current = settings.Settings("/a.jar", expert_mode=True)
+
+        # Act
+        added = settings.add_repository(current, str(data_root), "Mine")
+        removed = settings.remove_repository(added, str(data_root))
+
+        # Assert
+        assert added.expert_mode and removed.expert_mode
+        assert removed.repositories == []
