@@ -26,8 +26,9 @@ FORMULATION_DETAILS = {
 
 # The operators outside the parameter spaces (see the tutorial T2 of Transept core).
 CROSSOVER = (
-    "Single-point crossover: combines two alignments with a cut that never splits a transmembrane "
-    "helix. It is the only crossover, and it creates no gaps inside helices."
+    "Combines two alignments. Single point, the default, cuts both at a column that splits no "
+    "transmembrane helix; uniform mixes the parts between the columns where both agree. Neither "
+    "creates gaps inside helices."
 )
 
 
