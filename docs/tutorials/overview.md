@@ -101,8 +101,8 @@ Transept has to offer.
 | --- | --- | --- |
 | **Explore** | **Datasets** | See the datasets of your data directories and whether they are ready; add directories, such as the GPCR structural benchmark |
 | | **Add dataset** | Add your own proteins, from their UniProt accessions or from your files, guided by a checklist |
-| | **Algorithms** | See the algorithms, objectives and operators, and the parameters of each configurable algorithm |
-| **Optimize** | **New run** | Choose a dataset, seed alignments, objectives, an algorithm and its settings, and launch the search, once or several times |
+| | **Algorithms** | See NSGA-II and its parameters, the objectives and the operators; in expert mode, every algorithm |
+| **Optimize** | **New run** | Choose a dataset and seed alignments and launch the search, once or several times; its settings are optional, and the expert mode adds objectives and algorithms |
 | | **Monitor** | Follow runs live; stop one early keeping what it found, or cancel it |
 | | **History** | Every run and series of runs; move them to the trash and restore them |
 | **Analyze** | **Results** | Explore, check and download the alignments of a run (see below) |
@@ -153,8 +153,8 @@ About five minutes, with the included example.
    **Structures for ChimeraX and PyMOL**: the structures come superposed according to the
    alignment, with a script that opens them with the helices coloured.
 
-**New run** gives you every option: the dataset, the seed alignments, what to optimise, the
-algorithm and its settings.
+**New run** lets you choose the dataset, the seed alignments and the settings of the search;
+**Expert mode**, at the top of the page, adds what to optimise and the algorithm.
 
 ## Workflow 2: your own proteins
 
@@ -204,7 +204,7 @@ datasets, as a repository on the **Datasets** page.
 
 ## Workflow 5: explore the method
 
-For those who study the search itself:
+For those who study the search itself. Switch on **Expert mode** in **New run** first:
 
 - **What to optimise.** Three formulations: SOPwTP and lDDT (the default), lDDT alone, or both
   with coverage as a third objective, which favours alignments with more aligned pairs.

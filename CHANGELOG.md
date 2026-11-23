@@ -8,13 +8,21 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Changed
 
+- **Expert mode**, off by default and kept in the settings. Without it, **New run** searches with
+  NSGA-II, SOPwTP and lDDT and the recommended configuration, whose settings are optional, and
+  **Algorithms** shows only NSGA-II. With it, both offer every algorithm and formulation, as before.
 - **New run** proposes the recommended configuration, chosen with a pilot on the GPCR benchmark:
   50,000 evaluations (was 10,000), **Repair the seeds** on, and as seeds the precomputed alignments of
   the sequence and structural aligners when the dataset has them (internal seeds otherwise). The
   example of the home page keeps 10,000 evaluations, as a short demonstration, and repairs its seeds.
 
+### Removed
+
+- The **Automatic configuration** page announced as coming soon, and the Advanced section.
+
 ### Fixed
 
+- **Algorithms** said that there is a single crossover; there are two.
 - What the interface and the tutorials say about helices: the search never opens a gap inside a
   transmembrane helix, but keeps those that the seed alignments already have (**Repair the seeds**
   in **New run** moves them out first). The subtitle of the home page no longer promises whole

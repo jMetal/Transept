@@ -17,7 +17,7 @@ Transept core's `docs/reference/cli.md` and `docs/reference/outputs.md`.
 | --- | --- |
 | `app.py` | Navigation shell (`st.navigation`), built from `transept/sections.py` |
 | `pages/` | One script per page; only `st.session_state` survives between them |
-| `transept/sections.py` | The pages grouped by use case (Explore, Optimize, Analyze, Advanced, Learn): the single source of the menu and the cards of the home page |
+| `transept/sections.py` | The pages grouped by use case (Explore, Optimize, Analyze, Learn): the single source of the menu and the cards of the home page |
 | `transept/settings.py` | Paths of the jar and the runs, and the repositories of datasets (`TRANSEPT_HOME`, `TRANSEPT_CORE_JAR`, `lib/`, `examples/`) |
 | `transept/datasets.py` | Datasets, seed tools and topology files of a data directory |
 | `transept/dataset_check.py` | The checklist and contents of a dataset, without Streamlit: one report for every page |

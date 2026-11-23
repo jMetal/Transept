@@ -120,8 +120,8 @@ What it does **not** add, and what it costs:
 
 ## Step 8: and with a single objective?
 
-**New run** also offers **lDDT only**, with the genetic algorithms, which maximise one number. It
-is useful to study the structural measure on its own, but you lose three things:
+In **Expert mode**, **New run** also offers **lDDT only**, with the genetic algorithms, which
+maximise one number. It is useful to study the structural measure on its own, but you lose three things:
 
 - **The trade-off.** You get the best alignment in structure and close variants of it, without
   knowing what it costs in sequence.

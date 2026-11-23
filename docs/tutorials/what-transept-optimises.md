@@ -115,7 +115,8 @@ projections, and the knee is chosen among the three.
 
 ## Step 6: the three formulations
 
-**New run** offers three ways to combine the objectives:
+**New run** uses the first of these three ways to combine the objectives; **Expert mode** offers
+them all:
 
 | Formulation | Objectives | Algorithms | When to use it |
 | --- | --- | --- | --- |

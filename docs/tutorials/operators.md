@@ -18,7 +18,8 @@ it.
 
 ## Step 1: where to choose them
 
-Open **New run** and choose an algorithm. What you see depends on the algorithm:
+Open **New run**. It searches with NSGA-II; switch on **Expert mode** to choose another algorithm.
+What you see depends on the algorithm:
 
 | Algorithm | Where the operators are |
 | --- | --- |

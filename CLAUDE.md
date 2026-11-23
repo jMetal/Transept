@@ -16,15 +16,15 @@ The pages are grouped by use case (`transept/sections.py`):
 - **Explore**: Datasets (several repositories of datasets, each checked), Add dataset (your own
   proteins from UniProt accessions, with AlphaFold models, or from your files; distances computed
   from the structures), Algorithms (read from the jar).
-- **Optimize**: New run (every algorithm, formulation and operator; a recommended configuration
-  with 50,000 evaluations and repaired seeds; several independent runs), Monitor, History.
+- **Optimize**: New run (NSGA-II with a recommended configuration of 50,000 evaluations and repaired
+  seeds; in expert mode, off by default, every algorithm and formulation; several independent runs),
+  Monitor, History.
 - **Analyze**: Results of a run (the front, knee and medoid, agreement, the alignment helix by helix,
   support, pLDDT and conservation tracks, GPCRdb generic numbers, metrics against a reference, 3D
   superposition, downloads), Results of independent runs (the aggregate front, analysed like a
   single run, with support from the other runs), Repair alignment.
 - **Learn**: the tutorials of `docs/tutorials/`, also shown inside the tool.
-- **Not yet built**: Compare (runs, seeds and other tools) and Automatic configuration (shown as
-  "Coming soon").
+- **Not yet built**: Compare (runs, seeds and other tools; shown as "Coming soon").
 - **Installation**: `make setup` with Conda on macOS and Linux, and a Docker image built locally
   (`make image`), not published yet.
 - **Quality**: about 490 tests (pytest and `AppTest`), ruff; GitHub Actions runs them on Linux,
@@ -37,7 +37,7 @@ The pages are grouped by use case (`transept/sections.py`):
 Contributions are welcome in any of these; open an issue first to agree on the approach.
 
 - The Compare page: runs, seed alignments and alignments of other tools side by side.
-- Automatic configuration of the algorithms (Evolver), from the Advanced section.
+- Comparative studies of algorithms and configurations, in expert mode.
 - A first release, a published Docker image, and an installation that works on a clean macOS or
   Linux machine (and Windows through WSL or Docker, not tested yet).
 - Datasets of other transmembrane families, and better support for proteins without a GPCRdb

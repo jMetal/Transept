@@ -12,6 +12,9 @@ widely used algorithm for problems with several objectives, and its default conf
 choice for most users: you do not need to read this tutorial to align your proteins. It is for
 those who want to know how the search works, or to try other algorithms and settings.
 
+**New run** and **Algorithms** show only NSGA-II until you switch on **Expert mode**, at the top of
+both pages (and in the settings of the home page). Transept remembers it.
+
 ## Step 1: how an evolutionary search works
 
 1. **A population of alignments.** The search starts from the seed alignments (those of other tools,
@@ -66,7 +69,7 @@ What is worth changing, if anything, is not the algorithm but:
 - **Independent runs**: several runs with different seeds show how stable the result is, and
   together find better alignments (Workflow 3 of the [Overview](overview.md)).
 
-## Step 4: the other algorithms
+## Step 4: the other algorithms (expert mode)
 
 All of them use the same operators and objectives; they differ in how they select. With two
 objectives, none is better than NSGA-II everywhere: the only way to know on your proteins is to
@@ -111,10 +114,11 @@ The other algorithms offer the basic settings in **New run**: the operators, the
 the population size, the largest gap shift and the number of candidate cuts.
 
 A configuration is a line of text; **New run** shows the equivalent command line with it, and
-every run records it in **Results**, to repeat it exactly. Choosing configurations automatically
-(**Automatic configuration**) is coming soon.
+every run records it in **Results**, to repeat it exactly.
 
 ## Step 6: comparing algorithms on your proteins
+
+Switch on **Expert mode** first.
 
 1. In **New run**, choose the algorithm and its settings, with the same budget for all, and set
    **Independent runs**, for example to 10.
