@@ -1080,7 +1080,7 @@ class TestNewRun:
         monkeypatch.setattr(series, "launch", fake_launch)
         app = open_page(ui.NEW_RUN)
         next(box for box in app.selectbox if box.label == "Algorithm").set_value("PAES").run()
-        assert not [box for box in app.number_input if box.label == "Evaluation threads"]
+        assert not [box for box in app.number_input if box.label.startswith("Evaluation threads")]
 
         # Act
         next(box for box in app.number_input if box.label == "Independent runs").set_value(3).run()
@@ -1477,6 +1477,20 @@ class TestExpertMode:
         command = self.command(app)
         assert "--population-size 40" in command
         assert "--configuration '--selection random'" in command
+
+    def test_should_offer_the_cores_outside_the_optional_settings(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        optional = next(e for e in app.expander if e.label == "Settings of the search (optional)")
+        assert not [b for b in optional.number_input if b.label.startswith("Evaluation threads")]
+
+        # Act
+        next(b for b in app.number_input if b.label.startswith("Evaluation threads")).set_value(1)
+        app.run()
+
+        # Assert
+        assert not app.exception
+        assert "--threads 1" in self.command(app)
 
     def test_should_return_to_nsga_ii_when_leaving_the_expert_mode(self, configured):
         # Arrange
