@@ -94,8 +94,9 @@ Open the **Alignment** tab of the knee and press **TM3**, the first half-helix:
   the alignment still puts them in the columns of the NPA of the others.
 - The gaps in red in AQP2, AQP4 and AQP5 fall inside a helix as UniProt delimits it in those
   proteins: there the aquaglyceroporins (AQP3, AQP7 and AQP9) have a longer loop. The search never
-  opens such a gap; this one comes from the internal seeds. The **3D** tab shows whether the
-  residues on both sides really sit together.
+  opens such a gap; this one comes from the internal seeds, which this run did not repair. Transept
+  now always repairs them, so a new run does not show it. The **3D** tab shows whether the residues
+  on both sides really sit together.
 
 To know which columns you can trust, read [Is my alignment reliable?](is-my-alignment-reliable.md).
 

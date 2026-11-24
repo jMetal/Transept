@@ -70,7 +70,8 @@ end up facing the gaps of other rows. The two measure different things.
 
 **New run** repairs the seed alignments before the search by default (**Repair the seeds**). Since the
 operators of Transept never open a gap inside a helix either, no alignment of the result has one.
-Turn it off only to reproduce a run made without it.
+The internal seeds are always repaired. Turn it off to keep the gaps of precomputed alignments that
+you trust, or to reproduce a run made without it; then the result may have gaps inside helices.
 
 ## How much does it change an alignment?
 
