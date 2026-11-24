@@ -51,7 +51,8 @@ class RunRequest:
         max_time: Stop after this many seconds instead of `max_evaluations`; None to stop by
             evaluations.
         objectives: Value of --objectives.
-        repair_seeds: Whether to pass --repair-seeds.
+        repair_seeds: Whether the gaps inside helices are moved out of the precomputed seeds; the
+            internal ones are always repaired.
         max_shift: Value of --max-shift, for algorithms not configured from a parameter space.
         cut_candidates: Value of --cut-candidates, likewise.
     """
@@ -72,7 +73,7 @@ class RunRequest:
     configuration: str = ""
     max_time: float | None = None
     objectives: str = options.DEFAULT_OBJECTIVES
-    repair_seeds: bool = False
+    repair_seeds: bool = True
     max_shift: int = options.DEFAULT_MAX_SHIFT
     cut_candidates: int = options.DEFAULT_CUT_CANDIDATES
 
@@ -152,8 +153,8 @@ def command(request: RunRequest, jar: str, data_root: str, runs_root: Path) -> l
         "--objectives",
         request.objectives,
     ]
-    if request.repair_seeds:
-        arguments.append("--repair-seeds")
+    # Always explicit: the default of the tool depends on its version.
+    arguments.append("--repair-seeds" if request.repair_seeds else "--no-repair-seeds")
     if request.max_time is None:
         arguments += ["--max-evaluations", str(request.max_evaluations)]
     else:

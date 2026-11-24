@@ -149,7 +149,8 @@ repair_seeds = st.checkbox(
     "Repair the seeds",
     value=True,
     help="Move the gaps that split a transmembrane helix out of every seed before the search. "
-    "The operators never create such gaps, but keep those of the seeds.",
+    "The operators never create such gaps, so no helix of the result is split. Without it, the "
+    "gaps of the precomputed alignments may stay. The internal seeds are always repaired.",
 )
 
 OBJECTIVES_WIDGET = "new_run_objectives"

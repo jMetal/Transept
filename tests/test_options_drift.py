@@ -70,8 +70,10 @@ def test_should_pass_only_options_that_the_tool_accepts(run_help):
         crossover="TM_SAFE_UNIFORM",
     )
     arguments = runner.command(request, JAR, "data", Path("runs"))
+    # Negatable options are shown once, as --[no-]option
+    accepted = re.sub(r"--\[no-\](\S+?)(?=[\],\s])", r"--\1 --no-\1", run_help)
     for flag in (argument for argument in arguments if argument.startswith("--")):
-        assert re.search(re.escape(flag) + r"\b", run_help), f"the jar does not accept {flag}"
+        assert re.search(re.escape(flag) + r"\b", accepted), f"the jar does not accept {flag}"
 
 
 def test_should_find_the_parameter_space_of_every_configurable_algorithm():

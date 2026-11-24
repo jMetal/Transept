@@ -41,6 +41,8 @@ class TestRequests:
         assert runner.validate(request) == []
         assert "--repair-seeds" in arguments
         assert arguments[arguments.index("--seeds") + 1] == "internal"
-        assert "--repair-seeds" not in runner.command(
+        kept = runner.command(
             dataclasses.replace(request, repair_seeds=False), "/t.jar", "/data", tmp_path
         )
+        assert "--repair-seeds" not in kept
+        assert "--no-repair-seeds" in kept
