@@ -55,7 +55,9 @@ All notable changes to Transept are recorded here. The format follows
 - **New run**: every algorithm and formulation, the operators with their settings, the
   configuration of NSGA-II, SPEA2 and the genetic algorithm, independent runs that share the
   computer automatically, and the equivalent command line.
-- **Monitor**: progress of runs and series; stop them early keeping their results, or cancel them.
+- **Monitor**: progress of runs and series; stop them early keeping their results, or cancel them. It
+  says when the best values have not improved for a number of generations (30 by default, adjustable),
+  without stopping anything.
 - **History**: runs and series, with a trash to restore them.
 - **Results**: the front of two or three objectives with its extremes and knee, the seed alignments
   (precomputed or internal), the alignment helix by helix with the gaps that break a helix, metrics
