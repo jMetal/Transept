@@ -1624,6 +1624,63 @@ class TestMonitor:
             "Best coverage",
         ]
 
+    @staticmethod
+    def stalled_run(generations: int) -> None:
+        """A running run whose best values did not improve in its last generations."""
+        write_job(settings.runs_root(), "stalled", ALIVE_PID)
+        directory = settings.runs_root() / "ejecuciones" / "toy" / "stalled"
+        directory.mkdir(parents=True)
+        (directory / "config.json").write_text(
+            json.dumps({"maxEvaluations": 50_000, "populationSize": 100})
+        )
+        (directory / "progress.jsonl").write_text(
+            "".join(
+                json.dumps(
+                    {
+                        "evaluations": 100 * (index + 1),
+                        "elapsedMs": 10 * index,
+                        "best": {"SOPwTP": 1.0, "lDDT": 0.5},
+                    }
+                )
+                + "\n"
+                for index in range(generations + 1)
+            )
+        )
+
+    @staticmethod
+    def notices(app: AppTest) -> list[str]:
+        return [item.value for item in app.info if "have not improved" in item.value]
+
+    def test_should_suggest_stopping_a_run_that_does_not_improve(self, configured):
+        self.stalled_run(settings.DEFAULT_PATIENCE)
+        app = open_page(ui.MONITOR)
+        assert not app.exception
+        assert len(self.notices(app)) == 1
+        # It is only a notice: nothing is stopped
+        results = settings.runs_root() / "ejecuciones" / "toy" / "stalled"
+        assert not (results / runner.STOP_FILE).exists()
+
+    def test_should_not_suggest_it_before_the_generations_chosen(self, configured):
+        self.stalled_run(settings.DEFAULT_PATIENCE - 1)
+        app = open_page(ui.MONITOR)
+        assert not app.exception
+        assert not self.notices(app)
+
+    def test_should_keep_the_generations_chosen(self, configured):
+        # Arrange
+        self.stalled_run(12)
+        app = open_page(ui.MONITOR)
+        assert not self.notices(app)
+
+        # Act
+        app.number_input[0].set_value(10).run()
+
+        # Assert
+        assert not app.exception
+        assert settings.load_settings().patience == 10
+        assert len(self.notices(app)) == 1
+        assert open_page(ui.MONITOR).number_input[0].value == 10
+
     def test_should_say_there_are_no_runs(self, configured):
         app = open_page(ui.MONITOR)
         assert "no runs" in texts(app)

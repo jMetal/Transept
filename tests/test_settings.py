@@ -216,6 +216,19 @@ class TestDataRootOfRun:
         assert settings.data_root_of_run(configured, None, "other") == ""
 
 
+class TestPatience:
+    @pytest.mark.parametrize("saved", [{}, {"patience": 0}, {"patience": "many"}])
+    def test_should_use_the_default_without_a_valid_value(self, transept_home: Path, saved):
+        settings.settings_file().write_text(json.dumps({"jar": "/a.jar", **saved}))
+        assert settings.load_settings().patience == settings.DEFAULT_PATIENCE
+
+    def test_should_survive_the_changes_of_repositories(self, data_root: Path):
+        current = settings.Settings("/a.jar", patience=12)
+        added = settings.add_repository(current, str(data_root), "Mine")
+        assert added.patience == 12
+        assert settings.remove_repository(added, str(data_root)).patience == 12
+
+
 class TestExpertMode:
     def test_should_be_off_by_default_and_in_earlier_settings(self, transept_home: Path):
         assert not settings.default_settings().expert_mode
