@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 
-from transept import charts, runner, runs, series, settings, ui
+from transept import charts, convergence, runner, runs, series, settings, ui
 from transept.runs import RunState
 from transept.series import SeriesState
 
@@ -92,6 +92,7 @@ def show_series(chosen: series.Series, members: list[series.Member]) -> None:
         + (f" {stopped} run(s) did not finish and are not shown." if stopped else "")
     )
     if current == SeriesState.RUNNING:
+        suggest_stopping_series(active)
         series_controls(chosen)
     if current == SeriesState.FINISHED:
         st.success("Every run has finished.")
@@ -117,6 +118,36 @@ def show_series(chosen: series.Series, members: list[series.Member]) -> None:
         show_member(members)
 
 
+def idle_generations(run: runs.Run) -> int:
+    """Generations without improvement of a run, from its files."""
+    population = runs.config(run).get("populationSize") or convergence.DEFAULT_POPULATION
+    return convergence.generations_without_improvement(runs.progress(run), int(population))
+
+
+def suggest_stopping_series(active: list[series.Member]) -> None:
+    """Says how many of the runs in progress seem to have stopped improving."""
+    patience = settings.load_settings().patience
+    idle = sum(idle_generations(member.run) >= patience for member in active)
+    if idle:
+        st.info(
+            f"{idle} of the {len(active)} runs in progress have not improved their best values for "
+            f"{patience} generations or more.",
+            icon=":material/trending_flat:",
+        )
+
+
+def suggest_stopping(run: runs.Run) -> None:
+    """Says that a run seems to have stopped improving, without stopping it."""
+    patience = settings.load_settings().patience
+    idle = idle_generations(run)
+    if idle >= patience and not runner.stop_requested(run.results):
+        st.info(
+            f"The best values have not improved for {idle} generations (notice after {patience}). "
+            "You can stop now and keep the results. The rest of the front may still be improving.",
+            icon=":material/trending_flat:",
+        )
+
+
 @st.fragment(run_every=2)
 def live_series(chosen: series.Series) -> None:
     show_series(chosen, series.members(chosen))
@@ -132,11 +163,15 @@ if followed is None:
     st.stop()
 if isinstance(followed, series.Series):
     if series.state(followed) == SeriesState.RUNNING:
+        ui.patience_input()
+    if series.state(followed) == SeriesState.RUNNING:
         live_series(followed)
     else:
         show_series(followed, series.members(followed))
     st.stop()
 run = followed
+if runs.state(run) == RunState.RUNNING:
+    ui.patience_input()
 
 
 def show_progress(run: runs.Run, state: RunState) -> None:
@@ -194,6 +229,7 @@ def run_controls(run: runs.Run) -> None:
 
 def show_outcome(run: runs.Run, state: RunState) -> None:
     if state == RunState.RUNNING:
+        suggest_stopping(run)
         run_controls(run)
     elif state == RunState.FINISHED and runs.stopped_by_user(run):
         st.success("The run was stopped at your request and kept its results.")

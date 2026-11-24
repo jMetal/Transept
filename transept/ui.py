@@ -26,6 +26,7 @@ DATASET_SELECTED = "datasets_selected"
 ALGORITHM_TO_USE = "algorithm_to_use"
 ALGORITHM_SELECTED = "algorithms_selected"
 EXPERT_MODE = "expert_mode"
+PATIENCE = "monitor_patience"
 LEVEL_MARKS = {
     Level.OK: ":green[:material/check_circle:]",
     Level.INFO: ":blue[:material/info:]",
@@ -48,6 +49,28 @@ def expert_mode_toggle(current: settings.Settings) -> bool:
         on_change=save,
         help="Offers every algorithm, formulation and operator. Without it, Transept searches with "
         "NSGA-II and its recommended configuration, whose settings can be changed too.",
+    )
+
+
+def patience_input() -> int:
+    """Shows how many generations without improvement trigger the notice of Monitor; it is kept."""
+
+    def save() -> None:
+        chosen = replace(settings.load_settings(), patience=int(st.session_state[PATIENCE]))
+        settings.save_settings(chosen)
+
+    st.session_state[PATIENCE] = settings.load_settings().patience
+    return int(
+        st.number_input(
+            "Generations without improvement before suggesting to stop",
+            min_value=1,
+            step=5,
+            key=PATIENCE,
+            on_change=save,
+            help="Monitor tells you when the best value of no objective has improved for this many "
+            "generations. It never stops a run by itself. Small values warn too early: the best "
+            "values often stay still for a while and improve again.",
+        )
     )
 
 

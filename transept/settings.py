@@ -13,6 +13,11 @@ HOME_VARIABLE = "TRANSEPT_HOME"
 JAR_VARIABLE = "TRANSEPT_CORE_JAR"
 JAR_NAME = "transept-core-0.1.0-jar-with-dependencies.jar"
 SETTINGS_FILE_NAME = "settings.json"
+
+# In 155 benchmark runs of 50,000 evaluations, 30 generations of 100 without improvement came for
+# the first time after a median of 20,700, with 0.002 of lDDT still to gain; 10 generations came
+# after 5,900, too early.
+DEFAULT_PATIENCE = 30
 REPOSITORY = Path(__file__).resolve().parent.parent
 EXAMPLES = REPOSITORY / "examples" / "GPCRdb"
 EXAMPLES_NAME = "Examples"
@@ -63,11 +68,13 @@ class Settings:
         repositories: The repositories the user added; the examples are always available too.
         expert_mode: Whether every algorithm and formulation is offered, or only the recommended
             ones.
+        patience: Generations without improvement before Monitor suggests stopping a run.
     """
 
     jar: str
     repositories: list[Repository] = field(default_factory=list)
     expert_mode: bool = False
+    patience: int = DEFAULT_PATIENCE
 
 
 def jar_candidates() -> list[Path]:
@@ -170,6 +177,11 @@ def _saved_repositories(saved: dict) -> list[Repository]:
     return repositories
 
 
+def _saved_patience(saved: dict) -> int:
+    value = saved.get("patience", DEFAULT_PATIENCE)
+    return value if isinstance(value, int) and value >= 1 else DEFAULT_PATIENCE
+
+
 def load_settings() -> Settings:
     """Loads the saved settings, or the defaults if there are none."""
     path = settings_file()
@@ -179,6 +191,7 @@ def load_settings() -> Settings:
             saved.get("jar") or default_jar(),
             _saved_repositories(saved),
             bool(saved.get("expert_mode", False)),
+            _saved_patience(saved),
         )
     return default_settings()
 
