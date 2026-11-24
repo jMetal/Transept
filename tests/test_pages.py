@@ -1668,18 +1668,49 @@ class TestMonitor:
 
     def test_should_keep_the_generations_chosen(self, configured):
         # Arrange
-        self.stalled_run(12)
+        self.stalled_run(settings.DEFAULT_PATIENCE - 3)
         app = open_page(ui.MONITOR)
         assert not self.notices(app)
 
         # Act
-        app.number_input[0].set_value(10).run()
+        app.number_input[0].set_value(5).run()
 
         # Assert
         assert not app.exception
-        assert settings.load_settings().patience == 10
+        assert settings.load_settings().patience == 5
         assert len(self.notices(app)) == 1
-        assert open_page(ui.MONITOR).number_input[0].value == 10
+        assert open_page(ui.MONITOR).number_input[0].value == 5
+
+    def test_should_remove_the_notice_when_the_run_improves_and_count_again(self, configured):
+        # Arrange: the notice is shown
+        patience = settings.DEFAULT_PATIENCE
+        self.stalled_run(patience)
+        app = open_page(ui.MONITOR)
+        assert len(self.notices(app)) == 1
+        progress = settings.runs_root() / "ejecuciones" / "toy" / "stalled" / "progress.jsonl"
+
+        def advance(first: int, count: int, lddt: float) -> None:
+            with progress.open("a") as file:
+                for index in range(first, first + count):
+                    record = {
+                        "evaluations": 100 * (index + 1),
+                        "elapsedMs": 10 * index,
+                        "best": {"SOPwTP": 1.0, "lDDT": lddt},
+                    }
+                    file.write(json.dumps(record) + "\n")
+
+        # Act: one objective improves; then nothing does for fewer, and for enough, generations
+        advance(patience + 1, 1, 0.6)
+        improved = self.notices(app.run())
+        advance(patience + 2, patience - 1, 0.6)
+        waiting = self.notices(app.run())
+        advance(2 * patience + 1, 1, 0.6)
+        again = self.notices(app.run())
+
+        # Assert
+        assert improved == []
+        assert waiting == []
+        assert len(again) == 1
 
     def test_should_say_there_are_no_runs(self, configured):
         app = open_page(ui.MONITOR)
