@@ -68,8 +68,9 @@ def patience_input() -> int:
             key=PATIENCE,
             on_change=save,
             help="Monitor tells you when the best value of no objective has improved for this many "
-            "generations. It never stops a run by itself. Small values warn too early: the best "
-            "values often stay still for a while and improve again.",
+            "generations. It never stops a run by itself, and it goes away if one improves again. "
+            "The best values often stay still for a while before improving: raise it to be told "
+            "later.",
         )
     )
 

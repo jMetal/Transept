@@ -14,10 +14,10 @@ JAR_VARIABLE = "TRANSEPT_CORE_JAR"
 JAR_NAME = "transept-core-0.1.0-jar-with-dependencies.jar"
 SETTINGS_FILE_NAME = "settings.json"
 
-# In 155 benchmark runs of 50,000 evaluations, 30 generations of 100 without improvement came for
-# the first time after a median of 20,700, with 0.002 of lDDT still to gain; 10 generations came
-# after 5,900, too early.
-DEFAULT_PATIENCE = 30
+# An early hint: in 155 benchmark runs of 50,000 evaluations, 10 generations of 100 without
+# improvement came for the first time after a median of 5,900, with 0.004 of lDDT still to gain.
+# The notice goes away when a best value improves again.
+DEFAULT_PATIENCE = 10
 REPOSITORY = Path(__file__).resolve().parent.parent
 EXAMPLES = REPOSITORY / "examples" / "GPCRdb"
 EXAMPLES_NAME = "Examples"
