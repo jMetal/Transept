@@ -65,9 +65,10 @@ What is worth changing, if anything, is not the algorithm but:
 
 - **The budget**, for many or long proteins: more evaluations let the search go further. The chart
   of **Monitor** shows how the best values evolve, and whether they were still improving at the
-  end. **Monitor** also says when the best values have not improved for 30 generations, a number
-  that you can change: then you can stop the run and keep its results. It is only a hint, since the
-  rest of the front may still be improving.
+  end. **Monitor** also says when the best values have not improved for 10 generations, a number
+  that you can change: then you can stop the run and keep its results. It is only an early hint: if
+  a best value improves again, the notice goes away and the count starts over, and the rest of the
+  front may still be improving meanwhile.
 - **Independent runs**: several runs with different seeds show how stable the result is, and
   together find better alignments (Workflow 3 of the [Overview](overview.md)).
 
