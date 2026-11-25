@@ -24,6 +24,8 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Fixed
 
+- **Results** kept saying that GPCRdb did not answer for some receptors after a second attempt got
+  them.
 - **Algorithms** said that there is a single crossover; there are two.
 - What the interface and the tutorials say about helices: the search never opens a gap inside a
   transmembrane helix, but keeps those that the seed alignments already have (**Repair the seeds**
