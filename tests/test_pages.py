@@ -1964,6 +1964,43 @@ class TestResultsGpcrdb:
         assert "has not been fetched from GPCRdb yet" in texts(app)
         assert any(button.label == "Get the GPCRdb numbering" for button in app.button)
 
+    def test_should_forget_the_receptors_that_failed_once_they_answer(
+        self, configured, data_root: Path, monkeypatch
+    ):
+        # Arrange: GPCRdb does not answer the first time
+        from test_generic_numbers import ANSWERS, answer
+
+        from transept import generic_numbers
+
+        write_finished_run(settings.runs_root(), data_root)
+        proteins = datasets.read_topology(datasets.topology_file(data_root, "toy"))
+        answers = {}
+
+        def fetch(entry: str) -> list[dict] | None:
+            found = answers.get(entry)
+            if found:
+                directory = generic_numbers.cache_directory()
+                directory.mkdir(parents=True, exist_ok=True)
+                (directory / f"{entry}.json").write_text(json.dumps(found))
+            return found
+
+        monkeypatch.setattr(generic_numbers, "fetch", fetch)
+        app = open_page(ui.RESULTS, selected_run=("toy", "done"))
+
+        def press(app: AppTest) -> None:
+            next(b for b in app.button if b.label == "Get the GPCRdb numbering").click().run()
+
+        # Act
+        press(app)
+        failed = texts(app)
+        answers.update({p.id: answer(p, ANSWERS[p.id]) for p in proteins})
+        press(app)
+
+        # Assert
+        assert not app.exception
+        assert "did not answer for" in failed
+        assert "did not answer for" not in texts(app)
+
     def test_should_show_the_numbering_kept(self, configured, data_root: Path, tmp_path: Path):
         # Arrange: the answers of GPCRdb, kept from an earlier request
         from test_generic_numbers import ANSWERS, answer
