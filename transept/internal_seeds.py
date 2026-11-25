@@ -35,7 +35,9 @@ def advice(available: bool) -> str:
     return (
         "The internal seeds are quick, but they all come from one sequence aligner. In the GPCR "
         "benchmark the result was as good as with the alignments of other tools in some families "
-        "and clearly worse in others. The alignments of several tools are recommended. " + how
+        "and clearly worse in others. The alignments of several tools are recommended. "
+        + how
+        + " The tutorial *Which seed alignments to start from* shows those cases."
     )
 
 

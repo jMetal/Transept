@@ -19,6 +19,7 @@ WHY_SEVERAL_OBJECTIVES = "why-several-objectives"
 WHAT_TRANSEPT_OPTIMISES = "what-transept-optimises"
 CHOOSE_AN_ALGORITHM = "choose-an-algorithm"
 GAPS_INSIDE_HELICES = "gaps-inside-helices"
+WHICH_SEEDS = "which-seed-alignments"
 # The levels of the tutorials, as the table at the top of each one gives it ("| **Level** | ... |");
 # a tutorial without it is Basic. Learn groups them by level.
 LEVELS = ("Basic", "Intermediate", "Advanced")
@@ -40,6 +41,8 @@ SUMMARIES = {
     "other algorithms for those who want to explore them.",
     "gaps-inside-helices": "Why gaps inside helices are a problem, and how Transept repairs "
     "them in any alignment or in the seeds of a search.",
+    "which-seed-alignments": "What changes when a search starts from the internal seeds or from "
+    "the alignments of other tools, in the datasets we have studied.",
 }
 # Within a level, the order in which the tutorials are meant to be read; the others follow, by
 # file name.
@@ -50,6 +53,7 @@ READING_ORDER = (
     WHAT_TRANSEPT_OPTIMISES,
     RELIABILITY,
     GAPS_INSIDE_HELICES,
+    WHICH_SEEDS,
     CHOOSE_AN_ALGORITHM,
     OPERATORS,
 )

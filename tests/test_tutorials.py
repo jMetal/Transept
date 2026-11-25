@@ -134,6 +134,7 @@ class TestLearningPath:
                 tutorials.ADD_YOUR_OWN_PROTEINS,
                 tutorials.RELIABILITY,
                 tutorials.GAPS_INSIDE_HELICES,
+                tutorials.WHICH_SEEDS,
             ],
             "Intermediate": [tutorials.WHY_SEVERAL_OBJECTIVES, tutorials.WHAT_TRANSEPT_OPTIMISES],
             "Advanced": [tutorials.CHOOSE_AN_ALGORITHM, tutorials.OPERATORS],
