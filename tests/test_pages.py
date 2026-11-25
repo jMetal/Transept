@@ -1327,6 +1327,50 @@ class TestNewRun:
         assert app.multiselect[0].value == ["kalign", "mafft", "caretta"]
         assert any("--dataset toy" in code.value for code in app.code)
 
+    @staticmethod
+    def internal_notices(app: AppTest) -> list[str]:
+        return [item.value for item in app.warning if "internal seeds are quick" in item.value]
+
+    def test_should_not_warn_about_the_seeds_of_other_tools(self, configured):
+        app = open_page(ui.NEW_RUN)
+        assert not app.exception
+        assert not self.internal_notices(app)
+
+    def test_should_suggest_the_seeds_of_the_dataset_instead_of_the_internal_ones(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+
+        # Act
+        app.multiselect[0].set_value(["internal"]).run()
+
+        # Assert
+        assert not app.exception
+        assert len(self.internal_notices(app)) == 1
+        assert "select them above" in self.internal_notices(app)[0]
+        assert [button for button in app.button if button.label == "Launch"]
+
+    def test_should_not_warn_when_the_internal_seeds_join_others(self, configured):
+        app = open_page(ui.NEW_RUN)
+        app.multiselect[0].set_value(["internal", "mafft"]).run()
+        assert not app.exception
+        assert not self.internal_notices(app)
+
+    def test_should_say_how_to_add_seeds_when_the_dataset_has_none(
+        self, configured, data_root: Path
+    ):
+        # Arrange
+        for path in (data_root / "precomputed" / "toy").glob("*.fasta"):
+            path.unlink()
+
+        # Act
+        app = open_page(ui.NEW_RUN)
+
+        # Assert
+        assert not app.exception
+        assert app.multiselect[0].value == ["internal"]
+        assert len(self.internal_notices(app)) == 1
+        assert "Add dataset" in self.internal_notices(app)[0]
+
     def test_should_propose_the_recommended_configuration(self, configured):
         if settings.java_version() is None:
             pytest.skip("Java is not installed")
