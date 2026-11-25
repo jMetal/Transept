@@ -8,10 +8,12 @@
 | **You will use** | **Repair alignment** (Analyze) and **Repair the seeds** in **New run** |
 
 A transmembrane helix crosses the membrane in one piece. When an alignment puts a gap *inside* a
-helix of a protein, it says that a stretch of that helix has no counterpart in the other proteins,
-which the structures rarely support. Most aligners place such gaps, because they do not know where
-the helices are: in the GPCR benchmark, MAFFT leaves a median of 51 per dataset, MUSCLE5 79, and even
-TM-Aligner, which uses the topology, 45.
+helix of a protein, it says that a stretch of that helix has no counterpart in the other proteins.
+Sometimes that is so: a helix can have a residue more or less than its homologue (a bulge or a
+constriction), and where a helix starts and ends is not always annotated in the same way. But most
+aligners place more of them, because they do not know where the helices are: in the GPCR benchmark,
+MAFFT leaves a median of 51 per dataset, MUSCLE5 79, and even TM-Aligner, which uses the topology, 45;
+the reference alignments have a median of 19.
 
 Transept never opens a gap inside a helix, and it can remove those of other alignments: the
 **repair**. This tutorial explains what it does, and how to use it on its own or before a search.
@@ -75,8 +77,8 @@ you trust, or to reproduce a run made without it; then the result may have gaps 
 
 ## How much does it change an alignment?
 
-Very little. The 11 aligners of the GPCR benchmark, repaired and compared with the GPCRdb reference
-alignments (median change of Pair F1 over the datasets):
+It depends on the proteins. These are the 11 aligners of the GPCR benchmark, repaired and compared with
+the GPCRdb reference alignments (median change of Pair F1 over the datasets):
 
 | Aligner | Change of Pair F1 |
 | --- | --- |
@@ -84,9 +86,22 @@ alignments (median change of Pair F1 over the datasets):
 | MUSCLE5, T-Coffee, TM-Aligner, US-align, MUSTANG | −0.005 to −0.001 |
 | mTM-align | −0.022 |
 
-For 10 of the 11 the change stays below 0.005: the repair removes every gap inside a helix at almost
-no cost in accuracy. It does not, however, make an alignment better; that is what the search does.
-A Transept alignment improves on its seeds because of the search, not because of the repair.
+For 10 of the 11 the change stays within 0.005: in these receptors, the repair removed every gap inside
+a helix at almost no cost in accuracy.
+
+In more divergent families it was different. On the 8 families of BAliBASE reference 7 (proteins with
+an AlphaFold model, topology from UniProt), the same repair lowered the Pair F1 of the nine aligners
+tried by 0.008 to 0.047 (medians), and up to 0.165 in one family. The reference alignments themselves
+have gaps inside the annotated helices in 7 of the 8 families, and in 13 of the 15 GPCR datasets: some
+are real differences between the proteins, and others may come from the limits of the helices in the
+annotation.
+
+So whole helices are a choice. If what matters to you is that every helix is in one piece, repair. If
+you trust the alignment you bring, or your family has helices of different lengths, compare both: turn
+**Repair the seeds** off in a second run, and look at the helices and the 3D superposition.
+
+The repair does not make an alignment better by itself: it is a local move, not a new alignment. What
+improves on the seeds is the search.
 
 ## Summary
 
