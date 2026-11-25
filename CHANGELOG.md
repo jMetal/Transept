@@ -27,6 +27,9 @@ All notable changes to Transept are recorded here. The format follows
 - **Results** kept saying that GPCRdb did not answer for some receptors after a second attempt got
   them.
 - **Algorithms** said that there is a single crossover; there are two.
+- The 3D view said that the marked column is red; it is yellow.
+- What the interface and the tutorials say about the support of the columns: the figures are those of
+  the recommended configuration, and high support is not a sign that a column is right.
 - What the interface and the tutorials say about helices: the search never opens a gap inside a
   transmembrane helix, but keeps those that the seed alignments already have (**Repair the seeds**
   in **New run** moves them out first). The subtitle of the home page no longer promises whole

@@ -106,7 +106,7 @@ guarantee of a more correct alignment, but things that a single score cannot giv
 | **Topology** | Ignored by general aligners, so gaps can fall inside a helix; a few, such as PRALINE-TM or TM-Aligner, use it | The search never opens a gap inside a helix, and by default it moves those of the seed alignments out before starting (**Repair the seeds**) |
 | **Several tools at once** | Each gives its own answer, and you choose without a common measure | Their alignments are the starting points, scored with the same two measures: the chart shows where each tool stands, and what the search found beyond them |
 | **Choosing for your purpose** | One alignment, whatever you will do with it | An alignment closer to the structures for mapping residues onto them, or closer to the sequence for evolutionary analyses, from the same run |
-| **Which columns to trust** | Not said; other programs (GUIDANCE, the TCS of T-Coffee) estimate it by running more alignments | The **Support** track, from the alignments of the run itself |
+| **Which columns to doubt** | Usually not said; other programs (GUIDANCE, MUSCLE5, the TCS of T-Coffee) estimate it from many alignments; on the GPCR benchmark, GUIDANCE3 predicted the right columns better than the support of one run | The **Support** track, from the alignments of the run itself: low support is a warning, high support is not a guarantee |
 
 What it does **not** add, and what it costs:
 

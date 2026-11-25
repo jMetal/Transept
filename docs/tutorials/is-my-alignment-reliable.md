@@ -74,10 +74,11 @@ above the alignment offers a second source: **The other runs of the series**, th
 alignments then come from the fronts of the other runs, the same number from each, up to 60. They
 are independent searches, so they do not share the choices that the alignments of one run make
 together, and their disagreement is more telling. On the GPCR benchmark (20 runs per dataset), this
-support told the right columns from the wrong ones better than the support by the run itself in all
-14 datasets (median AUC 0.81 against 0.72). It is also stricter: about 7 % of the columns fall
-below 0.5, instead of under 1 %, and about 7 % of those are right; of the columns of 0.9 or more,
-about 60 %. **This run** goes back to the alignments of the run alone.
+support told the right columns from the wrong ones better than the support by the run itself in 11
+of 15 datasets (median AUC 0.89 against 0.76), and slightly worse in the other four (at most 0.02).
+It is also stricter: about 19 % of the columns fall below 0.5, instead of about 2 %, and about 8 %
+of those are right; of the columns of 0.9 or more, about 70 %. **This run** goes back to the
+alignments of the run alone.
 
 In the aggregate of the runs, Results sums up the agreement in the same way, for the alignments of
 the aggregate front, which come from the runs that reached it. Its **Knee or medoid?** compares the

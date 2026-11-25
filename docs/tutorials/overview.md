@@ -58,10 +58,11 @@ one, the knee. The set is what lets Transept tell you more:
   identically: they are one answer in the helices, with variants in the loops. When they disagree
   more, as with long extracellular domains, Results says so and compares the knee with the
   **medoid**, the alignment that agrees most with all the others.
-- **Which columns to trust.** The **Support** track gives, for every column, how many of the other
-  alignments keep its residues together. On the GPCR benchmark, columns with support below 0.5
-  were almost never right according to the reference alignment, while well-supported ones mostly
-  were. You can download the alignment without its unreliable columns, for a tree for instance.
+- **Which columns not to trust.** The **Support** track gives, for every column, how many of the other
+  alignments keep its residues together. It is a warning, not a measure of correctness: on the GPCR
+  benchmark, columns with support below 0.5 were almost never right according to the reference
+  alignment, but those of 0.9 or more were right in only about 60 % of cases. You can download the
+  alignment without its unreliable columns, for a tree for instance.
 
 [Why several objectives?](why-several-objectives.md) explains the idea without mathematics, and
 [Is my alignment reliable?](is-my-alignment-reliable.md) shows how to read these measures.
