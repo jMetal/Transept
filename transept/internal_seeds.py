@@ -19,6 +19,26 @@ PID_SUFFIX = ".pid"
 LOG_SUFFIX = ".log"
 
 
+def advice(available: bool) -> str:
+    """Returns what to know before starting a search from the internal seeds alone.
+
+    Args:
+        available: Whether the dataset has alignments of other tools that can be used.
+    """
+    how = (
+        "This dataset has alignments of other tools: select them above."
+        if available
+        else "To use them, align your sequences with other tools (for example MAFFT, MUSCLE or "
+        "Kalign, and FoldMason or US-align with the structures) and give the aligned FASTA files "
+        "in **Add dataset**, under *Seed alignments*."
+    )
+    return (
+        "The internal seeds are quick, but they all come from one sequence aligner. In the GPCR "
+        "benchmark the result was as good as with the alignments of other tools in some families "
+        "and clearly worse in others. The alignments of several tools are recommended. " + how
+    )
+
+
 def directory(runs_root: Path, dataset: str) -> Path:
     """Returns the directory of the internal seeds of a dataset."""
     return runs_root / DIRECTORY / dataset

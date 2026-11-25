@@ -124,6 +124,8 @@ seeds = st.multiselect(
 for tool in seeds:
     if tool in datasets.KNOWN_ISSUES:
         st.info(f"**{tool}**: {datasets.KNOWN_ISSUES[tool]}")
+if seeds == [internal_seeds.NAME]:
+    st.warning(internal_seeds.advice(available=bool(recommended)), icon=":material/info:")
 if internal_seeds.NAME in seeds:
     root = settings.runs_root()
     columns = st.columns([3, 1])
