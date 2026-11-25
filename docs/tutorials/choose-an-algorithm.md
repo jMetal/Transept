@@ -107,7 +107,7 @@ algorithm**: it starts from the default configuration, marks with ✏️ what yo
 | Result | The final population, or an external archive of the best alignments found during the run |
 | Offspring | How many children every generation produces |
 | Crossover | Single point or uniform, its probability, and how many cuts to try |
-| Mutation | Gap shift, merge gap runs, random choice of both, block shift or window realignment, its probability and its settings |
+| Mutation | Gap shift, merge gap runs, block shift, window realignment or a random choice among the four, its probability and its settings |
 | Selection | Tournament, and its size |
 
 SPEA2 adds its ranking, its density estimator and its replacement; the genetic algorithm, its

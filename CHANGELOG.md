@@ -8,6 +8,8 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Changed
 
+- The **random choice** mutation picks one of the four mutations, not only the gap shift or the merge
+  of gap runs. Needs a Transept core that does so.
 - **Expert mode**, off by default and kept in the settings. Without it, **New run** searches with
   NSGA-II, SOPwTP and lDDT and the recommended configuration, whose settings are optional, and
   **Algorithms** shows only NSGA-II. With it, both offer every algorithm and formulation, as before.

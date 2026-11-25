@@ -104,8 +104,9 @@ ACDEFGHI          ACDEFGHI
 
 ### Random choice
 
-`randomChoice`: each time, gap shift or merge gap runs, chosen at random. **Largest gap shift**
-applies to its gap shifts.
+`randomChoice`: each time, one of the other four mutations (gap shift, merge gap runs, block shift or
+window realignment), chosen at random with the same probability. The parameters of those mutations
+apply to it. It has not been evaluated yet, so it is not in the results of Step 4.
 
 ### Block shift
 
