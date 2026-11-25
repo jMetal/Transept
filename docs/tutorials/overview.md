@@ -244,6 +244,8 @@ For those who study the search itself. Switch on **Expert mode** in **New run** 
 | --- | --- | --- |
 | Basic | [Add your own proteins](add-your-own-proteins.md) | Proteins from UniProt or from your files, added, aligned and read, with eight aquaporins |
 | Basic | [Is my alignment reliable?](is-my-alignment-reliable.md) | Support, pLDDT, conservation, the GPCRdb check, and how to read them together |
+| Basic | [Gaps inside helices, and how to repair them](gaps-inside-helices.md) | Why they are a problem, and how to move them out of an alignment or of the seeds |
+| Basic | [Which seed alignments to start from](which-seed-alignments.md) | What changed between the internal seeds and the alignments of other tools, in the datasets studied |
 | Intermediate | [Why several objectives?](why-several-objectives.md) | Why sequence and structure are optimised together, the front, and how to choose from it |
 | Intermediate | [What Transept optimises](what-transept-optimises.md) | SOPwTP, lDDT and coverage in detail, how to read their values, and what none of them measures |
 | Advanced | [Choose an algorithm](choose-an-algorithm.md) | How the search works, NSGA-II and its defaults, the other algorithms and how to configure them |
