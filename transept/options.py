@@ -88,7 +88,7 @@ DESCRIPTIONS = {
     "RANDOM_SEEDED": "Random search from the seeds (strong sanity check)",
     "TM_SAFE_GAP_SHIFT": "Gap shift that never breaks a transmembrane helix",
     "MERGE_GAP_RUNS": "Joins two consecutive gap runs of a row",
-    "RANDOM_CHOICE": "TM_SAFE_GAP_SHIFT or MERGE_GAP_RUNS, chosen at random",
+    "RANDOM_CHOICE": "One of the other four mutations, chosen at random",
     "TM_SAFE_BLOCK_SHIFT": "Moves a block of gaps shared by several rows one column",
     "TM_SAFE_WINDOW_REALIGN": "Realigns one row inside a window of 50 columns",
     "TM_SAFE_SINGLE_POINT": "Single point, at a column that cuts no helix",
