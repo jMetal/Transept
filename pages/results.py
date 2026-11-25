@@ -91,7 +91,7 @@ def show_structures(rows, proteins, data_root, run, alignment_start: str) -> Non
     if spread:
         ordered = sorted(spread, key=spread.get, reverse=True)
         column = st.selectbox(
-            "Column to mark, in red (the most spread first)",
+            "Column to mark, in yellow (the most spread first)",
             ordered,
             format_func=lambda c: f"column {c + 1}: spread {spread[c]:.2f} Å",
             key=f"structures_column:{run.key}",
@@ -741,8 +741,8 @@ def download_reliable(stem: str) -> None:
         key=f"trim:{run.key}:{selected}",
         help=(
             "On the GPCR benchmark, with support from the other runs, columns below 0.5 were "
-            "right in about 7 % of cases according to the reference alignment, and columns of "
-            "0.9 or more in about 60 %. "
+            "right in about 8 % of cases according to the reference alignment, and columns of "
+            "0.9 or more in about 70 %. "
             if from_other_runs
             else "On the GPCR benchmark, columns with support below 0.5 were almost never right "
             "according to the reference alignment. "
