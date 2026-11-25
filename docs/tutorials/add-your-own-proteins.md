@@ -60,7 +60,9 @@ shows a checklist:
 
 ![The checklist of the aquaporins: everything in place, and no reference alignment, as usual for new data](images/add-checklist.png)
 
-There are no seed alignments: Transept computes its own (internal seeds) when it runs.
+There are no seed alignments: Transept computes its own (internal seeds) when it runs. They are quick,
+and enough for a first look; in some families the alignments of other tools give a clearly better
+result, so **New run** recommends them. Give them here, under **Seed alignments**, if you have them.
 
 ## Step 3: add the dataset
 

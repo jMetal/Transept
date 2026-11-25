@@ -55,6 +55,8 @@ All notable changes to Transept are recorded here. The format follows
 - **New run**: every algorithm and formulation, the operators with their settings, the
   configuration of NSGA-II, SPEA2 and the genetic algorithm, independent runs that share the
   computer automatically, and the equivalent command line.
+- **New run** says, when a search would start from the internal seeds alone, that the alignments of
+  several tools are recommended, and how to use them.
 - **Monitor**: progress of runs and series; stop them early keeping their results, or cancel them. It
   says when the best values have not improved for a number of generations (10 by default, adjustable),
   without stopping anything; the notice goes away if they improve again.
