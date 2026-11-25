@@ -791,9 +791,9 @@ with gpcrdb_tab:
                     done / total, text=f"Asking GPCRdb: {done} of {total} receptors"
                 ),
             )
-            unknown = [entry for entry, residues in fetched.items() if not residues]
-            if unknown:
-                st.session_state[f"gpcrdb_unknown:{run.key}"] = unknown
+            st.session_state[f"gpcrdb_unknown:{run.key}"] = [
+                entry for entry, residues in fetched.items() if not residues
+            ]
             st.rerun()
     unknown = st.session_state.get(f"gpcrdb_unknown:{run.key}", [])
     if unknown:
