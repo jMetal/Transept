@@ -11,7 +11,9 @@ from pathlib import Path
 
 HOME_VARIABLE = "TRANSEPT_HOME"
 JAR_VARIABLE = "TRANSEPT_CORE_JAR"
-JAR_NAME = "transept-core-0.1.0-jar-with-dependencies.jar"
+# make copies the jar to lib/ under a name without version; Maven names it with its version
+JAR_NAME = "transept-core.jar"
+BUILT_JAR_PATTERN = "transept-core-*-jar-with-dependencies.jar"
 SETTINGS_FILE_NAME = "settings.json"
 
 # An early hint: in 155 benchmark runs of 50,000 evaluations, 10 generations of 100 without
@@ -77,13 +79,21 @@ class Settings:
     patience: int = DEFAULT_PATIENCE
 
 
+def _newest_built(folder: Path) -> list[Path]:
+    """The most recent jar built by Maven in a folder, whatever its version, if there is one."""
+    built = sorted(folder.glob(BUILT_JAR_PATTERN), key=lambda path: path.stat().st_mtime)
+    return built[-1:]
+
+
 def jar_candidates() -> list[Path]:
-    """Places where the jar is looked for, in order: lib/ and a sibling Transept core build."""
+    """Places where the jar is looked for, in order: lib/ (under the name given by make, or as
+    Maven names it) and a sibling Transept core build."""
     parent = REPOSITORY.parent
     return [
         REPOSITORY / "lib" / JAR_NAME,
-        parent / "transept-core" / "target" / JAR_NAME,
-        parent / "Transept-core" / "target" / JAR_NAME,
+        *_newest_built(REPOSITORY / "lib"),
+        *_newest_built(parent / "transept-core" / "target"),
+        *_newest_built(parent / "Transept-core" / "target"),
     ]
 
 
@@ -177,6 +187,15 @@ def _saved_repositories(saved: dict) -> list[Repository]:
     return repositories
 
 
+def _saved_jar(saved: dict) -> str:
+    """The saved jar, or the default one if none is saved or it is in lib/, which make updates
+    (an older version of the jar, for instance)."""
+    jar = saved.get("jar")
+    if not jar or Path(jar).parent == REPOSITORY / "lib":
+        return default_jar()
+    return jar
+
+
 def _saved_patience(saved: dict) -> int:
     value = saved.get("patience", DEFAULT_PATIENCE)
     return value if isinstance(value, int) and value >= 1 else DEFAULT_PATIENCE
@@ -188,7 +207,7 @@ def load_settings() -> Settings:
     if path.is_file():
         saved = json.loads(path.read_text(encoding="utf-8"))
         return Settings(
-            saved.get("jar") or default_jar(),
+            _saved_jar(saved),
             _saved_repositories(saved),
             bool(saved.get("expert_mode", False)),
             _saved_patience(saved),

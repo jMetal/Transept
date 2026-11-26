@@ -1,6 +1,7 @@
 CONDA_ENV := transept
 RUN := conda run --no-capture-output -n $(CONDA_ENV)
-JAR_NAME := transept-core-0.1.0-jar-with-dependencies.jar
+# The core jar in lib/, under a name without version (Maven names it with its version)
+JAR_NAME := transept-core.jar
 # A clone of Transept-core next to this repository, if there is one
 CORE ?= $(firstword $(wildcard ../Transept-core/pom.xml ../transept-core/pom.xml))
 CORE_DIR := $(patsubst %/pom.xml,%,$(CORE))
@@ -27,7 +28,7 @@ jar:
 	else \
 	  echo "No jar found. Clone Transept-core next to this repository and run 'make setup' again:"; \
 	  echo "  git clone https://github.com/jMetal/Transept-core.git ../Transept-core"; \
-	  echo "or run 'make setup JAR=<path to $(JAR_NAME)>'."; \
+	  echo "or run 'make setup JAR=<path to transept-core-<version>-jar-with-dependencies.jar>'."; \
 	  exit 1; \
 	fi
 
@@ -38,8 +39,8 @@ core:
 	@echo "Building the jar in $(CORE_DIR) (a few minutes the first time)..."
 	$(RUN) mvn -q -f $(CORE_DIR)/pom.xml clean package -DskipTests
 	@mkdir -p lib
-	cp $(CORE_DIR)/target/$(JAR_NAME) lib/
-	@echo "Copied $(CORE_DIR)/target/$(JAR_NAME) to lib/"
+	@built="$$(ls -t $(CORE_DIR)/target/transept-core-*-jar-with-dependencies.jar | head -1)"; \
+	  cp "$$built" lib/$(JAR_NAME) && echo "Copied $$built to lib/$(JAR_NAME)"
 
 # Builds the Docker image from the jar of a clone of Transept-core next to this repository.
 image: core
