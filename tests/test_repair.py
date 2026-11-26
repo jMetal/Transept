@@ -38,6 +38,10 @@ class TestProblem:
         stderr = "java.lang.IllegalStateException: broken\n\tat org.transept.X\n"
         assert repair._problem(stderr) == "java.lang.IllegalStateException: broken"
 
+    def test_should_take_the_message_of_the_error_line(self):
+        stderr = "Error: Invalid alignment in x.fasta\n"
+        assert repair._problem(stderr) == "Invalid alignment in x.fasta"
+
     def test_should_say_nothing_when_there_is_nothing(self):
         assert repair._problem("") == ""
 
