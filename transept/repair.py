@@ -96,7 +96,7 @@ def _problem(stderr: str) -> str:
     if message:
         return message.group(1)
     lines = [line for line in stderr.splitlines() if line.strip() and not line.startswith("\t")]
-    return lines[0] if lines else ""
+    return lines[0].removeprefix("Error: ") if lines else ""
 
 
 def helix_breaks(repaired: Repaired, proteins: list[datasets.Protein]) -> pd.DataFrame:
