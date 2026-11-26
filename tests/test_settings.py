@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -50,6 +51,37 @@ class TestLocations:
         # Act & Assert
         assert settings.default_jar() == str(candidates[0])
 
+    def test_should_find_the_newest_built_jar_whatever_its_version(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange: no jar in lib/, two versions built in a sibling transept-core
+        monkeypatch.delenv(settings.JAR_VARIABLE, raising=False)
+        monkeypatch.setattr(settings, "REPOSITORY", tmp_path / "Transept")
+        target = tmp_path / "transept-core" / "target"
+        target.mkdir(parents=True)
+        old = target / "transept-core-0.1.0-jar-with-dependencies.jar"
+        new = target / "transept-core-0.1-SNAPSHOT-jar-with-dependencies.jar"
+        for age, jar in enumerate([new, old]):
+            jar.write_bytes(b"")
+            os.utime(jar, (1000 - age, 1000 - age))
+
+        # Act & Assert
+        assert settings.default_jar() == str(new)
+
+    def test_should_prefer_the_jar_copied_to_lib(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange
+        monkeypatch.delenv(settings.JAR_VARIABLE, raising=False)
+        monkeypatch.setattr(settings, "REPOSITORY", tmp_path / "Transept")
+        lib = tmp_path / "Transept" / "lib"
+        lib.mkdir(parents=True)
+        (lib / "transept-core-0.1.0-jar-with-dependencies.jar").write_bytes(b"")
+        (lib / settings.JAR_NAME).write_bytes(b"")
+
+        # Act & Assert
+        assert settings.default_jar() == str(lib / settings.JAR_NAME)
+
     def test_should_find_datasets_in_the_examples(self):
         assert "classT2_19" in datasets.list_datasets(settings.EXAMPLES)
 
@@ -99,6 +131,17 @@ class TestPersistence:
 
         # Assert
         assert loaded == chosen
+
+    def test_should_replace_a_saved_jar_of_lib_with_the_current_one(
+        self, transept_home: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Arrange: settings saved with the jar of an earlier version in lib/
+        monkeypatch.setenv(settings.JAR_VARIABLE, "/current/tool.jar")
+        old = settings.REPOSITORY / "lib" / "transept-core-0.1.0-jar-with-dependencies.jar"
+        settings.settings_file().write_text(json.dumps({"jar": str(old)}), encoding="utf-8")
+
+        # Act & Assert
+        assert settings.load_settings().jar == "/current/tool.jar"
 
     def test_should_turn_an_earlier_data_directory_into_a_repository(self, transept_home: Path):
         # Arrange
