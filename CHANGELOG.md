@@ -30,6 +30,9 @@ All notable changes to Transept are recorded here. The format follows
   them.
 - **Algorithms** said that there is a single crossover; there are two.
 - The 3D view said that the marked column is red; it is yellow.
+- `make core` and the settings found only the jar of Transept core 0.1.0. The jar is now copied to
+  `lib/transept-core.jar` whatever its version, and a jar of an earlier version saved in the
+  settings from `lib/` gives way to it.
 - What the interface and the tutorials say about the support of the columns: the figures are those of
   the recommended configuration, and high support is not a sign that a column is right.
 - What the interface and the tutorials say about helices: the search never opens a gap inside a

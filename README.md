@@ -77,7 +77,7 @@ conda --version
 
    It creates the `transept` Conda environment, builds the core jar in `../Transept-core` with
    the Maven of that environment, and copies it to `lib/`. It ends with
-   `Copied ../Transept-core/target/transept-core-0.1.0-jar-with-dependencies.jar to lib/`.
+   `Copied ../Transept-core/target/transept-core-<version>-jar-with-dependencies.jar to lib/transept-core.jar`.
 
 3. Start Transept:
 
@@ -95,7 +95,7 @@ Transept only listens on your own machine (`localhost`): it is not reachable fro
 To update Transept later, run `git pull` in both folders, then `make setup` (it updates the
 environment) and `make core` (it rebuilds the jar) in `Transept`.
 
-If you already have the jar (`transept-core-0.1.0-jar-with-dependencies.jar`), you do not need
+If you already have the jar (`transept-core-<version>-jar-with-dependencies.jar`), you do not need
 Transept-core: run `make setup JAR=/path/to/the.jar` instead.
 
 ### Your first run
