@@ -105,7 +105,7 @@ algorithm**: it starts from the default configuration, marks with ✏️ what yo
 | Part | What you can choose (NSGA-II) |
 | --- | --- |
 | Result | The final population, or an external archive of the best alignments found during the run |
-| Offspring | How many children every generation produces |
+| Offspring | How many children every generation produces: 1, 5, 10, 20, 50, 100, 200 or 400. It is the population size unless you change it, so another population size needs a choice here |
 | Crossover | Single point or uniform, its probability, and how many cuts to try |
 | Mutation | Gap shift, merge gap runs, block shift, window realignment or a random choice among the four, its probability and its settings |
 | Selection | Tournament, and its size |

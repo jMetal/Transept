@@ -8,6 +8,9 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Changed
 
+- With NSGA-II, SPEA2 and the genetic algorithm, the offspring size is one of 1, 5, 10, 20, 50, 100,
+  200 and 400: **New run** asks for one when the population size is another. The population of the
+  search with an external archive goes up to 200. Needs a Transept core with those parameter spaces.
 - The **random choice** mutation picks one of the four mutations, not only the gap shift or the merge
   of gap runs. Needs a Transept core that does so.
 - **Expert mode**, off by default and kept in the settings. Without it, **New run** searches with
