@@ -78,7 +78,7 @@ DESCRIPTIONS = {
     "SPEA2": "SPEA2 (strength ranking, nearest-neighbour density)",
     "GENETIC_ALGORITHM": "Genetic algorithm, generational",
     "ASYNC_GENETIC_ALGORITHM": "Genetic algorithm, asynchronous (keeps all threads busy)",
-    "NSGA_III": "NSGA-III (population size multiple of 4)",
+    "NSGA_III": "NSGA-III",
     "AGE_MOEA": "AGE-MOEA",
     "AGE_MOEA_II": "AGE-MOEA-II",
     "SMS_EMOA": "SMS-EMOA (steady state: threads do not help)",

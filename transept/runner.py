@@ -93,8 +93,6 @@ def validate(request: RunRequest) -> list[str]:
             "Choose at least two seed alignments: the rest of the population is made of "
             "their crossover children."
         )
-    if request.algorithm == "NSGA_III" and request.population_size % 4 != 0:
-        found.append("NSGA-III needs a population size that is a multiple of 4.")
     if not request.run_id or any(char in request.run_id for char in "/\\ "):
         found.append("The run identifier cannot be empty or contain spaces or slashes.")
     if request.max_evaluations < 1 or request.population_size < 1 or request.threads < 1:

@@ -26,7 +26,6 @@ from transept.configuration import (
     complete_values,
     configuration_string,
     modified_values,
-    offspring_problem,
     values_outside_the_space,
 )
 from transept.parameter_form import render_configuration_form
@@ -194,7 +193,7 @@ with settings_area:
             format_func=lambda value: options.DESCRIPTIONS[value],
         )
     population_size = st.number_input(
-        "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=4
+        "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=10
     )
 with left:
     threads = 1
@@ -242,7 +241,6 @@ max_shift = options.DEFAULT_MAX_SHIFT
 cut_candidates = options.DEFAULT_CUT_CANDIDATES
 configuration = ""
 parameters = None
-offspring_error = None
 guide = tutorials.tutorial_named(tutorials.OPERATORS)
 if guide is not None and algorithm not in options.WITHOUT_OPERATORS:
     # Here and not on its own page, so that the choices made in this form are kept
@@ -257,17 +255,13 @@ if spaces.is_configurable(algorithm):
             "operator options are offered. Rebuild the jar to configure it."
         )
 if parameters is not None:
-    reference = {
-        **spaces.default_configuration(current.jar, algorithm),
-        "offspringPopulationSize": str(int(population_size)),
-    }
+    reference = spaces.default_configuration(current.jar, algorithm)
     version = st.session_state.setdefault("configuration_version", 0)
-    key_prefix = f"configuration_{algorithm}_{int(population_size)}_{version}"
+    key_prefix = f"configuration_{algorithm}_{version}"
     with st.expander("Configuration of the algorithm"):
         st.caption(
             "The parameter space of the algorithm in the tool, starting from its default "
-            "configuration; ✏️ marks what you changed. Set the population size first: changing "
-            "it resets this form."
+            "configuration; ✏️ marks what you changed."
         )
         if st.button("Reset to the default configuration"):
             st.session_state["configuration_version"] = version + 1
@@ -275,12 +269,7 @@ if parameters is not None:
         edited = render_configuration_form(
             parameters, complete_values(parameters, reference), reference, key_prefix
         )
-    offspring_error = offspring_problem(parameters, edited)
-    outside = [
-        name
-        for name in values_outside_the_space(parameters, edited)
-        if name != "offspringPopulationSize"
-    ]
+    outside = values_outside_the_space(parameters, edited)
     if outside:
         st.warning("Outside the parameter space: " + ", ".join(f"`{name}`" for name in outside))
     changed = modified_values(parameters, edited, reference)
@@ -390,8 +379,6 @@ request = runner.RunRequest(
     cut_candidates=int(cut_candidates),
 )
 errors = runner.validate(request)
-if offspring_error:
-    errors.append(offspring_error)
 if count > 1:
     errors += series.validate(request, int(count), int(parallel))
 for error in errors:
