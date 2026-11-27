@@ -1522,6 +1522,20 @@ class TestExpertMode:
         assert "--population-size 50" in command
         assert "--configuration '--selection random'" in command
 
+    def test_should_accept_any_population_size(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        size = next(b for b in app.number_input if b.label == "Population size")
+
+        # Act
+        size.set_value(64).run()
+
+        # Assert: the offspring size stays at its default
+        assert not app.error
+        assert not next(b for b in app.button if b.label == "Launch").disabled
+        assert next(b for b in app.selectbox if b.label == "offspringPopulationSize").value == "100"
+        assert "--configuration" not in self.command(app)
+
     def test_should_offer_the_cores_outside_the_optional_settings(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
