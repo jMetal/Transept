@@ -1535,6 +1535,18 @@ class TestExpertMode:
         assert next(b for b in app.selectbox if b.label == "offspringPopulationSize").value == "100"
         assert "--configuration" not in self.command(app)
 
+    def test_should_offer_the_population_size_from_20_to_200(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+        optional = next(e for e in app.expander if e.label == "Settings of the search (optional)")
+
+        # Act
+        size = next(b for b in app.number_input if b.label == "Population size")
+
+        # Assert
+        assert (size.value, size.min, size.max) == (100, 20, 200)
+        assert not [b for b in optional.number_input if b.label == "Population size"]
+
     def test_should_offer_the_cores_outside_the_optional_settings(self, configured):
         # Arrange
         app = open_page(ui.NEW_RUN)
