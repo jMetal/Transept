@@ -2,6 +2,8 @@
 
 import dataclasses
 
+import pytest
+
 from transept import options, runner
 
 
@@ -44,6 +46,26 @@ class TestObjectives:
         assert any("does not accept" in message for message in wrong_algorithm)
         assert any("MOEA/D with three objectives" in message for message in wrong_size)
         assert good == []
+
+    @pytest.mark.parametrize(
+        ("algorithm", "name"), [("MOEA_D", "MOEA/D"), ("NSGA_III", "NSGA-III")]
+    )
+    def test_should_ask_for_weight_vectors_only_with_three_objectives(self, algorithm, name):
+        # Arrange
+        request = runner.RunRequest(
+            dataset="toy",
+            seeds=("a", "b"),
+            run_id="r",
+            seed=1,
+            algorithm=algorithm,
+            population_size=50,
+        )
+        three = dataclasses.replace(request, objectives="SOPWTP_LDDT_COVERAGE")
+
+        # Act and assert
+        assert runner.validate(request) == []
+        assert any(f"{name} with three objectives" in m for m in runner.validate(three))
+        assert runner.validate(dataclasses.replace(three, population_size=91)) == []
 
     def test_should_pass_the_objectives_to_the_tool(self, tmp_path):
         request = runner.RunRequest(
