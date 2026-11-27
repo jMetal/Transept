@@ -192,10 +192,15 @@ with settings_area:
             key=ALGORITHM_WIDGET,
             format_func=lambda value: options.DESCRIPTIONS[value],
         )
-    population_size = st.number_input(
-        "Population size", 1, 10_000, options.DEFAULT_POPULATION_SIZE, step=10
-    )
 with left:
+    population_size = st.number_input(
+        "Population size",
+        options.MIN_POPULATION_SIZE,
+        options.MAX_POPULATION_SIZE,
+        options.DEFAULT_POPULATION_SIZE,
+        step=10,
+        help="Alignments the search keeps and improves.",
+    )
     threads = 1
     if options.is_parallel(algorithm):
         threads = st.number_input(
@@ -226,12 +231,6 @@ with right:
             help="Runs that stop by time do not repeat exactly with the same seed: the number of "
             "evaluations depends on the machine.",
         )
-
-if not expert and population_size != options.DEFAULT_POPULATION_SIZE:
-    st.caption(
-        f"Population size changed: {int(population_size)} instead of "
-        f"{options.DEFAULT_POPULATION_SIZE}."
-    )
 
 mutation = "TM_SAFE_GAP_SHIFT"
 crossover = options.DEFAULT_CROSSOVER

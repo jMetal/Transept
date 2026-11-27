@@ -106,7 +106,8 @@ def validate(request: RunRequest) -> list[str]:
         and options.OBJECTIVES[request.objectives][1] == 3
         and request.population_size not in options.THREE_OBJECTIVE_SIZES
     ):
-        sizes = ", ".join(str(size) for size in options.THREE_OBJECTIVE_SIZES)
+        offered = [s for s in options.THREE_OBJECTIVE_SIZES if s <= options.MAX_POPULATION_SIZE]
+        sizes = ", ".join(str(size) for size in offered)
         name = {"MOEA_D": "MOEA/D", "NSGA_III": "NSGA-III"}[request.algorithm]
         found.append(f"{name} with three objectives needs a population size of {sizes}.")
     return found
