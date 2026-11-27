@@ -82,7 +82,7 @@ compare them (Step 6).
 | --- | --- | --- |
 | **Asynchronous NSGA-II** | NSGA-II that evaluates a new alignment as soon as a thread is free, instead of waiting for the whole population | With many cores, to finish sooner. With several threads a run does not repeat exactly |
 | **SPEA2** | Ranks each alignment by how many others it dominates, and spreads the front with the distance to its nearest neighbours | As an alternative to NSGA-II with two objectives |
-| **NSGA-III** | NSGA-II with reference directions to spread the front | With three objectives |
+| **NSGA-III** | NSGA-II with reference directions to spread the front | With three objectives, which need particular population sizes |
 | **AGE-MOEA**, **AGE-MOEA-II** | Estimate the shape of the front to spread the alignments over it | With two or three objectives |
 | **SMS-EMOA** | Keeps the alignments that add most to the area covered by the front, one at a time | For a well spread front; extra threads do not help |
 | **MOEA/D** | Splits the problem into many weighted subproblems solved together | With three objectives it needs particular population sizes; extra threads do not help |
