@@ -11,7 +11,7 @@ All notable changes to Transept are recorded here. The format follows
 - **Population size** is always shown in **New run**, 100 by default and from 20 to 200.
 - NSGA-II, SPEA2 and the genetic algorithm create 100 offspring per generation by default, whatever
   the population size, and offer 1, 5, 10, 20, 50, 100, 200 or 400. The population of the search with
-  an external archive goes up to 200. **Population size** changes in steps of 10, and NSGA-III no
+  an external archive goes from 10 to 200. **Population size** changes in steps of 10, and NSGA-III no
   longer needs a multiple of 4; with three objectives it needs particular sizes, as MOEA/D. Needs a Transept core that does so.
 - The **random choice** mutation picks one of the four mutations, not only the gap shift or the merge
   of gap runs. Needs a Transept core that does so.
