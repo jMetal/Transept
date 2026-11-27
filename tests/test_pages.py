@@ -1511,16 +1511,35 @@ class TestExpertMode:
         app = open_page(ui.NEW_RUN)
 
         # Act
-        next(b for b in app.number_input if b.label == "Population size").set_value(40).run()
+        next(b for b in app.number_input if b.label == "Population size").set_value(50).run()
         next(b for b in app.selectbox if b.label == "selection").set_value("random").run()
 
         # Assert
         assert not app.exception
-        assert "Population size changed: 40" in texts(app)
+        assert "Population size changed: 50" in texts(app)
         assert "1 parameter(s) changed" in texts(app)
         command = self.command(app)
-        assert "--population-size 40" in command
+        assert "--population-size 50" in command
         assert "--configuration '--selection random'" in command
+
+    def test_should_ask_for_an_offspring_size_of_the_parameter_space(self, configured):
+        # Arrange
+        app = open_page(ui.NEW_RUN)
+
+        # Act
+        next(b for b in app.number_input if b.label == "Population size").set_value(64).run()
+
+        # Assert
+        assert not app.exception
+        assert "The offspring size cannot be 64" in " ".join(e.value for e in app.error)
+        assert next(b for b in app.button if b.label == "Launch").disabled
+
+        # Act: choose a size of the space instead
+        next(b for b in app.selectbox if b.label.startswith("offspring")).set_value("50").run()
+
+        # Assert
+        assert "The offspring size" not in " ".join(e.value for e in app.error)
+        assert "--configuration '--offspringPopulationSize 50'" in self.command(app)
 
     def test_should_offer_the_cores_outside_the_optional_settings(self, configured):
         # Arrange
