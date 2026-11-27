@@ -122,6 +122,28 @@ def values_outside_the_space(
     ]
 
 
+def offspring_problem(parameters: list[ParameterSpec], values: Mapping[str, str]) -> str | None:
+    """Say why the tool would reject the offspring size, which is the population size unless the
+    configuration sets it.
+
+    Args:
+        parameters: The top-level parameters of a parameter space.
+        values: A value for every parameter, as `complete_values` returns.
+
+    Returns:
+        The problem and what to do about it, or None if the space allows the size.
+    """
+    name = "offspringPopulationSize"
+    if name not in values_outside_the_space(parameters, values):
+        return None
+    allowed = ", ".join(choice.value for choice in parameters_by_name(parameters)[name].choices)
+    return (
+        f"The offspring size cannot be {values[name]}: this algorithm takes {allowed}. It is the "
+        f"population size unless you change it, so use one of these population sizes or choose "
+        f"{name} in Configuration of the algorithm."
+    )
+
+
 def modified_values(
     parameters: list[ParameterSpec], values: Mapping[str, str], reference: Mapping[str, str]
 ) -> list[str]:

@@ -26,6 +26,7 @@ from transept.configuration import (
     complete_values,
     configuration_string,
     modified_values,
+    offspring_problem,
     values_outside_the_space,
 )
 from transept.parameter_form import render_configuration_form
@@ -241,6 +242,7 @@ max_shift = options.DEFAULT_MAX_SHIFT
 cut_candidates = options.DEFAULT_CUT_CANDIDATES
 configuration = ""
 parameters = None
+offspring_error = None
 guide = tutorials.tutorial_named(tutorials.OPERATORS)
 if guide is not None and algorithm not in options.WITHOUT_OPERATORS:
     # Here and not on its own page, so that the choices made in this form are kept
@@ -273,7 +275,12 @@ if parameters is not None:
         edited = render_configuration_form(
             parameters, complete_values(parameters, reference), reference, key_prefix
         )
-    outside = values_outside_the_space(parameters, edited)
+    offspring_error = offspring_problem(parameters, edited)
+    outside = [
+        name
+        for name in values_outside_the_space(parameters, edited)
+        if name != "offspringPopulationSize"
+    ]
     if outside:
         st.warning("Outside the parameter space: " + ", ".join(f"`{name}`" for name in outside))
     changed = modified_values(parameters, edited, reference)
@@ -383,6 +390,8 @@ request = runner.RunRequest(
     cut_candidates=int(cut_candidates),
 )
 errors = runner.validate(request)
+if offspring_error:
+    errors.append(offspring_error)
 if count > 1:
     errors += series.validate(request, int(count), int(parallel))
 for error in errors:
