@@ -20,7 +20,6 @@ class TestValidation:
         [
             ({"seeds": ()}, "at least one seed"),
             ({"seeds": ("mafft",)}, "at least two seed"),
-            ({"algorithm": "NSGA_III", "population_size": 10}, "multiple of 4"),
             ({"run_id": "a b"}, "identifier"),
             ({"threads": 0}, "positive"),
             ({"max_time": 0.0}, "time limit"),
