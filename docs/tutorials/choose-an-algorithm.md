@@ -55,6 +55,8 @@ The default run of NSGA-II:
 | Seed alignments | The precomputed ones of sequence and structural aligners, if the dataset has them; otherwise the internal ones |
 | Repair the seeds | Yes |
 
+**New run** always shows the population size, which can go from 20 to 200.
+
 These defaults come from a pilot on the GPCR benchmark: 50,000 evaluations gave a better front and a
 slightly better recommended alignment than 10,000 in every dataset; repairing the seeds removed the
 gaps inside helices without changing the accuracy in most datasets; and adding the alignments of

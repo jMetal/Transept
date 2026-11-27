@@ -8,6 +8,7 @@ All notable changes to Transept are recorded here. The format follows
 
 ### Changed
 
+- **Population size** is always shown in **New run**, 100 by default and from 20 to 200.
 - NSGA-II, SPEA2 and the genetic algorithm create 100 offspring per generation by default, whatever
   the population size, and offer 1, 5, 10, 20, 50, 100, 200 or 400. The population of the search with
   an external archive goes up to 200. **Population size** changes in steps of 10, and NSGA-III no
