@@ -36,8 +36,9 @@ MAX_OBJECTIVES = 3
 # Asynchronous algorithms: all threads stay busy, but runs with several threads do not repeat.
 ASYNCHRONOUS = ("ASYNC_NSGA_II", "ASYNC_GENETIC_ALGORITHM")
 
-# Population sizes with weight vectors for MOEA/D with three objectives.
-MOEAD_THREE_OBJECTIVE_SIZES = (91, 100, 136, 300, 500, 600, 800, 1000, 1200)
+# With three objectives, MOEA/D and NSGA-III only take the population sizes with weight vectors.
+NEED_WEIGHT_VECTORS = ("MOEA_D", "NSGA_III")
+THREE_OBJECTIVE_SIZES = (91, 100, 136, 300, 500, 600, 800, 1000, 1200)
 MUTATIONS = (
     "TM_SAFE_GAP_SHIFT",
     "MERGE_GAP_RUNS",

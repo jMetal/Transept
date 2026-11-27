@@ -102,12 +102,13 @@ def validate(request: RunRequest) -> list[str]:
     if request.algorithm not in options.algorithms_for(request.objectives):
         found.append(f"{request.algorithm} does not accept the objectives {request.objectives}.")
     if (
-        request.algorithm == "MOEA_D"
+        request.algorithm in options.NEED_WEIGHT_VECTORS
         and options.OBJECTIVES[request.objectives][1] == 3
-        and request.population_size not in options.MOEAD_THREE_OBJECTIVE_SIZES
+        and request.population_size not in options.THREE_OBJECTIVE_SIZES
     ):
-        sizes = ", ".join(str(size) for size in options.MOEAD_THREE_OBJECTIVE_SIZES)
-        found.append(f"MOEA/D with three objectives needs a population size of {sizes}.")
+        sizes = ", ".join(str(size) for size in options.THREE_OBJECTIVE_SIZES)
+        name = {"MOEA_D": "MOEA/D", "NSGA_III": "NSGA-III"}[request.algorithm]
+        found.append(f"{name} with three objectives needs a population size of {sizes}.")
     return found
 
 
