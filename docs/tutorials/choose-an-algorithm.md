@@ -82,7 +82,7 @@ compare them (Step 6).
 | --- | --- | --- |
 | **Asynchronous NSGA-II** | NSGA-II that evaluates a new alignment as soon as a thread is free, instead of waiting for the whole population | With many cores, to finish sooner. With several threads a run does not repeat exactly |
 | **SPEA2** | Ranks each alignment by how many others it dominates, and spreads the front with the distance to its nearest neighbours | As an alternative to NSGA-II with two objectives |
-| **NSGA-III** | NSGA-II with reference directions to spread the front | With three objectives; population a multiple of 4 |
+| **NSGA-III** | NSGA-II with reference directions to spread the front | With three objectives |
 | **AGE-MOEA**, **AGE-MOEA-II** | Estimate the shape of the front to spread the alignments over it | With two or three objectives |
 | **SMS-EMOA** | Keeps the alignments that add most to the area covered by the front, one at a time | For a well spread front; extra threads do not help |
 | **MOEA/D** | Splits the problem into many weighted subproblems solved together | With three objectives it needs particular population sizes; extra threads do not help |
@@ -105,7 +105,7 @@ algorithm**: it starts from the default configuration, marks with ✏️ what yo
 | Part | What you can choose (NSGA-II) |
 | --- | --- |
 | Result | The final population, or an external archive of the best alignments found during the run |
-| Offspring | How many children every generation produces: 1, 5, 10, 20, 50, 100, 200 or 400. It is the population size unless you change it, so another population size needs a choice here |
+| Offspring | How many children every generation produces: 1, 5, 10, 20, 50, 100, 200 or 400; 100 unless you change it, whatever the population size |
 | Crossover | Single point or uniform, its probability, and how many cuts to try |
 | Mutation | Gap shift, merge gap runs, block shift, window realignment or a random choice among the four, its probability and its settings |
 | Selection | Tournament, and its size |
