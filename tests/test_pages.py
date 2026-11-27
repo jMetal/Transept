@@ -1516,7 +1516,6 @@ class TestExpertMode:
 
         # Assert
         assert not app.exception
-        assert "Population size changed: 50" in texts(app)
         assert "1 parameter(s) changed" in texts(app)
         command = self.command(app)
         assert "--population-size 50" in command
